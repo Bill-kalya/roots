@@ -1,0 +1,85 @@
+.nav {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 32px;
+  min-height: 72px; /* better than fixed height */
+  
+  z-index: 50;
+  background: var(--primary);
+  border: none;
+  transition: all 0.4s ease;
+
+  box-shadow:
+    6px 6px 12px #2a1a1a,
+    -6px -6px 12px #6F4E37;
+}
+
+/* Nav links — ensure vertical centering */
+.nav-links {
+  display: flex;
+  gap: 24px;              /* ← reduced from 36px to prevent overflow */
+  align-items: center;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-img {
+  border-radius: 999px;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;  /* ← critical, stops it from blowing up */
+}
+
+.logo-text {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+.nav-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;            /* ← stops Shop Now from squishing */
+}
+
+@media (max-width: 1024px) {
+  .nav {
+    padding: 0 20px;
+    min-height: 64px;
+  }
+
+  .nav-links {
+    gap: 16px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+
+  .logo-img {
+    width: 42px;
+    height: 42px;
+  }
+}   
+@media (max-width: 768px) {
+  .nav-links {
+    display: none; /* hide links */
+  }
+
+  .menu-toggle {
+    display: block;
+    cursor: pointer;
+  }
+}

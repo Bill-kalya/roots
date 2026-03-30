@@ -1,0 +1,20 @@
+.card {
+  width: fit-content;
+
+  border-radius: 30px;
+  background: var(--background);
+
+  box-shadow:
+    6px 6px 12px #2a1a1a,
+    -6px -6px 12px #6F4E37;
+
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Optional hover effect (nice upgrade) */
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow:
+    inset 4px 4px 12px #2a1a1a,
+    inset -4px -4px 12px #6F4E37;
+}

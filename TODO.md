@@ -1,0 +1,1 @@
+# TODO: Move Hero Logo to Positioned Div\n\n- [ ] Step 1: Edit src/screens/Rootslanding.jsx to wrap logo in hero-logo-right div\n- [ ] Step 2: Edit src/screens/Rootslanding.css to add hero-logo-right styles\n- [ ] Step 3: Verify changes and complete task

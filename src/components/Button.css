@@ -1,0 +1,31 @@
+.button-wrapper {
+  display: flex;          /* ← was inline-block */
+  align-items: center;  
+  height: 100%;  /* ← centers the button inside the wrapper */
+}
+
+.custom-btn {
+  color: var(--text);
+  padding: 0.6em 1.6em;   /* ← increased from 0.5em 1.4em */
+  font-size: 16px;  
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  letter-spacing: 1.5px;
+  border-radius: 0.5em;
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  line-height: 1;        /* ← prevents hidden line-height pushing it down */
+  vertical-align: middle;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow:
+    6px 6px 12px #2a1a1a,
+    -6px -6px 12px #6F4E37;
+}
+
+.custom-btn:active {
+  color: black;
+  background: var(--primary);
+  box-shadow:
+    inset 4px 4px 12px #2a1a1a,
+    inset -4px -4px 12px #6F4E37;
+}

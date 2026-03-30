@@ -1,0 +1,109 @@
+/* Root color variables (from your COLORS file) */
+:root {
+  --primary: #3C2F2F;     /* espresso */
+  --secondary: #954535;   /* chestnut */
+  --accent: #C19A6B;      /* camel */
+  --background: #3C2F2F;  /* espresso */
+  --text: #C19A6B;        /* camel */
+  --background-rgb: 60, 47, 47;
+}
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body styling */
+body {
+  background-color: var(--background);
+  color: var(--text);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* App container */
+.App {
+  min-height: 100vh;
+  padding-top: 80px; /* space for fixed navbar */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px; /* spacing between child components */
+}
+
+/* Component wrappers */
+.nav-wrapper,
+.search-wrapper,
+.card-container,
+.button-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Headings */
+h1, h2, h3 {
+  color: var(--accent);
+  font-family: 'Playfair Display', Georgia, serif;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+
+/* Paragraphs */
+p {
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+/* Links */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #e6c89c; /* lighter camel */
+}
+
+/* Section spacing */
+.section {
+  padding: 60px 40px;
+}
+
+/* Card container */
+.card-container {
+  display: flex;
+  gap: 30px; /* space between cards */
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+/* Button global style */
+button {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  margin-top: 20px; /* spacing from above elements */
+}
+
+/* Search bar container */
+.container-input {
+  margin-top: 20px; /* spacing from above components */
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 10px;
+}

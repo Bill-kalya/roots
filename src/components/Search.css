@@ -1,0 +1,40 @@
+.container-input {
+  position: relative;
+}
+
+.input {
+  width: 150px;
+  padding: 10px 0px 10px 40px;
+  border-radius: 9999px;
+  border: solid 1px #333;
+  transition: all .2s ease-in-out;
+  outline: none;
+  opacity: 0.8;
+  background: var(--primary);
+  color: var(--text);
+  box-shadow:
+    inset 4px 4px 12px #2a1a1a,
+    inset -4px -4px 12px #6F4E37;
+}
+
+.container-input svg {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translate(0, -50%);
+}
+
+.input:focus {
+  opacity: 1;
+  width: 250px;
+  border-color: #555;
+}
+
+.styled-wrapper {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--primary);
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}

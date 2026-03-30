@@ -1,0 +1,110 @@
+@font-face {
+  font-family: Sonke;
+  src: url(../assets/fonts/Sonke.ttf);
+}
+/* Root color variables (from your COLORS file) */
+:root {
+  --primary: #3C2F2F;     /* espresso */
+  --secondary: #954535;   /* chestnut */
+  --accent: #C19A6B;      /* camel */
+  --background: #3C2F2F;  /* espresso */
+  --text: #C19A6B;        /* camel */
+}
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body styling */
+body {
+  font-family: Sonke, sans-serif;
+  background-color: var(--background);
+  color: var(--text);
+}
+
+/* App container */
+.App {
+  min-height: 100vh;
+  padding-top: 80px; /* space for fixed navbar */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px; /* spacing between child components */
+}
+
+/* Component wrappers */
+.nav-wrapper,
+.search-wrapper,
+.card-container,
+.button-wrapper {
+  width: 100%;
+  display: flex;
+  margin-top: 0;
+  justify-content: center;
+}
+
+/* Headings */
+h1, h2, h3 {
+  color: var(--accent);
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+
+/* Paragraphs */
+p {
+  color: #e0d6c8; /* softer readable tone */
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+/* Links */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #e6c89c; /* lighter camel */
+}
+
+/* Section spacing */
+.section {
+  padding: 60px 40px;
+}
+
+/* Card container */
+.card-container {
+  display: flex;
+  gap: 30px; /* space between cards */
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 0px;
+}
+
+/* Button global style */
+button {
+  margin-top: 0px;
+}
+
+/* Search bar container */
+.container-input {
+  margin-top: 0px; /* spacing from above components */
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 10px;
+}
