@@ -50,6 +50,7 @@
 }
 .nav-right {
   display: flex;
+  gap: 24px;
   align-items: center;
   flex-shrink: 0;            /* ← stops Shop Now from squishing */
 }
@@ -82,4 +83,37 @@
     display: block;
     cursor: pointer;
   }
+}
+
+.basket-btn {
+  display: flex;
+  align-items: center;
+  padding: 0.6em 1.6em;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  border-radius: 0.5em;
+  box-shadow:
+    inset 4px 4px 12px #2a1a1a,
+    inset -4px -4px 12px #6F4E37;
+}
+
+.basket-btn:active {
+  color: black;
+  background: var(--primary);
+  box-shadow:
+    6px 6px 12px #2a1a1a,
+    -6px -6px 12px #6F4E37;
+}
+.basket-count {
+  background: #a15d38;
+  color: white;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  position: absolute;
+  top: -6px;
+  right: -10px;
 }

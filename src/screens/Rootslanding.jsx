@@ -48,7 +48,7 @@ function Hero() {
 
       {/* Logo pinned to the right */}
       <div className={`hero-logo-right ${loaded ? 'hero-logo-right-visible' : ''}`}>
-        <img src="/src/assets/logo.png" alt="Roots Logo" style={{ width: 'auto', height: 'auto' }} />
+        <img src="/logo.png" alt="Roots Logo" style={{ width: 'auto', height: 'auto' }} />
       </div>
 
       <div className="hero-content">
@@ -160,7 +160,7 @@ function Heritage() {
       <div className={`heritage-visual ${inView ? 'heritage-visual-visible' : ''}`}>
         <div className="heritage-circle">
           <div className="heritage-circle-inner" />
-          <img src="/src/assets/logo.png" alt="Roots Logo" style={{ width: '160px', height: 'auto' }} />
+          <img src="/logo.png" alt="Roots Logo" style={{ width: '160px', height: 'auto' }} />
         </div>
         <div className="heritage-badge">Est. Authenticity 100%</div>
       </div>
@@ -232,7 +232,7 @@ function Newsletter() {
   return (
     <section ref={ref} className="newsletter">
       <div className={`newsletter-content ${inView ? 'newsletter-content-visible' : ''}`}>
-        <img src="/src/assets/logo.png" alt="Roots Logo" style={{ width: '40px', height: 'auto' }} />
+        <img src="/logo.png" alt="Roots Logo" style={{ width: '40px', height: 'auto' }} />
         <h2 className="newsletter-title">Join the Inner Circle</h2>
         <p className="newsletter-desc">New arrivals, artisan stories, and exclusive offers — delivered to your inbox.</p>
         <div className="newsletter-form">
