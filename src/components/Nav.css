@@ -5,33 +5,32 @@
   right: 20px;
   border-radius: 999px;
 
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; /* ← KEY CHANGE: replace flex with grid */
   align-items: center;
-  justify-content: space-between;
 
   padding: 0 32px;
-  min-height: 72px; /* better than fixed height */
-  
+  min-height: 72px;
   z-index: 50;
   background: var(--primary);
   border: none;
   transition: all 0.4s ease;
-
   box-shadow:
     6px 6px 12px #2a1a1a,
     -6px -6px 12px #6F4E37;
 }
-
 /* Nav links — ensure vertical centering */
 .nav-links {
   display: flex;
-  gap: 24px;              /* ← reduced from 36px to prevent overflow */
+  gap: 24px;
   align-items: center;
+  justify-content: center; /* pinned to true center */
 }
 .nav-logo {
   display: flex;
   align-items: center;
   gap: 8px;
+  justify-content: flex-start; /* stays on the left */
 }
 
 .logo-img {
@@ -52,7 +51,8 @@
   display: flex;
   gap: 24px;
   align-items: center;
-  flex-shrink: 0;            /* ← stops Shop Now from squishing */
+  justify-content: flex-end; /* stays on the right */
+  flex-shrink: 0;
 }
 
 @media (max-width: 1024px) {

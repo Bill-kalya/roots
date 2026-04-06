@@ -13,7 +13,7 @@ const Footer = () => {
       <div className="footer-grid">
         <div className="footer-brand">
           <div className="footer-brand-row">
-            <img src="/logo.png" alt="Roots Logo" style={{ width: 50 }} />
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Roots Logo" style={{ width: 50 }} />
             <span className="footer-logo">ROOTS</span>
           </div>
 

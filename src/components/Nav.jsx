@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import COLORS from "../components/Colors";
 import Button from "../components/Button";
 import "./Nav.css";
 import Cart from "./Cart";
+import CartDrawer from "./CartDrawer";
+
 
 /* ---------------- Basket Icon ---------------- */
 const BasketIcon = () => (
@@ -36,7 +39,15 @@ const BasketButton = ({ onClick, count }) => (
 /* ---------------- Nav Component ---------------- */
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
-  const [basketCount, setBasketCount] = useState(0); // demo state
+  const [basketCount, setBasketCount] = useState(0);
+  const [cartOpen, setCartOpen] = useState(false);
+
+  const navigate = useNavigate(); // 👈 navigation hook
+
+  const cartItems = [
+    { name: "Wooden Mask", price: 2500, image: `${import.meta.env.BASE_URL}roots.png` },
+    { name: "Tribal Necklace", price: 1800, image: `${import.meta.env.BASE_URL}roots.png` }
+  ];
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
@@ -45,32 +56,39 @@ function Nav() {
   }, []);
 
   return (
-    <nav className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
-      {/* Logo */}
-      <div className="nav-logo">
-        <img
-          src="/roots.png"
-          alt="Roots Logo"
-          className="logo-img"
-        />
-        <span className="logo-text" style={{ color: COLORS.cream }}>
-          ROOTS
-        </span>
-      </div>
+    <>
+      <nav className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
+        {/* Logo */}
+        <div className="nav-logo">
+          <img src={`${import.meta.env.BASE_URL}roots.png`} alt="Roots Logo" className="logo-img" />
+          <span className="logo-text" style={{ color: COLORS.cream }}>
+            ROOTS
+          </span>
+        </div>
 
-      {/* Nav Links */}
-      <div className="nav-links">
-        {["Collection", "Origins", "Artisans", "About"].map((label) => (
-          <Button key={label}>{label}</Button>
-        ))}
-      </div>
+        {/* Nav Links */}
+        <div className="nav-links">
+          {["Collection", "Origins", "Artisans", "About"].map((label) => (
+            <Button key={label}>{label}</Button>
+          ))}
+        </div>
 
-      {/* Right Side */}
-      <div className="nav-right">
-        <BasketButton count={basketCount} onClick={() => console.log("Basket clicked")} />
-        <Cart>Shop Now</Cart>
-      </div>
-    </nav>
+        {/* Right Side */}
+        <div className="nav-right">
+          <BasketButton
+            count={basketCount}
+            onClick={() => setCartOpen(true)}
+          />
+
+          <Cart>Shop Now</Cart>
+        </div>
+      </nav>
+      <CartDrawer
+        isOpen={cartOpen}
+        onClose={() => setCartOpen(false)}
+        cartItems={cartItems}
+      />
+    </>
   );
 }
 
