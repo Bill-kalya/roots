@@ -25,6 +25,7 @@ function useInView(threshold = 0.25) {
       ([entry]) => {
         if (entry.isIntersecting) {
           setInView(true);
+<<<<<<< HEAD
           obs.disconnect();
         }
       },
@@ -36,6 +37,20 @@ function useInView(threshold = 0.25) {
     return () => {
       obs.disconnect();
     };
+=======
+          obs.disconnect(); // ✅ STOP observing after first trigger
+        }
+      },
+      {
+        threshold,
+        rootMargin: "0px 0px -50px 0px" // smoother trigger
+      }
+    );
+
+    if (ref.current) obs.observe(ref.current);
+
+    return () => obs.disconnect();
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
   }, [threshold]);
 
   return [ref, inView];
@@ -82,6 +97,7 @@ function SectionError({ message, onRetry }) {
 
 // ─── Hero ───────────────────────────────────────────────────────────────────
 function Hero() {
+<<<<<<< HEAD
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -89,6 +105,9 @@ function Hero() {
     const timer = setTimeout(() => setLoaded(true), 50);
     return () => clearTimeout(timer);
   }, []);
+=======
+  const [loaded] = useState(true);
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
 
   return (
     <section className="hero">
@@ -149,7 +168,11 @@ function FeaturedBanner() {
   return (
     <section className="featured-banner" aria-hidden="true">
       <div className="marquee">
+<<<<<<< HEAD
         {[...Array(2)].flatMap((_, i) =>
+=======
+        {[...Array(3)].flatMap((_, i) =>
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
           MARQUEE_ITEMS.map((t) => (
             <span key={`${t}-${i}`} className="marquee-item">
               <span className="marquee-star">✦</span>{t}
@@ -161,25 +184,45 @@ function FeaturedBanner() {
   );
 }
 
+<<<<<<< HEAD
 // ─── Add-to-cart callback — stable module-level reference ────────────────────
 const addToCartCallback = (id) => addToCart(id, 1);
 
+=======
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
 // ─── Product Card ────────────────────────────────────────────────────────────
 function ProductCard({ product, delay }) {
   const [ref, inView] = useInView(0.1);
   const [hovered, setHovered] = useState(false);
+<<<<<<< HEAD
 
   const { mutate: doAddToCart, loading: addingToCart } = useMutation(addToCartCallback);
+=======
+  const { mutate: doAddToCart, loading: addingToCart } = useMutation(
+    useCallback((id) => addToCart(id, 1), [])
+  );
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
 
   const handleAddToCart = async () => {
     try {
       await doAddToCart(product.id);
+<<<<<<< HEAD
       window.dispatchEvent(new CustomEvent("roots:cart-updated"));
     } catch (err) {
+=======
+      // Optional: dispatch a global cart-updated event for a cart badge
+      window.dispatchEvent(new CustomEvent("roots:cart-updated"));
+    } catch (err) {
+      // Surface error — you can swap this for a toast notification
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
       console.error("Add to cart failed:", err.message);
     }
   };
 
+<<<<<<< HEAD
+=======
+  // Support both imageUrl (from API) and emoji fallback for development
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
   const visual = product.image_url ? (
     <img
       src={product.image_url}
@@ -192,6 +235,10 @@ function ProductCard({ product, delay }) {
     <span className="product-emoji" aria-hidden="true">🎭</span>
   );
 
+<<<<<<< HEAD
+=======
+  // Format price — API returns a number (e.g. 28500), display as KSh
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
   const displayPrice =
     typeof product.price === "number"
       ? `KSh ${product.price.toLocaleString("en-KE")}`
@@ -216,14 +263,22 @@ function ProductCard({ product, delay }) {
         <p className="product-desc">{product.description}</p>
         <div className="product-footer">
           <span className="product-price">{displayPrice}</span>
+<<<<<<< HEAD
           <button
+=======
+          <Cart
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
             className={`product-cart-btn ${hovered ? "product-cart-btn-hovered" : ""} ${addingToCart ? "product-cart-btn-loading" : ""}`}
             onClick={handleAddToCart}
             disabled={addingToCart}
             aria-label={addingToCart ? "Adding to cart…" : `Add ${product.name} to cart`}
           >
             {addingToCart ? "ADDING…" : "ADD TO CART"}
+<<<<<<< HEAD
           </button>
+=======
+          </Cart>
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
         </div>
       </div>
     </article>
@@ -232,7 +287,11 @@ function ProductCard({ product, delay }) {
 
 // ─── Collection ──────────────────────────────────────────────────────────────
 function Collection() {
+<<<<<<< HEAD
   const [ref, inView] = useInView(0.1);
+=======
+  const [ref, inView] = useInView();
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
 
   const {
     data: products,
@@ -255,7 +314,11 @@ function Collection() {
           </h2>
         </div>
 
+<<<<<<< HEAD
         <div className="product-grid" aria-live="polite" aria-busy={loading ? "true" : "false"}>
+=======
+        <div className="product-grid" aria-live="polite" aria-busy={loading}>
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
           {loading && Array.from({ length: 6 }).map((_, i) => (
             <ProductCardSkeleton key={i} />
           ))}
@@ -335,7 +398,11 @@ function Heritage() {
 // ─── Testimonials ─────────────────────────────────────────────────────────────
 function Testimonials() {
   const [active, setActive] = useState(0);
+<<<<<<< HEAD
   const [ref, inView] = useInView(0.1);
+=======
+  const [ref, inView] = useInView();
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
 
   const { data: testimonials, loading, error, refetch } = useApi(
     getTestimonials,
@@ -344,6 +411,7 @@ function Testimonials() {
 
   useEffect(() => {
     if (!testimonials?.length) return;
+<<<<<<< HEAD
     const interval = setInterval(
       () => setActive((current) => (current + 1) % testimonials.length),
       5000
@@ -352,6 +420,22 @@ function Testimonials() {
   }, [testimonials?.length]);
 
   const safeActive = testimonials?.length ? active % testimonials.length : 0;
+=======
+    const t = setInterval(
+      () => setActive((a) => (a + 1) % testimonials.length),
+      4500
+    );
+    return () => clearInterval(t);
+  }, [testimonials]);
+
+
+
+  // ✅ Safe index (fixes your bug properly)
+  const safeActive = testimonials?.length
+    ? active % testimonials.length
+    : 0;
+
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
   const current = testimonials?.[safeActive];
 
   return (
@@ -364,13 +448,21 @@ function Testimonials() {
         </div>
 
         {loading && <TestimonialSkeleton />}
+<<<<<<< HEAD
         
+=======
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
         {error && <SectionError message={error.message} onRetry={refetch} />}
 
         {!loading && !error && current && (
           <>
+<<<<<<< HEAD
             <div className={`testimonials-content ${inView ? "testimonials-content-visible" : ""}`} aria-live="polite">
               <p className="testimonials-text">
+=======
+            <div className="testimonials-content" aria-live="polite">
+              <p className={`testimonials-text ${inView ? "testimonials-text-visible" : ""}`}>
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
                 "{current.text}"
               </p>
               <div className="testimonials-name">{current.name}</div>
@@ -404,7 +496,11 @@ function Testimonials() {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function Newsletter() {
+<<<<<<< HEAD
   const [ref, inView] = useInView(0.1);
+=======
+  const [ref, inView] = useInView();
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
   const [email, setEmail] = useState("");
   const [validationError, setValidationError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -423,10 +519,15 @@ function Newsletter() {
       await subscribe(email);
       setSuccess(true);
       setEmail("");
+<<<<<<< HEAD
       // Reset success message after 5 seconds
       setTimeout(() => setSuccess(false), 5000);
     } catch {
       // Error is handled by useMutation
+=======
+    } catch {
+      // apiError is already set by useMutation
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
     }
   };
 
@@ -472,7 +573,11 @@ function Newsletter() {
                 className="newsletter-btn"
                 onClick={handleSubmit}
                 disabled={loading}
+<<<<<<< HEAD
                 aria-busy={loading ? "true" : "false"}
+=======
+                aria-busy={loading}
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
               >
                 {loading ? "SUBSCRIBING…" : "SUBSCRIBE"}
               </button>
@@ -493,6 +598,10 @@ function Newsletter() {
 export default function RootsLanding() {
   useEffect(() => {
     document.body.classList.add("roots-body");
+<<<<<<< HEAD
+=======
+    // Listen for session expiry → redirect to login
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
     const onExpired = () => { window.location.href = "/login"; };
     window.addEventListener("roots:session-expired", onExpired);
     return () => {

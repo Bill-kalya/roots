@@ -39,6 +39,7 @@ export function useApi(fetchFn, deps = [], { immediate = true, initialData = nul
       }
     } catch (err) {
       if (err.name !== "AbortError" && !controller.signal.aborted) {
+<<<<<<< HEAD
         // AxiosError handling
         const isAxiosError = err.response !== undefined || err.request;
         const isNetworkFailure = isAxiosError && !err.response;
@@ -58,6 +59,10 @@ export function useApi(fetchFn, deps = [], { immediate = true, initialData = nul
             ? new Error("Unable to reach the server. Check your connection or API URL.")
             : err
         );
+=======
+        setError(err);
+        console.error("[useApi] Fetch error:", err.message);
+>>>>>>> fcd4104f7808b2fd515cc9c6796c3a39e77acff2
       }
     } finally {
       if (!controller.signal.aborted) {
