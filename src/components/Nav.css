@@ -1,6 +1,6 @@
 .nav {
   position: fixed;
-  top: 20px;
+  top: 40px;
   left: 20px;
   right: 20px;
   border-radius: 999px;
@@ -10,7 +10,7 @@
   align-items: center;
 
   padding: 0 32px;
-  min-height: 72px;
+  height: 70px;
   z-index: 50;
   background: var(--primary);
   border: none;
@@ -19,12 +19,15 @@
     6px 6px 12px #2a1a1a,
     -6px -6px 12px #6F4E37;
 }
-/* Nav links — ensure vertical centering */
+
 .nav-links {
   display: flex;
-  gap: 24px;
+  font-size: 15px;
+  gap: 28px;
   align-items: center;
-  justify-content: center; /* pinned to true center */
+  justify-content: center;
+  width: fit-content;   /* shrink to content */
+  margin: 0 auto;       /* centers the whole block */
 }
 .nav-logo {
   display: flex;
@@ -35,8 +38,8 @@
 
 .logo-img {
   border-radius: 999px;
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;  /* ← critical, stops it from blowing up */
 }
 
@@ -88,13 +91,14 @@
 .basket-btn {
   display: flex;
   align-items: center;
-  padding: 0.6em 1.6em;
+  padding: 8px 18px;
   gap: 6px;
   background: transparent;
   border: none;
   cursor: pointer;
   position: relative;
-  border-radius: 0.5em;
+  border-radius: 8px;
+  overflow: visible;
   box-shadow:
     inset 4px 4px 12px #2a1a1a,
     inset -4px -4px 12px #6F4E37;
@@ -114,6 +118,6 @@
   padding: 2px 6px;
   border-radius: 50%;
   position: absolute;
-  top: -6px;
-  right: -10px;
+  top: -5px;
+  right: -8px;
 }

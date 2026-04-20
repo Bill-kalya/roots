@@ -3,6 +3,10 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Nav from './components/Nav';
 import RootsLanding from './screens/Rootslanding';
 import Basket from './components/Basket';
+import Login from './screens/Login';
+import Register from './screens/Register';
+import AdminDashboard from './screens/AdminDashboard';
+import MerchantDashboard from './screens/MerchantDashboard';
 
 const App = () => {
   return (
@@ -11,6 +15,10 @@ const App = () => {
       <Routes>
         <Route path="/" element={<RootsLanding />} />
         <Route path="/basket" element={<Basket />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/Admin" element={<AdminDashboard />} />
+        <Route path="/Merchant" element={<MerchantDashboard />} />
       </Routes>
     </Router>
   );

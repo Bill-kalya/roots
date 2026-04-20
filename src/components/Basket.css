@@ -144,9 +144,11 @@ a:hover {
   background-color: var(--secondary);
   color: #f5ede0;
   border: none;
-  padding: 14px 40px;
-  border-radius: 25px;
-  font-size: 16px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  width: 100%;
+  margin-top: 0;
   cursor: pointer;
   letter-spacing: 1px;
   transition: background-color 0.3s ease, transform 0.2s ease;

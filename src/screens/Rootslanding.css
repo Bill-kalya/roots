@@ -7,15 +7,28 @@
   src: url(../assets/fonts/Sonke.ttf);
 }
 
+:root {
+  --background: #2d1f14;
+  --text: #F0C060;
+  --surface: #3a2518;
+  --border: rgba(196, 134, 26, 0.2);
+}
+
 /* ─────────────────────────────────────────────────────────────
    Base
 ───────────────────────────────────────────────────────────── */
 .roots-body {
   margin: 0;
+  background-color: var(--background);
+  color: var(--text);
 }
 
 .roots-landing {
+  overflow-x: hidden; /* Change from 'visible' to 'hidden' */
+  overflow-y: visible;
   font-family: Georgia, serif;
+  min-height: 100vh;
+  overflow: visible;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -93,7 +106,8 @@
    Hero
 ───────────────────────────────────────────────────────────── */
 .hero {
-  min-height: 100vh;
+  height: 100vh;
+  background: var(--background);
   position: relative;
   display: flex;
   align-items: center;
@@ -373,8 +387,10 @@
    Collection
 ───────────────────────────────────────────────────────────── */
 .collection {
+  background: var(--background);
   padding: 100px 80px;
   position: relative;
+  scroll-margin-top: 130px;
 }
 
 .collection-container {
@@ -425,7 +441,7 @@
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
 }
 
@@ -433,12 +449,15 @@
    Product Card
    Fixed: width: fit-content → width: 100% so grid works
 ───────────────────────────────────────────────────────────── */
+
 .product-card {
   cursor: pointer;
   transition: all 0.35s ease, transform 0.3s ease, box-shadow 0.3s ease;
   transform: translateY(40px);
   opacity: 0;
   display: flex;
+  min-height: 420px;
+
   flex-direction: column;
   width: 100%;
   border-radius: 30px;
@@ -463,7 +482,7 @@
 }
 
 .product-visual {
-  height: 220px;
+  height: 180px; 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -540,9 +559,11 @@
 }
 
 .product-cart-btn {
-  padding: 7px 18px;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 12px;
+  padding: 10px 20px;
+  font-family: 'Cormorant Garamond', Georgia, serif; 
+  font-size: 14px;
+  border-radius: 8px;
+  width: 100%; /* full-width */
   letter-spacing: 2px;
   cursor: pointer;
   transition: all 0.2s;
@@ -554,19 +575,20 @@
 }
 
 .view-all-btn {
-  padding: 16px 56px;
+  padding: 10px 20px;
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 15px;
+  font-size: 14px;
   letter-spacing: 3px;
   cursor: pointer;
   transition: all 0.2s;
   background: #2d2f31;
   border: none;
   box-shadow:
-    6px 6px 12px #2a1a1a,
-    -6px -6px 12px #6F4E37;
-  color: var(--text);
-  border-radius: 20px;
+         6px 6px 12px #2a1a1a,
+        -6px -6px 12px #6F4E37;
+        color: var(--text);
+        border-radius: 8px;
+        width: 100%; /* full-width */
 }
 
 .view-all-btn:hover {
@@ -579,12 +601,15 @@
    Heritage
 ───────────────────────────────────────────────────────────── */
 .heritage {
+  background: var(--background);
   padding: 100px 80px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 80px;
   align-items: center;
   border-top: 1px solid rgba(196, 134, 26, 0.15);
+  min-height: 600px;
+  scroll-margin-top: 130px;
 }
 
 .heritage-visual {
@@ -707,6 +732,7 @@
   box-shadow:
     6px 6px 12px #2a1a1a,
     -6px -6px 12px #6F4E37;
+  scroll-margin-top: 130px;
 }
 
 .testimonials-container {
@@ -779,9 +805,11 @@
    Newsletter
 ───────────────────────────────────────────────────────────── */
 .newsletter {
+  background: var(--background);
   padding: 80px;
   text-align: center;
   border-top: 1px solid rgba(196, 134, 26, 0.3);
+  scroll-margin-top: 130px;
 }
 
 .newsletter-content {
