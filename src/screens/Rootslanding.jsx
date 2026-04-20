@@ -1,5 +1,6 @@
 // RootsLanding.jsx — Production version (FastAPI + PostgreSQL + Redis backend)
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import "./RootsLanding.css";
 import Cart from "../components/Cart";
 import Footer from "../components/Footer";
@@ -165,6 +166,7 @@ function FeaturedBanner() {
 function ProductCard({ product, delay }) {
   const [ref, inView] = useInView(0.1);
   const [hovered, setHovered] = useState(false);
+  const navigate = useNavigate();
 
   const { mutate: doAddToCart, loading: addingToCart } = useMutation(
     useCallback((id) => addToCart(id, 1), [])
@@ -201,6 +203,7 @@ function ProductCard({ product, delay }) {
       ref={ref}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={() => navigate('/checkout')}
       className={`product-card ${hovered ? "product-card-hovered" : ""} ${inView ? "product-card-visible" : ""}`}
       style={{ transitionDelay: `${delay}ms` }}
       aria-label={product.name}
@@ -217,7 +220,7 @@ function ProductCard({ product, delay }) {
           <span className="product-price">{displayPrice}</span>
           <button
             className={`product-cart-btn ${hovered ? "product-cart-btn-hovered" : ""} ${addingToCart ? "product-cart-btn-loading" : ""}`}
-            onClick={handleAddToCart}
+            onClick={(e) => { e.stopPropagation(); handleAddToCart(); }}
             disabled={addingToCart}
             aria-label={addingToCart ? "Adding to cart…" : `Add ${product.name} to cart`}
           >
