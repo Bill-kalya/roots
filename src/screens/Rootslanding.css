@@ -21,7 +21,6 @@
   overflow-y: visible;
   font-family: Georgia, serif;
   min-height: 100vh;
-  overflow: visible;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -560,6 +559,9 @@
   letter-spacing: 2px;
   cursor: pointer;
   transition: all 0.2s;
+  background: transparent;
+  border: 1px solid rgba(196, 134, 26, 0.5);
+  color: #C4861A;
 }
 
 .collection-footer {
@@ -584,7 +586,28 @@
         width: 100%; /* full-width */
 }
 
+.product-cart-btn-hovered, .product-cart-btn:hover {
+  background: #C4861A;
+  color: #0A0602;
+  border-color: #C4861A;
+}
+
+.product-cart-btn-loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.section-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #7A5C3A;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 16px;
+  padding: 40px 0;
+}
+
 .view-all-btn:hover {
+
   box-shadow:
     inset 4px 4px 12px #2a1a1a,
     inset -4px -4px 12px #6F4E37;

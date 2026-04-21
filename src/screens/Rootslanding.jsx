@@ -1,7 +1,7 @@
 // RootsLanding.jsx — Production version (FastAPI + PostgreSQL + Redis backend)
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import "./RootsLanding.css";
+import "./Rootslanding.css";
 import Cart from "../components/Cart";
 import Footer from "../components/Footer";
 import Nav from "../components/Nav";
@@ -371,8 +371,9 @@ function Testimonials() {
         {!loading && !error && current && (
           <>
             <div className={`testimonials-content ${inView ? "testimonials-content-visible" : ""}`} aria-live="polite">
-              <p className="testimonials-text">
+<p className={`testimonials-text ${inView ? "testimonials-text-visible" : ""}`}>
                 "{current.text}"
+
               </p>
               <div className="testimonials-name">{current.name}</div>
               <div className="testimonials-location">{current.location}</div>

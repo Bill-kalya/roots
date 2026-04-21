@@ -2,7 +2,7 @@
 // Customer ↔ Merchant direct messaging screen
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import "./Chat.css";
+import "./chat.css";
 import Nav from "../components/Nav";
 import Footer from "../components/Footer";
 
