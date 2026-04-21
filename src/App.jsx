@@ -12,8 +12,9 @@ import Chat from './screens/Chat';
 
 const App = () => {
   return (
-<Router basename="/roots">
+<Router basename={import.meta.env.BASE_URL || '/'}>
       <Routes>
+
         <Route path="/" element={<RootsLanding />} />
         <Route path="/basket" element={<Basket />} />
         <Route path="/checkout" element={<Checkout />} />
