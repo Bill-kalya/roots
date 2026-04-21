@@ -105,6 +105,23 @@ button {
   width: 8px;
 }
 
+/* Custom Fonts */
+@font-face {
+  font-family: 'Sonke';
+  src: url(/assets/fonts/Sonke.ttf) format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Umsaga';
+  src: url(/assets/fonts/Umsaga.ttf) format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 ::-webkit-scrollbar-track {
   background: var(--background);
 }

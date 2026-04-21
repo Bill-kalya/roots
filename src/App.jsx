@@ -8,11 +8,11 @@ import Login from './screens/Login';
 import Register from './screens/Register';
 import AdminDashboard from './screens/AdminDashboard';
 import MerchantDashboard from './screens/MerchantDashboard';
+import Chat from './screens/Chat';
 
 const App = () => {
   return (
 <Router basename="/roots">
-      <Nav />
       <Routes>
         <Route path="/" element={<RootsLanding />} />
         <Route path="/basket" element={<Basket />} />
@@ -21,6 +21,7 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/Admin" element={<AdminDashboard />} />
         <Route path="/Merchant" element={<MerchantDashboard />} />
+        <Route path="/chat" element={<Chat />} />
       </Routes>
     </Router>
   );

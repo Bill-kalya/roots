@@ -1,5 +1,6 @@
 // Checkout.jsx — Roots African Art & Culture
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./checkout.css";
 import Nav from "../components/Nav";
 import Footer from "../components/Footer";
@@ -63,8 +64,8 @@ function SectionLabel({ text }) {
 
 // ─── Payment Method Selector ─────────────────────────────────────────────────
 const PAYMENT_METHODS = [
-  { id: "card", label: "CARD", iconClass: "pay-icon-card" },
-  { id: "mpesa", label: "M-PESA", iconClass: "pay-icon-mpesa" },
+  { id: "card",   label: "CARD",   iconClass: "pay-icon-card"   },
+  { id: "mpesa",  label: "M-PESA", iconClass: "pay-icon-mpesa"  },
   { id: "paypal", label: "PAYPAL", iconClass: "pay-icon-paypal" },
 ];
 
@@ -108,88 +109,44 @@ function DeliveryForm({ data, onChange }) {
 
       <div className="form-row">
         <Field label="First Name" htmlFor="first-name">
-          <input
-            id="first-name"
-            type="text"
-            placeholder="Amara"
-            value={data.firstName}
-            onChange={handle("firstName")}
-            autoComplete="given-name"
-          />
+          <input id="first-name" type="text" placeholder="Amara"
+            value={data.firstName} onChange={handle("firstName")} autoComplete="given-name" />
         </Field>
         <Field label="Last Name" htmlFor="last-name">
-          <input
-            id="last-name"
-            type="text"
-            placeholder="Osei"
-            value={data.lastName}
-            onChange={handle("lastName")}
-            autoComplete="family-name"
-          />
+          <input id="last-name" type="text" placeholder="Osei"
+            value={data.lastName} onChange={handle("lastName")} autoComplete="family-name" />
         </Field>
       </div>
 
       <div className="form-row form-row-full">
         <Field label="Email Address" htmlFor="email">
-          <input
-            id="email"
-            type="email"
-            placeholder="amara@example.com"
-            value={data.email}
-            onChange={handle("email")}
-            autoComplete="email"
-          />
+          <input id="email" type="email" placeholder="amara@example.com"
+            value={data.email} onChange={handle("email")} autoComplete="email" />
         </Field>
       </div>
 
       <div className="form-row form-row-full">
         <Field label="Phone Number" htmlFor="phone">
-          <input
-            id="phone"
-            type="tel"
-            placeholder="+254 700 000 000"
-            value={data.phone}
-            onChange={handle("phone")}
-            autoComplete="tel"
-          />
+          <input id="phone" type="tel" placeholder="+254 700 000 000"
+            value={data.phone} onChange={handle("phone")} autoComplete="tel" />
         </Field>
       </div>
 
       <div className="form-row form-row-full">
         <Field label="Delivery Address" htmlFor="address">
-          <input
-            id="address"
-            type="text"
-            placeholder="Street address, apartment, suite…"
-            value={data.address}
-            onChange={handle("address")}
-            autoComplete="street-address"
-          />
+          <input id="address" type="text" placeholder="Street address, apartment, suite…"
+            value={data.address} onChange={handle("address")} autoComplete="street-address" />
         </Field>
       </div>
 
       <div className="form-row">
         <Field label="City" htmlFor="city">
-          <input
-            id="city"
-            type="text"
-            placeholder="Nairobi"
-            value={data.city}
-            onChange={handle("city")}
-            autoComplete="address-level2"
-          />
+          <input id="city" type="text" placeholder="Nairobi"
+            value={data.city} onChange={handle("city")} autoComplete="address-level2" />
         </Field>
         <Field label="Country" htmlFor="country">
-          <select
-            id="country"
-            value={data.country}
-            onChange={handle("country")}
-            autoComplete="country-name"
-          >
-            {[
-              "Kenya", "Ghana", "Nigeria", "Ethiopia",
-              "South Africa", "United Kingdom", "United States",
-            ].map((c) => (
+          <select id="country" value={data.country} onChange={handle("country")} autoComplete="country-name">
+            {["Kenya","Ghana","Nigeria","Ethiopia","South Africa","United Kingdom","United States"].map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
@@ -211,60 +168,31 @@ function PaymentForm({ paymentMethod, setPaymentMethod, cardData, onCardChange }
   return (
     <fieldset className="form-fieldset">
       <SectionLabel text="Payment Method" />
-
       <PaymentMethodSelector selected={paymentMethod} onChange={setPaymentMethod} />
 
       {paymentMethod === "card" && (
         <>
           <div className="card-row">
             <Field label="Card Number" htmlFor="card-number">
-              <input
-                id="card-number"
-                type="text"
-                placeholder="1234  5678  9012  3456"
-                value={cardData.number}
-                onChange={handleCard("number")}
-                autoComplete="cc-number"
-                inputMode="numeric"
-                maxLength={22}
-              />
+              <input id="card-number" type="text" placeholder="1234  5678  9012  3456"
+                value={cardData.number} onChange={handleCard("number")}
+                autoComplete="cc-number" inputMode="numeric" maxLength={22} />
             </Field>
             <Field label="Expiry" htmlFor="expiry">
-              <input
-                id="expiry"
-                type="text"
-                placeholder="MM / YY"
-                value={cardData.expiry}
-                onChange={handleCard("expiry")}
-                autoComplete="cc-exp"
-                inputMode="numeric"
-                maxLength={7}
-              />
+              <input id="expiry" type="text" placeholder="MM / YY"
+                value={cardData.expiry} onChange={handleCard("expiry")}
+                autoComplete="cc-exp" inputMode="numeric" maxLength={7} />
             </Field>
             <Field label="CVV" htmlFor="cvv">
-              <input
-                id="cvv"
-                type="text"
-                placeholder="•••"
-                value={cardData.cvv}
-                onChange={handleCard("cvv")}
-                autoComplete="cc-csc"
-                inputMode="numeric"
-                maxLength={4}
-              />
+              <input id="cvv" type="text" placeholder="•••"
+                value={cardData.cvv} onChange={handleCard("cvv")}
+                autoComplete="cc-csc" inputMode="numeric" maxLength={4} />
             </Field>
           </div>
-
           <div className="form-row form-row-full">
             <Field label="Name on Card" htmlFor="card-name">
-              <input
-                id="card-name"
-                type="text"
-                placeholder="As it appears on card"
-                value={cardData.name}
-                onChange={handleCard("name")}
-                autoComplete="cc-name"
-              />
+              <input id="card-name" type="text" placeholder="As it appears on card"
+                value={cardData.name} onChange={handleCard("name")} autoComplete="cc-name" />
             </Field>
           </div>
         </>
@@ -273,12 +201,7 @@ function PaymentForm({ paymentMethod, setPaymentMethod, cardData, onCardChange }
       {paymentMethod === "mpesa" && (
         <div className="form-row form-row-full">
           <Field label="M-Pesa Phone Number" htmlFor="mpesa-phone">
-            <input
-              id="mpesa-phone"
-              type="tel"
-              placeholder="+254 700 000 000"
-              autoComplete="tel"
-            />
+            <input id="mpesa-phone" type="tel" placeholder="+254 700 000 000" autoComplete="tel" />
           </Field>
         </div>
       )}
@@ -293,34 +216,67 @@ function PaymentForm({ paymentMethod, setPaymentMethod, cardData, onCardChange }
   );
 }
 
+// ─── Artisan Chat Button ──────────────────────────────────────────────────────
+// Navigates to /chat and passes artisan + piece context via router state so
+// Chat.jsx can greet the user with the right conversation pre-loaded.
+function ArtisanChatButton({ item }) {
+  const navigate = useNavigate();
+
+  const handleChat = () => {
+    navigate("/chat", {
+      state: {
+        artisanId:    item.artisanId,
+        artisanName:  item.artisan,
+        pieceId:      item.id,
+        pieceName:    item.name,
+        pieceOrigin:  item.origin,
+        pieceEmoji:   item.emoji,
+      },
+    });
+  };
+
+  return (
+    <button
+      className="artisan-chat-btn"
+      onClick={handleChat}
+      type="button"
+      aria-label={`Chat with the artisan about ${item.name}`}
+    >
+      <svg className="artisan-chat-btn-icon" viewBox="0 0 16 16" fill="none"
+        xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M14 1H2C1.45 1 1 1.45 1 2v9c0 .55.45 1 1 1h2v3l3.5-3H14c.55 0 1-.45 1-1V2c0-.55-.45-1-1-1Z"
+          stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+        <circle cx="5" cy="6.5" r="0.8" fill="currentColor"/>
+        <circle cx="8" cy="6.5" r="0.8" fill="currentColor"/>
+        <circle cx="11" cy="6.5" r="0.8" fill="currentColor"/>
+      </svg>
+      Chat with Artisan
+    </button>
+  );
+}
+
 // ─── Order Item ───────────────────────────────────────────────────────────────
 function OrderItem({ item, onQtyChange }) {
   return (
     <div className="order-item" aria-label={item.name}>
       <div className="item-visual" aria-hidden="true">{item.emoji}</div>
+
       <div className="item-info">
         <div className="item-name">{item.name}</div>
         <div className="item-origin">{item.origin}</div>
+        <div className="item-artisan">by {item.artisan}</div>
+
         <div className="item-qty" role="group" aria-label={`Quantity for ${item.name}`}>
-          <button
-            className="qty-btn"
-            onClick={() => onQtyChange(item.id, -1)}
-            aria-label="Decrease quantity"
-            type="button"
-          >
-            −
-          </button>
+          <button className="qty-btn" onClick={() => onQtyChange(item.id, -1)}
+            aria-label="Decrease quantity" type="button">−</button>
           <span className="qty-val" aria-live="polite">{item.qty}</span>
-          <button
-            className="qty-btn"
-            onClick={() => onQtyChange(item.id, 1)}
-            aria-label="Increase quantity"
-            type="button"
-          >
-            +
-          </button>
+          <button className="qty-btn" onClick={() => onQtyChange(item.id, 1)}
+            aria-label="Increase quantity" type="button">+</button>
         </div>
+
+        <ArtisanChatButton item={item} />
       </div>
+
       <div className="item-price">
         KSh {(item.price * item.qty).toLocaleString("en-KE")}
       </div>
@@ -330,22 +286,34 @@ function OrderItem({ item, onQtyChange }) {
 
 // ─── Order Summary ────────────────────────────────────────────────────────────
 const INITIAL_ITEMS = [
-  { id: 1, name: "Yoruba Gelede Mask",      origin: "NIGERIA · CERTIFIED", emoji: "🎭", price: 24500, qty: 1 },
-  { id: 2, name: "Djembe Ceremonial Drum",  origin: "GHANA · ARTISAN",     emoji: "🪘", price: 18000, qty: 1 },
-  { id: 3, name: "Benin Bronze Figure",     origin: "BENIN · HERITAGE",    emoji: "🏺", price: 33500, qty: 2 },
+  {
+    id: 1, name: "Yoruba Gelede Mask",
+    origin: "NIGERIA · CERTIFIED", artisan: "Babatunde Adeyemi", artisanId: "artisan-001",
+    emoji: "🎭", price: 24500, qty: 1,
+  },
+  {
+    id: 2, name: "Djembe Ceremonial Drum",
+    origin: "GHANA · ARTISAN", artisan: "Kofi Mensah", artisanId: "artisan-002",
+    emoji: "🪘", price: 18000, qty: 1,
+  },
+  {
+    id: 3, name: "Benin Bronze Figure",
+    origin: "BENIN · HERITAGE", artisan: "Emeka Okafor", artisanId: "artisan-003",
+    emoji: "🏺", price: 33500, qty: 2,
+  },
 ];
 
-const SHIPPING = 1200;
-const INSURANCE = 800;
+const SHIPPING      = 1200;
+const INSURANCE     = 800;
 const DISCOUNT_RATE = 0.10;
 
 function OrderSummary({ items, onQtyChange }) {
-  const [promo, setPromo] = useState("");
+  const [promo, setPromo]               = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
   const discount = promoApplied ? Math.round(subtotal * DISCOUNT_RATE) : 0;
-  const total = subtotal - discount + SHIPPING + INSURANCE;
+  const total    = subtotal - discount + SHIPPING + INSURANCE;
 
   const handlePromo = () => {
     if (promo.trim().length > 0) setPromoApplied(true);
@@ -355,9 +323,7 @@ function OrderSummary({ items, onQtyChange }) {
     <aside className="order-card" aria-label="Order summary">
       <div className="order-header">
         <h3>Your Order</h3>
-        <span className="order-count">
-          {items.reduce((s, i) => s + i.qty, 0)} PIECES
-        </span>
+        <span className="order-count">{items.reduce((s, i) => s + i.qty, 0)} PIECES</span>
       </div>
 
       <div className="order-items">
@@ -367,21 +333,11 @@ function OrderSummary({ items, onQtyChange }) {
       </div>
 
       <div className="promo-row">
-        <input
-          className="promo-input"
-          placeholder="Promo / gift code"
-          value={promo}
-          onChange={(e) => setPromo(e.target.value)}
+        <input className="promo-input" placeholder="Promo / gift code"
+          value={promo} onChange={(e) => setPromo(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handlePromo()}
-          aria-label="Promo code"
-          disabled={promoApplied}
-        />
-        <button
-          className="promo-btn"
-          onClick={handlePromo}
-          type="button"
-          disabled={promoApplied}
-        >
+          aria-label="Promo code" disabled={promoApplied} />
+        <button className="promo-btn" onClick={handlePromo} type="button" disabled={promoApplied}>
           {promoApplied ? "APPLIED ✓" : "APPLY"}
         </button>
       </div>
@@ -415,10 +371,7 @@ function OrderSummary({ items, onQtyChange }) {
         <span className="prov-icon" aria-hidden="true">📜</span>
         <div className="prov-text">
           <strong>Provenance Included</strong>
-          <span>
-            Each piece ships with its authenticated certificate of origin
-            and artisan biography.
-          </span>
+          <span>Each piece ships with its authenticated certificate of origin and artisan biography.</span>
         </div>
       </div>
     </aside>
@@ -427,10 +380,10 @@ function OrderSummary({ items, onQtyChange }) {
 
 // ─── Root Component ───────────────────────────────────────────────────────────
 export default function Checkout() {
-  const [items, setItems] = useState(INITIAL_ITEMS);
+  const [items, setItems]               = useState(INITIAL_ITEMS);
   const [paymentMethod, setPaymentMethod] = useState("card");
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting]     = useState(false);
+  const [submitted, setSubmitted]       = useState(false);
 
   const [delivery, setDelivery] = useState({
     firstName: "", lastName: "", email: "",
@@ -449,9 +402,7 @@ export default function Checkout() {
   const handleQtyChange = (id, delta) => {
     setItems((prev) =>
       prev.map((item) =>
-        item.id === id
-          ? { ...item, qty: Math.max(1, item.qty + delta) }
-          : item
+        item.id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item
       )
     );
   };
@@ -477,11 +428,8 @@ export default function Checkout() {
             Thank you for your order. A confirmation has been sent to your email.
             Your pieces will be carefully packed and shipped with provenance documents.
           </p>
-          <button
-            className="confirmed-btn"
-            onClick={() => (window.location.href = "/")}
-            type="button"
-          >
+          <button className="confirmed-btn"
+            onClick={() => (window.location.href = "/")} type="button">
             CONTINUE EXPLORING →
           </button>
         </div>
@@ -493,9 +441,7 @@ export default function Checkout() {
   return (
     <div className="roots-checkout">
       <CheckoutNav />
-
       <main className="checkout-body">
-        {/* ── Left column: forms ── */}
         <div className="checkout-left">
           <h2 className="checkout-heading">Complete Your Order</h2>
           <p className="checkout-subtitle">SHIPPING & PAYMENT DETAILS</p>
@@ -529,10 +475,8 @@ export default function Checkout() {
           </div>
         </div>
 
-        {/* ── Right column: order summary ── */}
         <OrderSummary items={items} onQtyChange={handleQtyChange} />
       </main>
-
       <Footer />
     </div>
   );

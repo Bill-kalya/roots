@@ -1,7 +1,4 @@
-@font-face {
-  font-family: Sonke;
-  src: url(../assets/fonts/Sonke.ttf);
-}
+
 /* Root color variables (from your COLORS file) */
 :root {
   --primary: #3C2F2F;     /* espresso */
