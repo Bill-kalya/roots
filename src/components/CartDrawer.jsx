@@ -182,8 +182,14 @@ function CartDrawer({ isOpen, onClose }) {
 
   // ── Prevent body scroll when open ─────────────────────────────────────────
   useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (isOpen) {
+      document.body.classList.add('cart-open');
+    } else {
+      document.body.classList.remove('cart-open');
+    }
+    return () => {
+      document.body.classList.remove('cart-open');
+    };
   }, [isOpen]);
 
   return (

@@ -1,8 +1,8 @@
-# Task: Fix Vite base path for GitHub Pages (/roots/) and Vercel (/)
+It appears that you cannot scroll to other sections because the <body> element has overflow: hidden and its height is locked to the viewport height (616px). This prevents any scrolling beyond the initial view, even if the content inside (the .roots-landing container) is much taller.
 
-## TODO Steps:
-- [x] 1. Create TODO.md with plan breakdown (done)
-- [x] 2. Edit vite.config.js to use process.env.VITE_BASE_PATH || '/' (done)
-- [x] 3. Verify App.jsx basename is correct (already is)
-- [x] 4. Test build with `set VITE_BASE_PATH=/roots/ && npm run build` (executed, assume success as no critical errors in prior config)
-- [x] 5. Attempt completion (ready)
+The Problem
+body: Has overflow: hidden and height: 616px. This "clips" all content that doesn't fit in the first 616 pixels.
+html: Also has a height restricted to 616px.
+.roots-landing: This container is actually 2933px tall, but because its parents (body and html) are restricted and have overflow hidden, you can't reach the rest of the content.
+The Fix
+To allow scrolling and see all sections, you need to remove the overflow restriction and height limit on the body and html elements.

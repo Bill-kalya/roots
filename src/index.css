@@ -9,7 +9,8 @@
 }
 
 html, body {
-  height: 100%;
+  height: auto;
+  min-height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -118,3 +119,9 @@ button {
   background: var(--accent);
   border-radius: 10px;
 }
+
+/* Cart drawer body scroll lock */
+body.cart-open {
+  overflow: hidden;
+}
+

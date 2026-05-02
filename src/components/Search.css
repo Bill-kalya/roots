@@ -3,21 +3,18 @@
 }
 
 .input {
+  border: none;
   width: 160px;
   height: 36px;
   padding: 0 16px 0 44px;
   line-height: 36px;
   font-size: 14px;
   border-radius: 9999px;
-  border: solid 1px #333;
   transition: all .2s ease-in-out;
   outline: none;
-  opacity: 0.8;
-  background: var(--primary);
+  opacity: 0;
+  background: none;
   color: var(--text);
-  box-shadow:
-    inset 4px 4px 12px #2a1a1a,
-    inset -4px -4px 12px #6F4E37;
 }
 
 .container-input svg {
@@ -32,7 +29,7 @@
 .input:focus {
   opacity: 1;
   width: 250px;
-  border-color: #555;
+  
 }
 
 .styled-wrapper {

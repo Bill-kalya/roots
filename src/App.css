@@ -1,13 +1,32 @@
 
 /* Root color variables (from your COLORS file) */
 :root {
-  --primary: #3C2F2F;     /* espresso */
-  --secondary: #954535;   /* chestnut */
-  --accent: #C19A6B;      /* camel */
-  --background: #3C2F2F;  /* espresso */
-  --text: #C19A6B;        /* camel */
+  --primary: #3C2F2F;
+  --secondary: #954535;
+  --accent: #C19A6B;
+
+  --background: #2d1f14;
+  --text: #F0C060;
+  --surface: #3a2518;
+  --border: rgba(196, 134, 26, 0.2);
+}
+#root {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--root-pad-mobile);
+  text-align: center;
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 100vh;
+}
+@media (min-width: 480px) {
+  #root { padding: var(--root-pad-tablet); }
 }
 
+@media (min-width: 768px) {
+  #root { padding: var(--root-pad-desktop); }
+}
 /* Reset */
 * {
   margin: 0;
@@ -17,7 +36,7 @@
 
 /* Body styling */
 body {
-  font-family: Sonke, sans-serif;
+  font-family: 'Playfair Display', Georgia, serif;
   background-color: var(--background);
   color: var(--text);
 }
@@ -74,16 +93,17 @@ a:hover {
 
 /* Card container */
 .card-container {
+  width: 100%;
   display: flex;
-  gap: 30px; /* space between cards */
+  gap: 30px;
   flex-wrap: wrap;
   justify-content: center;
-  margin-top: 0px;
+  margin-top: 0;
 }
 
 /* Button global style */
 button {
-  margin-top: 0px;
+  /*margin-top: 0px;*/
 }
 
 /* Search bar container */

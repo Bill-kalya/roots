@@ -6,7 +6,7 @@
   border-radius: 999px;
 
   display: grid;
-  grid-template-columns: 1fr auto 1fr; /* ← KEY CHANGE: replace flex with grid */
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
 
   padding: 0 32px;
@@ -20,27 +20,21 @@
     -6px -6px 12px #6F4E37;
 }
 
-.nav-links {
-  display: flex;
-  font-size: 15px;
-  gap: 28px;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;   /* shrink to content */
-  margin: 0 auto;       /* centers the whole block */
-}
+/* ── Logo: first grid column, anchored left ── */
 .nav-logo {
   display: flex;
   align-items: center;
   gap: 8px;
-  justify-content: flex-start; /* stays on the left */
+  justify-content: flex-start;
+  min-width: 0; /* prevents grid overflow */
 }
 
 .logo-img {
   border-radius: 999px;
   width: 48px;
   height: 48px;
-  object-fit: contain;  /* ← critical, stops it from blowing up */
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .logo-text {
@@ -49,45 +43,30 @@
   font-weight: bold;
   letter-spacing: 2px;
   color: var(--text);
+  white-space: nowrap;
 }
+
+/* ── Links: middle column, perfectly centered ── */
+.nav-links {
+  display: flex;
+  font-size: 15px;
+  gap: 28px;
+  align-items: center;
+  justify-content: center;
+  /* No width, no margin: grid handles centering */
+}
+
+/* ── Right actions: third column, anchored right ── */
 .nav-right {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   align-items: center;
-  justify-content: flex-end; /* stays on the right */
+  justify-content: flex-end;
+  min-width: 0; /* prevents grid overflow */
   flex-shrink: 0;
 }
 
-@media (max-width: 1024px) {
-  .nav {
-    padding: 0 20px;
-    min-height: 64px;
-  }
-
-  .nav-links {
-    gap: 16px;
-  }
-
-  .logo-text {
-    font-size: 18px;
-  }
-
-  .logo-img {
-    width: 42px;
-    height: 42px;
-  }
-}   
-@media (max-width: 768px) {
-  .nav-links {
-    display: none; /* hide links */
-  }
-
-  .menu-toggle {
-    display: block;
-    cursor: pointer;
-  }
-}
-
+/* ── Basket button ── */
 .basket-btn {
   display: flex;
   align-items: center;
@@ -111,6 +90,7 @@
     6px 6px 12px #2a1a1a,
     -6px -6px 12px #6F4E37;
 }
+
 .basket-count {
   background: #a15d38;
   color: white;
@@ -120,4 +100,43 @@
   position: absolute;
   top: -5px;
   right: -8px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .nav {
+    padding: 0 20px;
+    min-height: 64px;
+  }
+
+  .nav-links {
+    gap: 16px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+
+  .logo-img {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav {
+    grid-template-columns: 1fr auto; /* logo + basket only */
+    top: 12px;
+    left: 12px;
+    right: 12px;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .nav-right {
+    /* hide search on mobile, keep basket */
+    gap: 8px;
+  }
 }

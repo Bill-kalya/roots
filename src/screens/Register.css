@@ -12,17 +12,15 @@
     --sand: #E8D5B0;
   }
  
-  html, body { height: 100%; }
+  html, body { height: auto; min-height: 100vh; }
  
   body {
-    top: 50px;
     min-height: 100vh;
     font-family: 'Jost', sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow-x: hidden;
-    position: relative;
   }
  
   /* ── Adinkra background ── */

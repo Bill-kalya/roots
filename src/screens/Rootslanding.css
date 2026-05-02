@@ -1,12 +1,4 @@
 
-
-:root {
-  --background: #2d1f14;
-  --text: #F0C060;
-  --surface: #3a2518;
-  --border: rgba(196, 134, 26, 0.2);
-}
-
 /* ─────────────────────────────────────────────────────────────
    Base
 ───────────────────────────────────────────────────────────── */
@@ -17,8 +9,8 @@
 }
 
 .roots-landing {
-  overflow-x: hidden; /* Change from 'visible' to 'hidden' */
-  overflow-y: visible;
+  overflow-x: hidden;
+  overflow-y: auto;
   font-family: Georgia, serif;
   min-height: 100vh;
 }
@@ -555,7 +547,7 @@
   font-family: 'Cormorant Garamond', Georgia, serif; 
   font-size: 14px;
   border-radius: 8px;
-  width: 100%; /* full-width */
+  /*width: 100%;  full-width */
   letter-spacing: 2px;
   cursor: pointer;
   transition: all 0.2s;
@@ -578,12 +570,12 @@
   transition: all 0.2s;
   background: #2d2f31;
   border: none;
+  color: var(--text);
+  border-radius: 8px;
+  /*width: 50%; full-width */
   box-shadow:
          6px 6px 12px #2a1a1a,
         -6px -6px 12px #6F4E37;
-        color: var(--text);
-        border-radius: 8px;
-        width: 100%; /* full-width */
 }
 
 .product-cart-btn-hovered, .product-cart-btn:hover {

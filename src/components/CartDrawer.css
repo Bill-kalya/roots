@@ -91,3 +91,9 @@
   cursor: pointer;
 }
 
+/* Body scroll lock when cart drawer open */
+body.cart-open {
+  overflow: hidden;
+}
+
+

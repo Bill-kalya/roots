@@ -1,8 +1,9 @@
 .card {
   width: 100%;
+  max-width: 350px;
   border-radius: 8px;
   background: var(--background);
-
+  overflow: hidden;
   box-shadow:
     6px 6px 12px #2a1a1a,
     -6px -6px 12px #6F4E37;
