@@ -32,18 +32,14 @@
 
  
   /* Card */
-  .card {
-  top: 20px;  
-  position: relative;
+  .login-card {
+  margin-top: 20px;
   display: flex;
   width: 100%;
-  max-width: 620px;
+  max-width: 900px;
   min-height: 240px;
-  margin: 0 24px;
+  margin: 0 auto;
   animation: card-in .8s ease both;
-  box-shadow:
-    6px 6px 12px #2a1a1a,
-    -6px -6px 12px #6F4E37;
 }
   @keyframes card-in {
     from { opacity:0; transform: translateY(24px); }
@@ -51,12 +47,17 @@
   }
  
   /* Left panel */
-  .lp {
+  .login-lp {
+    min-width: 320px;
+    width: 370px;
     flex: 1;
     background: linear-gradient(155deg, var(--terracotta) 0%, var(--earth) 55%, var(--deep) 100%);
     padding: 52px 44px;
-    display: flex; flex-direction: column; justify-content: space-between;
-    position: relative; overflow: hidden;
+    display: flex; 
+    flex-direction: column; 
+    justify-content: space-between;
+    position: relative; 
+    overflow: hidden;
     border-radius: 2px 0 0 2px;
   }
   .lp::before {
@@ -75,7 +76,7 @@
  
   .brand { position:relative; z-index:2; animation: lpin .9s .2s ease both; }
   .brand-orb {
-    width:46px;height:46px;
+    width:60px;height:60px;
     background:var(--gold); border-radius:50%;
     display:flex;align-items:center;justify-content:center;
     font-size:22px; margin-bottom:18px;
@@ -86,9 +87,10 @@
     0%,100%{box-shadow:0 0 20px rgba(212,168,83,.3);}
     50%    {box-shadow:0 0 45px rgba(212,168,83,.65);}
   }
-  .brand-name { font-family:'Cinzel',serif; font-size:26px; font-weight:600; color:var(--cream); letter-spacing:6px; }
-  .brand-tag  { font-size:10px; letter-spacing:3px; color:var(--gold); opacity:.75; text-transform:uppercase; margin-top:3px; }
- 
+  .brand-name { font-family:'Cinzel',serif; font-size:35px; font-weight:600; color:var(--cream); letter-spacing:6px; }
+  .brand-tag  { font-size:20px; letter-spacing:3px; color:var(--gold); opacity:.75; text-transform:uppercase; margin-top:3px; }
+  .brand-desc { font-family: 'Cormorant Garamond', serif; color: var(--gold); font-style: italic; font-size: 14px; line-height: 1.6; margin-top: 50px; }
+
   .quote { position:relative; z-index:2; animation: lpin .9s .4s ease both; }
   .qt { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:21px; line-height:1.55; color:var(--cream); opacity:.92; margin-bottom:10px; }
   .qa { font-size:10px; letter-spacing:2.5px; text-transform:uppercase; color:var(--gold); opacity:.65; }
@@ -104,6 +106,8 @@
  
   /* Right panel */
   .rp {
+    flex-shrink: 0;
+    box-shadow: none !important;
     width: 370px;
     background: var(--cream);
     padding: 52px 42px;
@@ -199,4 +203,12 @@
   @keyframes fin {
     from{opacity:0;transform:translateY(10px);}
     to  {opacity:1;transform:translateY(0);}
+  }
+  .brand-desc {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--gold);
+    font-size: 14px;
+    line-height: 1.6;
+    align-content: center;
+    margin-top: 50px;
   }

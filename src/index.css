@@ -32,11 +32,11 @@ body {
 /* App container */
 .App {
   min-height: 100vh;
-  padding-top: 72px; /* space for fixed navbar */
+  padding-top: 90px; /* increased buffer for navbar */
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px; /* spacing between child components */
+  gap: 40px;
 }
 
 /* Component wrappers */
@@ -47,7 +47,7 @@ body {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: 0;
 }
 
 /* Headings */
@@ -72,9 +72,6 @@ a {
   transition: color 0.3s ease;
 }
 
-a:hover {
-  color: #e6c89c; /* lighter camel */
-}
 
 /* Section spacing */
 .section {
@@ -123,5 +120,14 @@ button {
 /* Cart drawer body scroll lock */
 body.cart-open {
   overflow: hidden;
+}
+
+html.dark {
+  --background: #0f0f23;
+  --text: #e0e0e0;
+  --primary: #5a67d8;
+  --secondary: #805ad5;
+  --accent: #ed8936;
+  --background-rgb: 15, 15, 35;
 }
 

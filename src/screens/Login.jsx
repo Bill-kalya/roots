@@ -56,14 +56,15 @@ const Login = () => {
   };
 
   return (
-    <div className="card">
+    <div className="login-card">
 
       {/* LEFT PANEL (unchanged UI) */}
-      <div className="lp">
+      <div className="login-lp">
         <div className="brand">
-          <div className="brand-orb">☥</div>
+          <div className="brand-orb"><img src={`${import.meta.env.BASE_URL}roots.png`} alt="Roots Logo" className="logo-img" /></div>
           <div className="brand-name">ROOTS</div>
           <div className="brand-tag">Heritage Collective</div>
+          <div className="brand-desc">"When the roots are deep, there is no reason to fear the wind."</div>
         </div>
       </div>
 
@@ -71,7 +72,7 @@ const Login = () => {
       <div className="rp">
 
         <div className="fh">
-          <div className="fe">Welcome</div>
+          <div className="fe">Karibu Tena</div>
           <div className="ft">Sign <em>in to your account</em></div>
         </div>
 

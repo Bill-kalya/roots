@@ -2,6 +2,7 @@
   width: 100%;
   max-width: 350px;
   border-radius: 8px;
+  border: none !important;
   background: var(--background);
   overflow: hidden;
   box-shadow:
@@ -12,9 +13,24 @@
 }
 
 /* Optional hover effect (nice upgrade) */
+.card {
+  width: 100%;
+  max-width: 350px;
+  border-radius: 8px;
+  border: none !important;
+  background: var(--background);
+  overflow: visible;
+  box-shadow:
+    6px 6px 12px #2a1a1a,
+    -6px -6px 12px #6F4E37;
+
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
 .card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
   box-shadow:
     inset 4px 4px 12px #2a1a1a,
     inset -4px -4px 12px #6F4E37;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }

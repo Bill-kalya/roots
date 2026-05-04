@@ -131,10 +131,11 @@ a:hover {
   border-color: var(--secondary);
 }
 
-/* Button */
+/* Button 
 .button-wrapper {
   padding-bottom: 60px;
 }
+  */
 
 .btn {
   font-family: Sonke, sans-serif;

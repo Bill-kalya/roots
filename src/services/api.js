@@ -29,6 +29,18 @@ const api = apiClient;
 // =========================
 // AUTH
 // =========================
+// =========================
+// AUTH
+// =========================
+export async function register(email, password, full_name, interests = [], signal) {
+  const res = await api.post(
+    '/api/auth/register',
+    { email, password, full_name, interests },
+    { signal }
+  );
+  return res.data;
+}
+
 export async function login(email, password, signal) {
   const res = await api.post(
     '/api/auth/login',

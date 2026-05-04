@@ -11,15 +11,22 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   letter-spacing: 1.5px;
   border-radius: 8px;
-  background: var(--primary);
-  border: 1px solid var(--primary);
+background: linear-gradient(to bottom, #493b3b, #2d2f31);
+  border: none;
   line-height: 1;        /* ← prevents hidden line-height pushing it down */
   vertical-align: middle;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow:
-    6px 6px 12px #2a1a1a,
-    -6px -6px 12px #6F4E37;
+  inset 0 4px 8px rgba(255, 255, 255, 0.12),
+  inset 0 -4px 8px rgba(0, 0, 0, 0.5),
+  0 6px 16px rgba(0, 0, 0, 0.45);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: translateZ(-1px);
+  transform: translateZ(10px);
+  transform: perspective(500px) rotateX(5deg);
+  transform-style: preserve-3d;
+  margin: 0 !important;
 }
 
 .custom-btn:active {

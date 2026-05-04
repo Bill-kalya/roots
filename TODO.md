@@ -1,8 +1,11 @@
-It appears that you cannot scroll to other sections because the <body> element has overflow: hidden and its height is locked to the viewport height (616px). This prevents any scrolling beyond the initial view, even if the content inside (the .roots-landing container) is much taller.
+# Task: Fix Collection Button & Blank Origins/About Pages
 
-The Problem
-body: Has overflow: hidden and height: 616px. This "clips" all content that doesn't fit in the first 616 pixels.
-html: Also has a height restricted to 616px.
-.roots-landing: This container is actually 2933px tall, but because its parents (body and html) are restricted and have overflow hidden, you can't reach the rest of the content.
-The Fix
-To allow scrolling and see all sections, you need to remove the overflow restriction and height limit on the body and html elements.
+## Steps:
+- [x] 1. Update Nav.jsx: Fix handleCollectionClick to navigate to '/'
+- [x] 2. Update Origins.jsx: Add useReveal hook, Badge component, CSS import
+- [x] 3. Update About.jsx: Add useReveal hook, Badge component, CSS import
+- [x] 4. Test: Navigate from /about to Collection button → lands on / with collection
+- [x] 5. Test: Visit /origins and /about → pages render content
+- [x] 6. Complete task
+
+✅ All fixes applied: Collection button now navigates to home from any page. Origins/About pages render with hooks/components added.
