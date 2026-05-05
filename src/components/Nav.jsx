@@ -6,7 +6,6 @@ import Search from "./Search";
 import "./Nav.css";
 import Cart from "./Cart";
 import CartDrawer from "./CartDrawer";
-import Theme from "./Theme";
 
 function Nav() {
   const [scrolled, setScrolled] = useState(false);

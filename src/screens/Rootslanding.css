@@ -22,6 +22,7 @@
    Hero
 ───────────────────────────────────────────────────────────── */
 .hero {
+  margin-top: 76px;
   height: 100vh;
   background: var(--background);
   position: relative;

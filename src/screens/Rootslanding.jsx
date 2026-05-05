@@ -4,7 +4,6 @@ import "./Rootslanding.css";
 import Cart from "../components/Cart";
 import Footer from "../components/Footer";
 import Nav from "../components/Nav";
-import Theme from "../components/Theme";
 
 // ─── Static Data (replaces broken API calls) ──────────────────────────────────
 const STATIC_PRODUCTS = [
@@ -533,9 +532,6 @@ export default function RootsLanding() {
     <SessionGuard>
       <DataProvider>
         <div className="roots-landing" style={{position: 'relative'}}>
-          <div className="theme-switch-top-right">
-            <Theme />
-          </div>
           <Nav />
           <HeroSection />
           <MarqueeBanner />
