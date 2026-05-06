@@ -1,6 +1,6 @@
 .card {
   width: 100%;
-  max-width: 350px;
+  max-width: clamp(20rem, 90vw, 28rem);
   border-radius: 8px;
   border: none !important;
   background: var(--background);
@@ -15,7 +15,7 @@
 /* Optional hover effect (nice upgrade) */
 .card {
   width: 100%;
-  max-width: 350px;
+  max-width: clamp(20rem, 90vw, 28rem);
   border-radius: 8px;
   border: none !important;
   background: var(--background);

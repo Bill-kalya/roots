@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./Register.css";
-import { register, login } from "../services/api.js";
+import { register } from "../services/api.js";
+
 
 const INTERESTS = [
   "Jewelry", 
@@ -16,8 +17,10 @@ const INTERESTS = [
 const Register = () => {
   const [step, setStep] = useState(1);
   const [chips, setChips] = useState([]);
+  const [registered, setRegistered] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -207,14 +210,14 @@ const Register = () => {
     setError("");
 
     try {
-      await register(form.email, form.password, `${form.firstName} ${form.lastName}`, chips);
-      
-      // Auto-login
-      await login(form.email, form.password);
-      
-      // Redirect to landing
-      window.location.href = "/";
-      
+      await register(
+        form.email,
+        form.password,
+        `${form.firstName} ${form.lastName}`,
+        chips
+      );
+
+      setRegistered(true);
     } catch (err) {
       setError(err.response?.data?.detail || err.message || "Registration failed");
     } finally {
@@ -222,10 +225,28 @@ const Register = () => {
     }
   };
 
+
+  if (registered) {
+    return (
+      <div className="register-page">
+        <div className="shield-success" role="status" aria-live="polite">
+          <h2>🛡️ Account Created</h2>
+          <p>
+            We’ve sent a verification link to:
+            <br />
+            <strong>{form.email}</strong>
+          </p>
+          <p>Please check your email and verify your account before logging in.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="register-page">
       <div className="register-card">
         <div className="register-lp">
+
           {/* Progress */}
           <div className="progress-wrap">
             <span>Step {step} of 3</span>

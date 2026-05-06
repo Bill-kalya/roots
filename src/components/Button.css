@@ -1,7 +1,16 @@
 .button-wrapper {
-  display: flex;          /* ← was inline-block */
-  align-items: center;  
-  height: 100%;  /* ← centers the button inside the wrapper */
+  display: flex;
+  align-items: center;
+  height: 100%;
+  width: fit-content;
+}
+
+.btn-text {
+  display: block;
+}
+
+.btn-icon {
+  display: block;
 }
 
 .custom-btn {
@@ -29,10 +38,68 @@ background: linear-gradient(to bottom, #493b3b, #2d2f31);
   margin: 0 !important;
 }
 
+.custom-btn.icon-only {
+  padding: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  font-size: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* .custom-btn.icon-only > *:not(.btn-icon) {
+  display: none !important;
+} - Commented out for responsive behavior */
+
+.custom-btn.icon-only .btn-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.custom-btn.icon-only .btn-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive behavior */
+@media (max-width: 1024px) {
+  .btn-text {
+    display: none !important;
+  }
+  .button-wrapper {
+    width: auto !important;
+    min-width: 44px !important;
+  }
+  .custom-btn {
+    padding: 8px !important;
+    min-width: 44px !important;
+    width: 44px !important;
+    justify-content: center !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .btn-icon {
+    display: none !important;
+  }
+  .button-wrapper {
+    width: fit-content !important;
+    justify-content: flex-start !important;
+  }
+  .custom-btn {
+    padding: 10px 20px !important;
+  }
+}
+
 .custom-btn:active {
   color: black;
   background: var(--primary);
+  transform: scale(0.95);
   box-shadow:
     inset 4px 4px 12px #2a1a1a,
     inset -4px -4px 12px #6F4E37;
+  transition: transform 0.1s ease;
 }

@@ -33,11 +33,11 @@
  
   /* Card */
   .login-card {
-  margin-top: 20px;
+  margin-top: clamp(1rem, 3vw, 1.25rem);
   display: flex;
   width: 100%;
-  max-width: 900px;
-  min-height: 240px;
+  max-width: clamp(30rem, 90vw, 56.25rem);
+  min-height: clamp(12rem, 20vh, 15rem);
   margin: 0 auto;
   animation: card-in .8s ease both;
 }
@@ -48,8 +48,8 @@
  
   /* Left panel */
   .login-lp {
-    min-width: 320px;
-    width: 370px;
+    min-width: clamp(18rem, 45vw, 20rem);
+    width: clamp(20rem, 50vw, 23rem);
     flex: 1;
     background: linear-gradient(155deg, var(--terracotta) 0%, var(--earth) 55%, var(--deep) 100%);
     padding: 52px 44px;
@@ -108,7 +108,7 @@
   .rp {
     flex-shrink: 0;
     box-shadow: none !important;
-    width: 370px;
+    width: clamp(20rem, 50vw, 23rem);
     background: var(--cream);
     padding: 52px 42px;
     display: flex; flex-direction: column; justify-content: center;

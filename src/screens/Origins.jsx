@@ -1,3 +1,4 @@
+import Footer from '../components/Footer';
 // ═══════════════════════════════════════════════════════════
 // ORIGINS PAGE
 // ═══════════════════════════════════════════════════════════
@@ -141,12 +142,11 @@ export default function OriginsPage() {
         </div>
       </section>
  
-      <footer className="page-footer">
-        <span>© 2025 ROOTS</span>
+   
         <span>ORIGINS — THE STORY OF WHERE</span>
-        <span>EST. AUTHENTICITY 100%</span>
-      </footer>
+      <Footer />
     </div>
+
   );
 }
  

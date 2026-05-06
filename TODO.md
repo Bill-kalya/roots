@@ -1,11 +1,9 @@
-# Task: Fix Collection Button & Blank Origins/About Pages
+# TODO
 
-## Steps:
-- [x] 1. Update Nav.jsx: Fix handleCollectionClick to navigate to '/'
-- [x] 2. Update Origins.jsx: Add useReveal hook, Badge component, CSS import
-- [x] 3. Update About.jsx: Add useReveal hook, Badge component, CSS import
-- [x] 4. Test: Navigate from /about to Collection button → lands on / with collection
-- [x] 5. Test: Visit /origins and /about → pages render content
-- [x] 6. Complete task
+## Register UX: email verification success shield card
+- [x] Update `src/screens/Register.jsx`: add `registered` state and remove auto-login + conditional render success shield card
+- [x] Update `handleSubmit` in `src/screens/Register.jsx` to set `registered=true` after successful `register()`
+- [x] Update render in `src/screens/Register.jsx`: conditional UI (form vs shield success card)
+- [ ] Update `src/screens/Register.css`: add `.shield-success` styles (clip-path shield), plus any container/layout needed
+- [ ] Run lint/build (if available) to ensure no syntax issues
 
-✅ All fixes applied: Collection button now navigates to home from any page. Origins/About pages render with hooks/components added.

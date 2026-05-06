@@ -1,3 +1,5 @@
+import Footer from '../components/Footer';
+
 // ═══════════════════════════════════════════════════════════
 // ABOUT PAGE
 // ═══════════════════════════════════════════════════════════
@@ -9,9 +11,9 @@ const VALUES = [
 ];
  
 const TEAM = [
-  { initials: "NK", name: "Nana Kwame", role: "Founder & CEO", bio: "Former curator at the British Museum's Africa collection, Nana founded Roots after witnessing how little of the art's value reached its makers." },
-  { initials: "AO", name: "Adaeze Obi", role: "Head of Curation", bio: "An art historian specialising in West African material culture, Adaeze has authenticated over 3,000 pieces across 15 countries." },
-  { initials: "MM", name: "Mwangi Mutua", role: "Artisan Relations", bio: "Born in Nairobi, Mwangi manages relationships with 200+ artisan cooperatives across East Africa." },
+  { initials: "CD", name: "Carter Dave", role: "Founder & CEO", bio: "Former Art Enthusiasit and Collector, Carter founded Roots after witnessing how little of the art's value reached its makers." },
+  { initials: "DM", name: "Domnic Murray", role: "Head of Curation", bio: "An art historian specialising in West African material culture, Domnic has authenticated over 3,000 pieces across 15 countries." },
+  { initials: "EK", name: "Edward Kiprotich", role: "Artisan Relations", bio: "Born in the interior of Kenya, Edward manages relationships with 200+ artisan cooperatives across East Africa." },
   { initials: "SL", name: "Sara Lindqvist", role: "Conservation", bio: "A trained conservator from the Rijksmuseum, Sara ensures every piece is preserved for centuries to come." },
 ];
  
@@ -148,11 +150,7 @@ export default function AboutPage() {
         </div>
       </section>
  
-      <footer className="page-footer">
-        <span>© 2025 ROOTS</span>
-        <span>ABOUT — WHO WE ARE & WHY WE EXIST</span>
-        <span>FAIR TRADE · CERTIFIED · AUTHENTIC</span>
-      </footer>
+      <Footer />
     </div>
   );
 }

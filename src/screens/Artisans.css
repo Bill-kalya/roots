@@ -1,5 +1,17 @@
 /* ── ARTISANS PAGE ── */
-  .artisans-hero { padding: 80px; position: relative; overflow: hidden; }
+.artisans-hero {
+  padding: clamp(3rem, 8vw, 5rem); position: relative; overflow: hidden;
+  background-image: url('/artisans.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: scroll;
+}
+.artisans-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(10, 6, 2, 0.65);
+  z-index: 1;
+}
+.artisans-hero > * { position: relative; z-index: 2; }
   .artisans-hero-text { max-width: 700px; }
   .artisans-title {
     font-family: 'Playfair Display', serif; font-size: clamp(48px, 8vw, 96px);

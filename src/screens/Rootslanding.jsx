@@ -333,6 +333,11 @@ function ProductCard({ product, delay }) {
 function CollectionSection() {
   const [sectionRef, inView] = useInView();
   const data = useContext(DataContext);
+  const navigate = useNavigate();
+
+  const handleViewAll = () => {
+    navigate('/');
+  };
 
   return (
     <section ref={sectionRef} className="collection">
@@ -354,7 +359,7 @@ function CollectionSection() {
           ))}
         </div>
         <div className="collection-footer">
-          <button className="view-all-btn">View All 500+ Pieces</button>
+          <button className="view-all-btn" onClick={handleViewAll}>View All 500+ Pieces</button>
         </div>
       </div>
     </section>

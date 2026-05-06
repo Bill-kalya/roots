@@ -1,8 +1,18 @@
 /* ── ORIGINS PAGE ── */
-  .origins-hero {
-    padding: 80px; position: relative; overflow: hidden;
-    border-bottom: 1px solid rgba(196,134,26,0.15);
-  }
+.origins-hero {
+  padding: 80px; position: relative; overflow: hidden;
+  border-bottom: 1px solid rgba(196,134,26,0.15);
+  background-image: url('/origins.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: scroll;
+}
+.origins-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(10, 6, 2, 0.65);
+  z-index: 1;
+}
+.origins-hero > * { position: relative; z-index: 2; }
   .origins-hero-bg {
     position: absolute; inset: 0; overflow: hidden; pointer-events: none;
   }
@@ -24,8 +34,8 @@
   .stat-item .num { font-family: 'Playfair Display', serif; font-size: 40px; color: var(--gold); font-weight: 700; }
   .stat-item .lbl { font-size: 12px; letter-spacing: 3px; color: var(--gold-dim); margin-top: 4px; text-transform: uppercase; }
  
-  .origins-map-section { padding: 100px 80px; }
-  .map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+.origins-map-section { padding: clamp(4rem, 10vw, 6rem) clamp(3rem, 8vw, 5rem); }
+  .map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(3rem, 8vw, 5rem); align-items: center; }
   .map-visual {
     position: relative; aspect-ratio: 4/3;
     background: var(--card); border-radius: 20px;

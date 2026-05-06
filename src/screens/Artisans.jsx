@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Footer from '../components/Footer'
 import './Artisans.css';
 
 // Data from task
@@ -105,12 +106,11 @@ function ArtisansPage() {
         </div>
       </section>
 
-      <footer className="page-footer">
-        <span>© 2025 ROOTS</span>
+      
         <span>ARTISANS — THE HANDS BEHIND THE ART</span>
-        <span>FAIR TRADE CERTIFIED</span>
-      </footer>
+        <Footer />
     </div>
+    
   );
 }
 

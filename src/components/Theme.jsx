@@ -4,30 +4,14 @@ import './theme.css';
 const ThemeSwitch = () => {
   const [isDark, setIsDark] = useState(false);
 
-  useEffect(() => {
-    // Load theme from localStorage on mount
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setIsDark(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  useEffect(() => {
-    // Update class and localStorage when theme changes
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDark]);
-
   const toggleTheme = () => {
-    setIsDark(!isDark);
+    // Animate switch but lock on light + show message
+    setIsDark(prev => !prev);
+    setTimeout(() => {
+      setIsDark(false); // Snap back to light
+      alert('Coming Soon...'); // Or implement toast
+    }, 300); // Match animation duration
+    document.documentElement.classList.remove('dark'); // Ensure no dark
   };
 
   return (

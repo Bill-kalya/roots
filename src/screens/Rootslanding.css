@@ -386,16 +386,17 @@ background: linear-gradient(to bottom, #493b3b, #2d2f31);
   box-sizing: border-box;
   
   width: 100%;
-  max-width: 350px;
   border-radius: 8px;
   border: none !important;
-  background: var(--background);
+  background: linear-gradient(to bottom, #493b3b, #2d2f31);
   overflow: visible;
   box-shadow:
-    6px 6px 12px #2a1a1a,
-    -6px -6px 12px #6F4E37;
+  inset 0 4px 8px rgba(255, 255, 255, 0.12),
+  inset 0 -4px 8px rgba(0, 0, 0, 0.5),
+  0 6px 16px rgba(0, 0, 0, 0.45);
 
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  max-width: 300px;
 }
 
 .product-card:hover,

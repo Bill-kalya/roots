@@ -20,9 +20,9 @@
 /* Full-height panel below the fixed Nav (Nav is 72px tall) */
 .chat-shell {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  height: calc(100vh - 72px);
-  margin-top: 72px;
+  grid-template-columns: clamp(280px, 80vw, 320px) 1fr;
+  height: calc(100vh - clamp(3.5rem, 10vh, 4.5rem));
+  margin-top: clamp(3.5rem, 10vh, 4.5rem);
   overflow: hidden;
 }
 
@@ -521,8 +521,8 @@
 .bubble-wrapper {
   display: flex;
   flex-direction: column;
-  max-width: 60%;
-  gap: 4px;
+  max-width: clamp(55%, 70vw, 65%);
+  gap: clamp(0.2rem, 1vw, 0.25rem);
 }
 
 .bubble-wrapper-customer {
