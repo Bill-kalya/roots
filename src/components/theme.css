@@ -199,7 +199,8 @@
     -webkit-transform: translateY(-50%);
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);
-  };
+  }
+
 
   /* Top-right positioning for Roots landing page */
   .theme-switch-top-right {

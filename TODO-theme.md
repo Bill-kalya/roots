@@ -1,1 +1,0 @@
-# TODO: Fix Duplicate Theme Switches\n\n✅ Create TODO-theme.md\n\n⏳ 1. Edit src/components/Nav.jsx: Remove Theme import and component render\n⏳ 2. Edit src/screens/Rootslanding.jsx: Remove theme-switch-top-right div with Theme\n⏳ 3. Verify single top-right theme switch on mobile/desktop\n⏳ 4. Update TODO and complete\n\n---\n*Completed by BLACKBOXAI*
