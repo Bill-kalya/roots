@@ -1,9 +1,7 @@
 import './Login.css';
 import { useState } from 'react';
-import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-
-const API_URL = "/api/auth/login";
+import { Link, useNavigate } from 'react-router-dom';
+import { login } from '../services/api.js';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,35 +19,35 @@ const Login = () => {
     setError('');
 
     try {
-      const res = await axios.post(API_URL, {
-        email,
-        password
-      });
+      // Backend: POST /api/auth/login
+      // Response model: Token { access_token, refresh_token }
+      const res = await login(email, password);
 
-      const { access_token, refresh_token } = res.data;
-
-      // =========================
-      // TOKEN STORAGE STRATEGY
-      // =========================
-
-      if (rememberMe) {
-        // persists even after closing browser
-        localStorage.setItem("access_token", access_token);
-      } else {
-        // cleared on tab close (safer)
-        sessionStorage.setItem("access_token", access_token);
+      // Backend response can be either:
+      // - { requires_mfa: true, user_id, ... }
+      // - { access_token, refresh_token, token_type }
+      if (res?.requires_mfa) {
+        navigate('/login/mfa', {
+          state: {
+            email,
+            password,
+            rememberMe,
+          },
+        });
+        return;
       }
 
-      // Store refresh token (better: HttpOnly cookie via backend)
-      localStorage.setItem("refresh_token", refresh_token);
+      const { access_token, refresh_token } = res;
 
-      // Redirect after login
-      navigate("/dashboard");
+      // Local/session token storage strategy (current app expects localStorage)
+      if (rememberMe) localStorage.setItem('access_token', access_token);
+      else sessionStorage.setItem('access_token', access_token);
 
+      if (refresh_token) localStorage.setItem('refresh_token', refresh_token);
+
+      navigate('/dashboard');
     } catch (err) {
-      setError(
-        err.response?.data?.detail || "Login failed. Try again."
-      );
+      setError(err?.response?.data?.detail || err.message || 'Login failed. Try again.');
     } finally {
       setLoading(false);
     }
@@ -57,29 +55,36 @@ const Login = () => {
 
   return (
     <div className="login-card">
-
-      {/* LEFT PANEL (unchanged UI) */}
+      {/* LEFT PANEL */}
       <div className="login-lp">
         <div className="brand">
-          <div className="brand-orb"><img src={`${import.meta.env.BASE_URL}roots.png`} alt="Roots Logo" className="logo-img" /></div>
+          <div className="brand-orb">
+            <img
+              src={`${import.meta.env.BASE_URL}roots.png`}
+              alt="Roots Logo"
+              className="logo-img"
+            />
+          </div>
           <div className="brand-name">ROOTS</div>
           <div className="brand-tag">Heritage Collective</div>
-          <div className="brand-desc">"When the roots are deep, there is no reason to fear the wind."</div>
+          <div className="brand-desc">
+            "When the roots are deep, there is no reason to fear the wind."
+          </div>
         </div>
       </div>
 
       {/* RIGHT PANEL */}
       <div className="rp">
-
         <div className="fh">
           <div className="fe">Karibu Tena</div>
-          <div className="ft">Sign <em>in to your account</em></div>
+          <div className="ft">
+            Sign <em>in to your account</em>
+          </div>
         </div>
 
         {error && <div className="error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="form">
-
           <div className="ig">
             <label>Email Address</label>
             <input
@@ -117,13 +122,12 @@ const Login = () => {
           </div>
 
           <button type="submit" className="sbtn" disabled={loading}>
-            <span>{loading ? "Signing in..." : "Sign In"}</span>
+            <span>{loading ? 'Signing in...' : 'Sign In'}</span>
           </button>
 
           <div className="sig">
             Don't have an account? <Link to="/register">Sign up</Link>
           </div>
-
         </form>
       </div>
     </div>
@@ -131,3 +135,4 @@ const Login = () => {
 };
 
 export default Login;
+

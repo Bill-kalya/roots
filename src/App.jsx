@@ -13,8 +13,15 @@ import Artisans from './screens/Artisans';
 import Origins from './screens/Origins';
 import About from './screens/About';
 import Theme from './components/Theme';
+import AppToaster from './components/Toaster';
+import VerifyEmail from './screens/VerifyEmail';
+import LoginMfaChallenge from './screens/LoginMfaChallenge';
+import MfaSetup from './screens/MfaSetup';
+
+
 
 const AppContent = () => {
+
   const location = useLocation();
   return (
     <>
@@ -27,7 +34,11 @@ const AppContent = () => {
         <Route path="/basket" element={<Basket />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/login/mfa" element={<LoginMfaChallenge />} />
+        <Route path="/settings/mfa" element={<MfaSetup />} />
+
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/Admin" element={<AdminDashboard />} />
         <Route path="/Merchant" element={<MerchantDashboard />} />
         <Route path="/chat" element={<Chat />} />
@@ -43,6 +54,7 @@ const App = () => {
   return (
     <Router basename={import.meta.env.BASE_URL || '/'}>
       <AppContent />
+      <AppToaster />
     </Router>
   );
 };
