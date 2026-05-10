@@ -199,19 +199,14 @@
 
 .mobile-menu {
   position: fixed;
-  top: 92px;
-  left: 12px;
-  right: 12px;
-  background: var(--primary);
+  top: 120px;
+  left: 90px;
+  right: 90px;
   border-radius: 20px;
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  z-index: 60;
-
-  box-shadow:
-    6px 6px 12px #2a1a1a,
-    -6px -6px 12px #6F4E37;
+  gap: 24px;
+  z-index: 1000;
 }
 

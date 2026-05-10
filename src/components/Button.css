@@ -66,20 +66,37 @@ background: linear-gradient(to bottom, #493b3b, #2d2f31);
 
 /* Responsive behavior */
 @media (max-width: 1024px) {
+  /* Default mobile behavior: icon-only buttons */
   .btn-text {
     display: none !important;
   }
+
   .button-wrapper {
     width: auto !important;
     min-width: 44px !important;
   }
+
   .custom-btn {
     padding: 8px !important;
     min-width: 44px !important;
     width: 44px !important;
     justify-content: center !important;
   }
+
+  /* Mobile Nav override: show labels inside the dropdown menu */
+  .mobile-menu .btn-text {
+    display: inline-block !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.1em !important;
+    color: rgb(193, 154, 107) !important; /* gold */
+  }
 }
+
+
+
+
 
 @media (min-width: 1025px) {
   .btn-icon {
