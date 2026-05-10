@@ -190,6 +190,13 @@
 
 
 .nav-right .shop-now-btn.custom-btn {
+  /* Match the basket button height */
+  height: 40px !important;
+  padding: 8px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
   transition: all 0.2s ease;
 }
 
