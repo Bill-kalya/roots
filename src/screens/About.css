@@ -110,7 +110,7 @@
     .origins-timeline { padding: 60px 40px; }
   }
   @media (max-width: 768px) {
-    .nav { top: 12px; left: 12px; right: 12px; grid-template-columns: 1fr auto; }
+    .nav { top: 54px; left: 12px; right: 12px; grid-template-columns: 1fr auto; }
     .nav-links { display: none; }
     .origins-hero, .artisans-hero, .about-hero { padding: 48px 24px; }
     .origins-map-section, .artisan-grid, .artisan-process,

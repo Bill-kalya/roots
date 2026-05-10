@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./checkout.css";
-import Nav from "../components/Nav";
+
 import Footer from "../components/Footer";
+
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 function formatCardNumber(value) {

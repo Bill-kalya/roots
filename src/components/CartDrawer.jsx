@@ -93,14 +93,29 @@ function DrawerItem({ item, onRemove, onQtyChange, disabled }) {
  * This means the parent does NOT need to pass cartItems — it only
  * controls open/close state.
  */
+function isUuidLike(value) {
+  if (typeof value !== "string") return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function getApiErrorMessage(err) {
+  // axios shape: err.response?.data can be { detail: string } or { message: string } or plain text
+  const data = err?.response?.data;
+  if (typeof data === "string") return data;
+  if (data?.detail) return data.detail;
+  if (data?.message) return data.message;
+  return err?.message || "Request failed.";
+}
+
 function CartDrawer({ isOpen, onClose }) {
   const drawerRef = useRef(null);
 
   // Fetch cart — lazy: only load when drawer opens for the first time
+
   const [shouldFetch, setShouldFetch] = useState(false);
 
   useEffect(() => {
-    if (isOpen) setShouldFetch(true);
+    if (isOpen) setShouldFetch(prev => (prev ? prev : true));
   }, [isOpen]);
 
   const { data: cart, loading, error, refetch } = useApi(
@@ -133,13 +148,20 @@ function CartDrawer({ isOpen, onClose }) {
   const [actionError, setActionError] = useState("");
 
   const handleRemove = async (productId) => {
+    if (!isUuidLike(productId)) {
+      setActionError("Invalid cart item id. Please refresh your cart.");
+      return;
+    }
+
+    // optimistic
     setItems((prev) => prev.filter((i) => i.product_id !== productId));
     setActionError("");
+
     try {
       await doRemove(productId);
       window.dispatchEvent(new CustomEvent("roots:cart-updated"));
     } catch (err) {
-      setActionError(err.message || "Failed to remove item.");
+      setActionError(getApiErrorMessage(err));
       refetch();
     }
   };
@@ -153,7 +175,7 @@ function CartDrawer({ isOpen, onClose }) {
     try {
       await doAdd(productId, newQty);
     } catch (err) {
-      setActionError(err.message || "Failed to update quantity.");
+      setActionError(getApiErrorMessage(err));
       refetch();
     }
   };

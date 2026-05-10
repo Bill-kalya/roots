@@ -167,90 +167,125 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-title">Total Revenue</div>
-          <div className="stat-value">${stats.totalSales.toLocaleString()}</div>
-          <div className="stat-change">↑ {stats.revenueGrowth}% from last month</div>
+      {/* TOP METRICS */}
+      <div className="top-stats-grid">
+        <div className="stat-card large-card">
+          <div className="stat-title">Revenue Overview</div>
+
+          <div className="big-stat">
+            ${stats.totalSales.toLocaleString()}
+          </div>
+
+          <div className="stat-change">
+            ↑ {stats.revenueGrowth}% this month
+          </div>
+
+          <div className="chart-wrapper">
+            <Line data={salesChartData} options={{ responsive: true }} />
+          </div>
         </div>
-        
-        <div className="stat-card">
-          <div className="stat-title">Total Orders</div>
-          <div className="stat-value">{stats.totalOrders.toLocaleString()}</div>
-          <div className="stat-change">↑ {stats.orderGrowth}% from last month</div>
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-title">Total Users</div>
-          <div className="stat-value">{stats.totalUsers.toLocaleString()}</div>
-          <div className="stat-change">Active customers</div>
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-title">Total Products</div>
-          <div className="stat-value">{stats.totalProducts}</div>
-          <div className="stat-change">{stats.lowStock} low stock items</div>
+
+        <div className="side-column">
+          <div className="stat-card">
+            <div className="stat-title">Orders</div>
+            <div className="stat-value">
+              {stats.totalOrders}
+            </div>
+
+            <div className="stat-change">
+              ↑ {stats.orderGrowth}% growth
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-title">Order Distribution</div>
+
+            <div className="small-chart">
+              <Doughnut
+                data={orderStatusData}
+                options={{ responsive: true }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="stats-grid">
+      {/* MINI CARDS */}
+      <div className="mini-stats-grid">
+        <div className="stat-card">
+          <div className="stat-title">Users</div>
+          <div className="stat-value">
+            {stats.totalUsers}
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-title">Products</div>
+          <div className="stat-value">
+            {stats.totalProducts}
+          </div>
+        </div>
+
         <div className="stat-card">
           <div className="stat-title">Pending Orders</div>
-          <div className="stat-value">{stats.pendingOrders}</div>
-          <div className="stat-change">Awaiting processing</div>
+          <div className="stat-value">
+            {stats.pendingOrders}
+          </div>
         </div>
-        
+
         <div className="stat-card">
-          <div className="stat-title">Average Order Value</div>
-          <div className="stat-value">${(stats.totalSales / stats.totalOrders || 0).toFixed(2)}</div>
-          <div className="stat-change">Per transaction</div>
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-title">Conversion Rate</div>
-          <div className="stat-value">3.2%</div>
-          <div className="stat-change">Visitors to customers</div>
+          <div className="stat-title">Avg Order Value</div>
+          <div className="stat-value">
+            ${(stats.totalSales / stats.totalOrders || 0).toFixed(2)}
+          </div>
         </div>
       </div>
 
-      <div className="stats-grid">
-        <div className="stat-card" style={{ gridColumn: 'span 2' }}>
-          <div className="stat-title">Sales Trend (Last 7 Days)</div>
-          <Line data={salesChartData} options={{ responsive: true }} />
-        </div>
-        
-        <div className="stat-card">
-          <div className="stat-title">Top Products</div>
-          <Bar data={topProductsData} options={{ responsive: true }} />
-        </div>
-      </div>
+      {/* LOWER SECTION */}
+      <div className="bottom-grid">
+        {/* RECENT ORDERS */}
+        <div className="stat-card orders-card">
+          <div className="section-header">Recent Orders</div>
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-title">Order Distribution</div>
-          <Doughnut data={orderStatusData} options={{ responsive: true }} />
-        </div>
-        
-        <div className="stat-card" style={{ gridColumn: 'span 2' }}>
-          <div className="stat-title">Recent Orders</div>
           <div className="data-table">
             <table>
               <thead>
-                <tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th></tr>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
               </thead>
+
               <tbody>
                 {recentOrders.map(order => (
                   <tr key={order.id}>
                     <td>#{order.id.slice(0, 8)}</td>
                     <td>{order.customer_name}</td>
                     <td>${order.total}</td>
-                    <td><span className={`status-badge status-${order.status}`}>{order.status}</span></td>
-                    <td>{new Date(order.created_at).toLocaleDateString()}</td>
+                    <td>
+                      <span
+                        className={`status-badge status-${order.status}`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* TOP PRODUCTS */}
+        <div className="stat-card products-card">
+          <div className="section-header">Top Products</div>
+
+          <Bar
+            data={topProductsData}
+            options={{ responsive: true }}
+          />
         </div>
       </div>
     </div>

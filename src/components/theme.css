@@ -210,9 +210,9 @@
     z-index: 9999;
   }
 
-  @media (max-width: 768px) {
-    .theme-switch-top-right {
-      top: 0.75rem;
-      right: 0.75rem;
-    }
+@media (max-width: 768px) {
+  .theme-switch-top-right {
+    top: 0.5rem;     /* ~8px — cleanly above the nav */
+    right: 0.75rem;
   }
+}

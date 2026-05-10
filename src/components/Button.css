@@ -94,6 +94,16 @@ background: linear-gradient(to bottom, #493b3b, #2d2f31);
   }
 }
 
+.mobile-menu .button-wrapper {
+  width: 100%;
+}
+
+.mobile-menu .custom-btn {
+  width: 100% !important;
+  justify-content: center;
+  display: flex;
+}
+
 .custom-btn:active {
   color: black;
   background: var(--primary);
@@ -103,3 +113,4 @@ background: linear-gradient(to bottom, #493b3b, #2d2f31);
     inset -4px -4px 12px #6F4E37;
   transition: transform 0.1s ease;
 }
+

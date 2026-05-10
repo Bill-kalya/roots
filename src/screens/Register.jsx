@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "./Register.css";
 import { register } from "../services/api.js";
+import { Link } from "react-router-dom";
+
 
 
 const INTERESTS = [
@@ -219,6 +221,12 @@ const Register = () => {
 
       setRegistered(true);
     } catch (err) {
+      // Handle common duplicate-email case (backend returns 400)
+      if (err?.response?.status === 400) {
+        setError("DUPLICATE_EMAIL");
+        return;
+      }
+
       setError(err.response?.data?.detail || err.message || "Registration failed");
     } finally {
       setLoading(false);
@@ -254,7 +262,20 @@ const Register = () => {
 
           <h2>{stepTitles[step]}</h2>
 
-          {error && <div className="error">{error}</div>}
+          {error && (
+            <div className="error">
+              {error === "DUPLICATE_EMAIL" ? (
+                <>
+                  This email is already in use.
+                  <br />
+                  Please{' '}
+                  <Link to="/login">log in</Link> instead.
+                </>
+              ) : (
+                error
+              )}
+            </div>
+          )}
 
           {/* STEP 1: Identity */}
           {step === 1 && (

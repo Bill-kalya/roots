@@ -18,8 +18,9 @@
   border: none;
   transition: all 0.4s ease;
   box-shadow:
-    6px 6px 12px #2a1a1a,
-    -6px -6px 12px #6F4E37;
+  inset 0 4px 8px rgba(255, 255, 255, 0.12),
+  inset 0 -4px 8px rgba(0, 0, 0, 0.5),
+  0 6px 16px rgba(0, 0, 0, 0.45);
   overflow: hidden;
 }
 
@@ -119,9 +120,19 @@
   font-size: 22px;
   background: transparent;
   border: none;
+  box-shadow: none;
+  outline: none;
   cursor: pointer;
   color: var(--text);
+  padding: 4px;
 }
+
+.menu-toggle:focus,
+.menu-toggle:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 
 /* ── Responsive ── */
 @media (min-width: 1025px) {
@@ -176,11 +187,7 @@
   }
 }
 
-@media (max-width: 480px) {
-  .nav-right .shop-now-btn {
-    display: none; /* hide Shop Now on very small screens */
-  }
-}
+
 
 .nav-right .shop-now-btn.custom-btn {
   transition: all 0.2s ease;

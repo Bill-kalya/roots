@@ -928,6 +928,8 @@ background: linear-gradient(to bottom, #493b3b, #2d2f31);
 @media (max-width: 768px) {
   /* Nav */
   .nav {
+    z-index: 1000;
+    top: 54px;
     padding: 0 20px;
   }
 

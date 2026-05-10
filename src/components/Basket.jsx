@@ -189,9 +189,14 @@ export default function Basket() {
   // ── Quantity change: optimistic update then sync ─────────────────────────
   const handleQuantityChange = async (productId, newQty) => {
     if (newQty < 1) return;
+    if (typeof productId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId)) {
+      setActionError("Invalid cart item id. Please refresh your cart.");
+      return;
+    }
+
     // Optimistic
     setItems((prev) =>
-      prev.map((i) => i.product_id === productId ? { ...i, quantity: newQty } : i)
+      prev.map((i) => (i.product_id === productId ? { ...i, quantity: newQty } : i))
     );
     setActionError("");
     try {
@@ -199,20 +204,40 @@ export default function Basket() {
       // or use a PATCH /api/cart/items/:id endpoint
       await doAdd(productId, newQty);
     } catch (err) {
-      setActionError(err.message || "Failed to update quantity.");
+      setActionError(
+        err?.response?.data?.detail ||
+          err?.response?.data?.message ||
+          err.message ||
+          "Failed to update quantity."
+      );
       refetch(); // roll back by re-fetching
     }
   };
 
   // ── Remove ────────────────────────────────────────────────────────────────
   const handleRemove = async (productId) => {
+    if (
+      typeof productId !== "string" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        productId
+      )
+    ) {
+      setActionError("Invalid cart item id. Please refresh your cart.");
+      return;
+    }
+
     // Optimistic
     setItems((prev) => prev.filter((i) => i.product_id !== productId));
     setActionError("");
     try {
       await doRemove(productId);
     } catch (err) {
-      setActionError(err.message || "Failed to remove item.");
+      setActionError(
+        err?.response?.data?.detail ||
+          err?.response?.data?.message ||
+          err.message ||
+          "Failed to remove item."
+      );
       refetch();
     }
   };

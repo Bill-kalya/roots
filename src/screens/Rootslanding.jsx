@@ -10,30 +10,105 @@ const STATIC_PRODUCTS = [
   {
     id: 1,
     name: "Ebony Queen Mask",
-    description: "Hand-carved ceremonial mask from Ghanaian Ashanti artisans.",
-    origin: "Ghana",
+    description:
+      "Hand-carved ceremonial mask from Ghanaian Ashanti artisans.",
+
+    longDescription:
+      "This ceremonial mask was carved from aged ebony wood by master artisans from the Ashanti region of Ghana. Traditionally used during royal festivals and ancestral ceremonies, every curve symbolizes protection, wisdom, and continuity of heritage.",
+
+    origin: "Kumasi, Ghana",
+
+    artisan:
+      "Crafted by Kwaku Mensah, a third-generation wood sculptor specializing in ceremonial carvings.",
+
+    materials: ["Ebony Wood", "Natural Dye", "Bronze Inlay"],
+
+    dimensions: "48cm x 22cm",
+
+    weight: "3.1kg",
+
+    year: "2025",
+
     price: 12800,
+
     image_url: `${import.meta.env.BASE_URL}mask.jpg`,
-    tag: "Featured"
+
+    gallery: [
+      `${import.meta.env.BASE_URL}mask.jpg`,
+      `${import.meta.env.BASE_URL}mask-side.jpg`,
+      `${import.meta.env.BASE_URL}mask-back.jpg`,
+    ],
+
+    tag: "Featured",
   },
   {
     id: 2,
     name: "Kente Royal Stole",
-    description: "Handwoven Kente cloth using 7 traditional colors.",
-    origin: "Ghana",
+    description:
+      "Handwoven Kente cloth using seven traditional colors.",
+
+    longDescription:
+      "Woven on traditional looms by master weavers from Ghana, this Kente stole is crafted using seven symbolic colors. Each stripe pattern honors the lineage of royal textiles and carries cultural meaning from festivals, court ceremonies, and family celebrations.",
+
+    origin: "Bonwire, Ghana",
+
+    artisan:
+      "Crafted by Akosua Ntim, a heritage weaver trained in royal Kente patterns.",
+
+    materials: ["Handspun Cotton", "Natural Dye", "Kente Loom Thread"],
+
+    dimensions: "200cm x 55cm",
+
+    weight: "0.9kg",
+
+    year: "2025",
+
     price: 4500,
-    image_url: null,
-    tag: "New"
+
+    image_url: `${import.meta.env.BASE_URL}kente.jpg`,
+
+    gallery: [
+      `${import.meta.env.BASE_URL}kente.jpg`,
+      `${import.meta.env.BASE_URL}kente-pattern.jpg`,
+      `${import.meta.env.BASE_URL}kente-fold.jpg`,
+    ],
+
+    tag: "New",
   },
   {
     id: 3,
     name: "Bronze Warrior",
-    description: "Lost-wax cast Benin bronze sculpture.",
-    origin: "Nigeria",
+    description:
+      "Lost-wax cast Benin bronze sculpture with ceremonial presence.",
+
+    longDescription:
+      "Cast using the lost-wax technique by skilled artisans from the Benin heritage tradition, this bronze warrior figure captures posture, strength, and ceremonial symbolism. The surface is finished to bring out rich tones and lasting detail.",
+
+    origin: "Benin City, Nigeria",
+
+    artisan:
+      "Crafted by Emeka Okafor, a bronze specialist preserving the lost-wax craft.",
+
+    materials: ["Bronze Alloy", "Natural Patina"],
+
+    dimensions: "36cm x 18cm",
+
+    weight: "4.7kg",
+
+    year: "2025",
+
     price: 28500,
+
     image_url: `${import.meta.env.BASE_URL}necklace.jpg`,
-  }
+
+    gallery: [
+      `${import.meta.env.BASE_URL}necklace.jpg`,
+      `${import.meta.env.BASE_URL}bronze-side.jpg`,
+      `${import.meta.env.BASE_URL}bronze-back.jpg`,
+    ],
+  },
 ];
+
 
 const STATIC_TESTIMONIALS = [
   {
@@ -197,9 +272,6 @@ function HeroSection() {
     <section className="hero">
       <div className="hero-accent-line" />
       <div className="hero-orb" />
-      <div className={`hero-logo-right ${loaded ? "hero-logo-right-visible" : ""}`}>
-        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Roots Logo" />
-      </div>
       <div className="hero-content">
         <div className={`hero-label ${loaded ? "hero-label-visible" : ""}`}>
           <div className="hero-label-line" />
@@ -226,6 +298,9 @@ function HeroSection() {
             </div>
           ))}
         </div>
+      </div>
+      <div className={`hero-logo-right ${loaded ? "hero-logo-right-visible" : ""}`}>
+        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Roots Logo" />
       </div>
       <div className="scroll-indicator">
         <span>SCROLL</span>
@@ -283,12 +358,13 @@ function ProductCard({ product, delay }) {
       ref={cardRef}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => navigate("/checkout")}
+      onClick={() => navigate("/product/" + product.id)}
       className={[
         "product-card",
         hovered ? "product-card-hovered" : "",
         cardInView ? "product-card-visible" : "",
       ].join(" ")}
+
       style={{ transitionDelay: `${delay}ms` }}
       aria-label={product.name}
     >
@@ -537,7 +613,6 @@ export default function RootsLanding() {
     <SessionGuard>
       <DataProvider>
         <div className="roots-landing" style={{position: 'relative'}}>
-          <Nav />
           <HeroSection />
           <MarqueeBanner />
           <CollectionSection />

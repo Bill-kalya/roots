@@ -17,22 +17,42 @@ import AppToaster from './components/Toaster';
 import VerifyEmail from './screens/VerifyEmail';
 import LoginMfaChallenge from './screens/LoginMfaChallenge';
 import MfaSetup from './screens/MfaSetup';
+import ProductDetails from './pages/ProductDetails';
 
 
+
+
+const shouldHideNav = (pathname) => {
+
+  const p = (pathname || "").toLowerCase();
+  return (
+    p === "/checkout" ||
+    p === "/login" ||
+    p === "/register" ||
+    p === "/admin" ||
+    p === "/merchant" ||
+    p.startsWith("/admin/") ||
+    p.startsWith("/merchant/")
+  );
+};
 
 const AppContent = () => {
 
   const location = useLocation();
   return (
+
     <>
       <div className="theme-switch-container">
         <Theme />
       </div>
-{!['/login', '/register', '/Admin', '/Merchant'].includes(location.pathname) && <Nav />}
+{!shouldHideNav(location.pathname) && <Nav />}
+
       <Routes>
         <Route path="/" element={<RootsLanding />} />
         <Route path="/basket" element={<Basket />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/product/:id" element={<ProductDetails />} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/login/mfa" element={<LoginMfaChallenge />} />
         <Route path="/settings/mfa" element={<MfaSetup />} />

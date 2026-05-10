@@ -18,9 +18,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     position: relative;
   }
+
  
   /* Floating adinkra symbols */
   
@@ -32,7 +34,7 @@
 
  
   /* Card */
-  .login-card {
+.login-card {
   margin-top: clamp(1rem, 3vw, 1.25rem);
   display: flex;
   width: 100%;
@@ -41,6 +43,79 @@
   margin: 0 auto;
   animation: card-in .8s ease both;
 }
+
+@media (max-width: 900px) {
+  .login-card {
+    flex-direction: column;
+    max-width: min(35rem, 96vw);
+    min-height: auto;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .login-lp {
+    width: 100%;
+    min-width: 0;
+    border-radius: 2px 2px 0 0;
+    padding: 36px 20px;
+  }
+
+  .rp {
+    width: 100%;
+    flex-shrink: 0;
+    padding: 28px 20px 44px;
+    border-radius: 0 0 2px 2px;
+  }
+
+  .ft {
+    font-size: 26px;
+  }
+
+  .brand-name {
+    font-size: 28px;
+    letter-spacing: 4px;
+  }
+
+  .brand-tag {
+    font-size: 16px;
+    letter-spacing: 2px;
+  }
+
+  .brand-desc {
+    margin-top: 24px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 520px) {
+  .login-lp {
+    padding: 28px 16px;
+  }
+
+  .rp {
+    padding: 22px 16px 36px;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .form {
+    width: 100%;
+  }
+
+  .ig input {
+    padding: 10px 12px;
+  }
+
+  .opts {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+
   @keyframes card-in {
     from { opacity:0; transform: translateY(24px); }
     to   { opacity:1; transform: translateY(0); }

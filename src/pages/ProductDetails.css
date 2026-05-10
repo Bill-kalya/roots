@@ -1,0 +1,160 @@
+.product-details-page {
+  min-height: 100vh;
+  background: var(--background);
+  padding: 120px 80px 80px;
+  color: var(--text);
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  color: #C4861A;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 40px;
+}
+
+.product-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 60px;
+}
+
+.main-image-wrapper {
+  width: 100%;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #2d2f31;
+  box-shadow:
+    inset 4px 4px 12px #2a1a1a,
+    inset -4px -4px 12px #6F4E37;
+}
+
+.main-product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.thumbnail {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 14px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: 0.3s;
+}
+
+.thumbnail-active,
+.thumbnail:hover {
+  opacity: 1;
+  border: 2px solid #C4861A;
+}
+
+.product-origin-label {
+  color: #C4861A;
+  letter-spacing: 4px;
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+
+.details-title {
+  font-size: clamp(38px, 5vw, 64px);
+  color: #F0C060;
+  margin-bottom: 12px;
+}
+
+.details-price {
+  font-size: 32px;
+  color: #C4861A;
+  margin-bottom: 28px;
+}
+
+.details-description {
+  color: #D4B896;
+  line-height: 1.9;
+  margin-bottom: 40px;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.detail-item {
+  padding: 20px;
+  border-radius: 18px;
+  background: #2d2f31;
+
+  box-shadow:
+    inset 4px 4px 12px #2a1a1a,
+    inset -4px -4px 12px #6F4E37;
+}
+
+.detail-item span {
+  display: block;
+  color: #7A5C3A;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.detail-item strong {
+  color: #F0C060;
+}
+
+.materials-section h3 {
+  color: #F0C060;
+  margin-bottom: 18px;
+}
+
+.materials-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.material-chip {
+  padding: 10px 18px;
+  border-radius: 30px;
+  background: rgba(196, 134, 26, 0.12);
+  color: #C4861A;
+}
+
+.add-cart-large {
+  width: 100%;
+  padding: 20px;
+  border: none;
+  border-radius: 20px;
+  background: #C4861A;
+  color: #0A0602;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+@media (max-width: 900px) {
+
+  .product-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .product-details-page {
+    padding: 110px 20px 60px;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
