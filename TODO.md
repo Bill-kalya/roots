@@ -1,6 +1,10 @@
 # TODO
 
-- [x] Update src/components/Button.css so `.mobile-menu .btn-text` is visible on mobile (override the existing `@media (max-width:1024px) { .btn-text { display: none !important; } }`).
-- [x] Apply requested mobile menu styling to `.mobile-menu .btn-text` (uppercase, font-weight 600, letter-spacing 0.1em, gold color).
-- [ ] Keep icon-only behavior intact for other button contexts on mobile.
-- [x] Validate by running dev server and checking mobile menu labels + spacing.
+## Auth + role-based routing fixes
+- [x] Create `TODO.md` with steps.
+- [ ] Create `src/context/AuthContext.jsx` to expose `{ user, syncUser, clearUser }` globally.
+- [ ] Update `src/screens/Login.jsx` handleSubmit to sync AuthContext and redirect based on JWT role.
+- [ ] Replace `src/App.jsx` with protected/case-consistent routes using `ProtectedRoute` and correct `/admin` + `/merchant` paths.
+- [ ] Update any remaining navigations to `/dashboard` to match the new role routes if needed (e.g., MFA success, etc.).
+- [ ] Run lint/build to ensure the project compiles.
+

@@ -11,9 +11,17 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from 'chart.js';
-import api from '../services/api';
+import {
+  getAnalytics,
+  getOrders,
+  updateSystemSettings,
+  updateUserRole,
+  getUsers,
+} from '../services/api';
 import './admin.css';
+
 
 ChartJS.register(
   CategoryScale,
@@ -24,10 +32,36 @@ ChartJS.register(
   ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
+
 const AdminDashboard = () => {
+  const [users, setUsers] = useState([]);
+  const [updatingUserIds, setUpdatingUserIds] = useState({});
+
+  const fetchUsers = async () => {
+    const data = await getUsers();
+    setUsers(Array.isArray(data) ? data : data?.users || []);
+  };
+
+  useEffect(() => {
+    fetchUsers().catch((e) => console.error('Error fetching users:', e));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onPromoteDemote = async (userId, targetRole) => {
+    setUpdatingUserIds((prev) => ({ ...prev, [userId]: true }));
+    try {
+      await updateUserRole(userId, targetRole);
+      await fetchUsers();
+    } catch (e) {
+      console.error('Error updating user role:', e);
+    } finally {
+      setUpdatingUserIds((prev) => ({ ...prev, [userId]: false }));
+    }
+  };
   const [stats, setStats] = useState({
     totalSales: 0,
     totalOrders: 0,
@@ -68,9 +102,10 @@ const AdminDashboard = () => {
     const load = async () => {
       try {
         const [analytics, orders] = await Promise.all([
-          api.getAnalytics(),
-          api.getOrders({ limit: 10 }),
+          getAnalytics(),
+          getOrders({ limit: 10 }),
         ]);
+
         if (!cancelled) applyDashboardData(analytics, orders);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -84,9 +119,10 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const [analytics, orders] = await Promise.all([
-        api.getAnalytics(),
-        api.getOrders({ limit: 10 }),
+        getAnalytics(),
+        getOrders({ limit: 10 }),
       ]);
+
       applyDashboardData(analytics, orders);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -95,11 +131,12 @@ const AdminDashboard = () => {
 
   const toggleMaintenance = async () => {
     try {
-      await api.updateSystemSettings({ maintenance_mode: !maintenanceMode });
+      await updateSystemSettings({ maintenance_mode: !maintenanceMode });
       setMaintenanceMode(!maintenanceMode);
     } catch (error) {
       console.error('Error toggling maintenance mode:', error);
     }
+
   };
 
   const salesChartData = {
@@ -241,6 +278,15 @@ const AdminDashboard = () => {
         </div>
       </div>
 
+      {/* ADMIN USERS ROLE MANAGEMENT */}
+      <div className="bottom-grid">
+        <AdminUsersSection
+          users={users}
+          onPromoteDemote={onPromoteDemote}
+          updatingUserIds={updatingUserIds}
+        />
+      </div>
+
       {/* LOWER SECTION */}
       <div className="bottom-grid">
         {/* RECENT ORDERS */}
@@ -292,4 +338,65 @@ const AdminDashboard = () => {
   );
 };
 
+// =========================
+// ADMIN USERS ROLE MANAGEMENT UI
+// =========================
+
+const ROLE_BUTTONS = {
+  USER: { label: 'Promote to Merchant', targetRole: 'MERCHANT' },
+  MERCHANT: { label: 'Demote to User', targetRole: 'USER' },
+};
+
+const AdminUsersSection = ({ users, onPromoteDemote, updatingUserIds }) => {
+  return (
+    <div className="stat-card users-card">
+      <div className="section-header">Admin Users</div>
+      <div className="admin-users-table-hint">Role changes are applied immediately by the backend.</div>
+
+
+      <div className="data-table">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((u) => {
+              const role = u.role || 'USER';
+              const btnConfig = ROLE_BUTTONS[role];
+
+              return (
+                <tr key={u.id}>
+                  <td>
+                    <div className="user-email">{u.email}</div>
+                  </td>
+                  <td>{role}</td>
+                  <td>
+                    {btnConfig && (
+                      <button
+                        className={`btn ${role === 'USER' ? 'btn-success' : 'btn-primary'}`}
+                        onClick={() => onPromoteDemote(u.id, btnConfig.targetRole)}
+                        disabled={Boolean(updatingUserIds[u.id])}
+                      >
+                        {updatingUserIds[u.id]
+                          ? 'Updating...'
+                          : btnConfig.label}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
 export default AdminDashboard;
+
+

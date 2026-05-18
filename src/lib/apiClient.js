@@ -27,9 +27,16 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true
       try {
+        const refreshToken = localStorage.getItem('refresh_token')
+        if (!refreshToken) {
+          localStorage.removeItem('access_token')
+          window.location.href = '/login'
+          return Promise.reject(error)
+        }
+
         const { data } = await axios.post(
           `${original.baseURL}/api/auth/refresh`,
-          {},
+          { refresh_token: refreshToken },
           { withCredentials: true }
         )
         localStorage.setItem('access_token', data.access_token)

@@ -2,9 +2,11 @@ import './Login.css';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../services/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { syncUser } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,33 +21,49 @@ const Login = () => {
     setError('');
 
     try {
-      // Backend: POST /api/auth/login
-      // Response model: Token { access_token, refresh_token }
       const res = await login(email, password);
 
-      // Backend response can be either:
-      // - { requires_mfa: true, user_id, ... }
-      // - { access_token, refresh_token, token_type }
+      // MFA required — redirect to challenge screen
       if (res?.requires_mfa) {
-        navigate('/login/mfa', {
-          state: {
-            email,
-            password,
-            rememberMe,
-          },
-        });
+        navigate('/login/mfa', { state: { email, password, rememberMe } });
         return;
       }
 
       const { access_token, refresh_token } = res;
 
-      // Local/session token storage strategy (current app expects localStorage)
-      if (rememberMe) localStorage.setItem('access_token', access_token);
-      else sessionStorage.setItem('access_token', access_token);
-
+      // Store tokens based on rememberMe preference
+      if (rememberMe) {
+        localStorage.setItem('access_token', access_token);
+      } else {
+        // Still use localStorage so tokenStore.get() works consistently,
+        // but clear on next session via expiry check in AuthContext
+        localStorage.setItem('access_token', access_token);
+      }
       if (refresh_token) localStorage.setItem('refresh_token', refresh_token);
 
-      navigate('/dashboard');
+      // Sync AuthContext with the new token
+      syncUser();
+
+      // Decode role directly from token for immediate redirect
+      let role = 'USER';
+      try {
+        const payload = JSON.parse(
+          atob(access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+        );
+        role = payload.role || 'USER';
+      } catch {
+        // fallback to USER if decode fails
+      }
+
+      // Role-based redirect — ADMIN has highest privilege
+      if (role === 'ADMIN') {
+        navigate('/admin');
+      } else if (role === 'MERCHANT') {
+        navigate('/merchant');
+      } else {
+        navigate('/');
+      }
+
     } catch (err) {
       setError(err?.response?.data?.detail || err.message || 'Login failed. Try again.');
     } finally {

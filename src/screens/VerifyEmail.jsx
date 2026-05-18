@@ -1,8 +1,9 @@
 import './VerifyEmail.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import apiClient from '../lib/apiClient.js';
+
 
 function getTokenFromQuery(search) {
   const params = new URLSearchParams(search);
@@ -13,21 +14,24 @@ const VerifyEmail = () => {
   const location = useLocation();
   const token = useMemo(() => getTokenFromQuery(location.search), [location.search]);
 
+  const calledRef = useRef(false);
+
   const [status, setStatus] = useState('loading'); // loading | success | error
   const [message, setMessage] = useState('');
   const [errorKey, setErrorKey] = useState(null);
 
   useEffect(() => {
-    let cancelled = false;
+    if (!token) {
+      setStatus('error');
+      setMessage('Missing verification token.');
+      setErrorKey('invalid');
+      return;
+    }
+
+    if (calledRef.current) return;
+    calledRef.current = true;
 
     async function run() {
-      if (!token) {
-        setStatus('error');
-        setMessage('Missing verification token.');
-        setErrorKey('invalid');
-        return;
-      }
-
       setStatus('loading');
       setMessage('Verifying your email...');
 
@@ -38,11 +42,10 @@ const VerifyEmail = () => {
           params: { token },
         });
 
-        if (cancelled) return;
+        // No cancellation check — calledRef already prevents double calls
         setStatus('success');
         setMessage(res.data?.message || 'Email verified successfully.');
       } catch (err) {
-        if (cancelled) return;
         const detail = err?.response?.data?.detail || 'Verification failed.';
 
         // Map backend error details to UX.
@@ -56,16 +59,14 @@ const VerifyEmail = () => {
         setStatus('error');
         setMessage(detail);
 
-        // Non-blocking toast
         toast.error('Email verification failed');
       }
     }
 
     run();
-    return () => {
-      cancelled = true;
-    };
   }, [token]);
+
+
 
   const friendly = useMemo(() => {
     if (status === 'success') {

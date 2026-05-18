@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+import {
+  getMerchantProducts,
+  getMerchantOrders,
+  getMerchantAnalytics,
+  createMerchantProduct,
+  updateMerchantProduct,
+  deleteMerchantProduct,
+  updateOrderStatus,
+} from '../services/api';
 import './merchant.css';
 import { toast } from 'sonner';
+
 
 const MerchantDashboard = () => {
   const [products, setProducts] = useState([]);
@@ -31,10 +40,11 @@ const MerchantDashboard = () => {
 
     try {
       const [productsData, ordersData, analyticsData] = await Promise.all([
-        api.getMerchantProducts(),
-        api.getMerchantOrders(),
-        api.getMerchantAnalytics(),
+        getMerchantProducts(),
+        getMerchantOrders(),
+        getMerchantAnalytics(),
       ]);
+
 
       applyMerchantData(productsData, ordersData, analyticsData);
     } catch (err) {
@@ -61,15 +71,22 @@ const MerchantDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSaveProduct = async (productData) => {
+  const handleSaveProduct = async (productData, isFormData = false) => {
     try {
+      // Many apiClient wrappers accept either:
+      // - raw JSON body
+      // - FormData body (multipart)
+      // If your API client already handles multipart headers, passing `isFormData` won't hurt.
+      const config = isFormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+
       if (editingProduct) {
-        await api.updateMerchantProduct(editingProduct.id, productData);
+        await updateMerchantProduct(editingProduct.id, productData, config);
         toast.success('Product updated!');
       } else {
-        await api.createMerchantProduct(productData);
+        await createMerchantProduct(productData, config);
         toast.success('Product created!');
       }
+
 
       await loadMerchantData();
       setShowProductForm(false);
@@ -87,7 +104,8 @@ const MerchantDashboard = () => {
       // minimal optimistic UI
       setProducts((prev) => prev.filter((p) => p.id !== id));
 
-      await api.deleteMerchantProduct(id);
+      await deleteMerchantProduct(id);
+
       toast.success('Product deleted!');
 
       await loadMerchantData();
@@ -106,7 +124,9 @@ const MerchantDashboard = () => {
         prev.map((o) => (o.id === orderId ? { ...o, status } : o))
       );
 
-      await api.updateOrderStatus(orderId, status);
+      await updateOrderStatus(orderId, status);
+
+
       toast.success('Order status updated!');
       await loadMerchantData();
     } catch (err) {
@@ -283,15 +303,33 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
     description: product?.description || '',
     price: product?.price || '',
     image_url: product?.image_url || '',
+    image_file: null,
     origin: product?.origin || '',
     tag: product?.tag || '',
     stock: product?.stock || 0,
     is_featured: product?.is_featured || false,
   });
 
+  const [imagePreview, setImagePreview] = useState(product?.image_url || null);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+
+    if (formData.image_file) {
+      const data = new FormData();
+
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'image_file') {
+          data.append('image', value);
+        } else if (key !== 'image_url') {
+          data.append(key, value);
+        }
+      });
+
+      onSave(data, true);
+    } else {
+      onSave(formData, false);
+    }
   };
 
   return (
@@ -344,13 +382,36 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
             </div>
           </div>
           <div className="form-group">
-            <label>Image URL</label>
+            <label>Product Image</label>
+
+            {/* Preview */}
+            {imagePreview && (
+              <div style={{ marginBottom: '8px' }}>
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  style={{
+                    width: '120px',
+                    height: '120px',
+                    objectFit: 'cover',
+                    borderRadius: '8px',
+                    border: '1px solid #ddd',
+                  }}
+                />
+              </div>
+            )}
+
             <input
-              type="url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              required
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                setFormData({ ...formData, image_file: file, image_url: '' });
+                setImagePreview(URL.createObjectURL(file));
+              }}
             />
+            <small style={{ color: '#888' }}>JPG, PNG, WEBP — max 5MB</small>
           </div>
           <div className="form-row">
             <div className="form-group">

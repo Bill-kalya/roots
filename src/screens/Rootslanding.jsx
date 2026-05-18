@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+
 import "./Rootslanding.css";
 import Cart from "../components/Cart";
 import Footer from "../components/Footer";
 import Nav from "../components/Nav";
+import api, { addToCart } from "../services/api";
+
+
 
 // ─── Static Data (replaces broken API calls) ──────────────────────────────────
 const STATIC_PRODUCTS = [
@@ -340,13 +344,29 @@ function ProductCard({ product, delay }) {
   const [addingToCart, setAddingToCart] = useState(false);
   const [cardRef, cardInView] = useInView(0.1);
 
+  // addToCart imported from services/api (Vite/ESM)
+
+
+
+
+
+
+  // Note: Landing products currently use numeric ids (1,2,3...).
+  // If your backend cart expects UUID product_ids, update STATIC_PRODUCTS id values accordingly.
+
   const handleAddToCart = async (e) => {
     e.stopPropagation();
+    if (addingToCart) return;
     setAddingToCart(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    window.dispatchEvent(new CustomEvent("roots:cart-updated"));
-    setAddingToCart(false);
+    try {
+      await addToCart(product.id, 1);
+      window.dispatchEvent(new CustomEvent("roots:cart-updated"));
+    } catch (err) {
+      // optional: surface error to user
+      console.error("addToCart failed", err);
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   const displayPrice = typeof product.price === "number"
@@ -609,9 +629,30 @@ function SessionGuard({ children }) {
 
 // ─── Main Landing Page ────────────────────────────────────────────────────────
 export default function RootsLanding() {
+
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.scrollToTop) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    if (location.state?.scrollToCollection) {
+      // Wait for landing sections to mount before scrolling.
+      setTimeout(() => {
+        document.querySelector('.collection')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 50);
+    }
+  }, [location.state]);
+
   return (
     <SessionGuard>
       <DataProvider>
+
         <div className="roots-landing" style={{position: 'relative'}}>
           <HeroSection />
           <MarqueeBanner />

@@ -12,7 +12,28 @@ function Nav() {
   const [cartOpen, setCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [basketCount, setBasketCount] = useState(0);
+
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem("cart") || "{}");
+        const count = (stored.items || []).reduce(
+          (n, i) => n + (i.quantity || 0),
+          0
+        );
+        setBasketCount(count);
+      } catch {
+        setBasketCount(0);
+      }
+    };
+
+    handler(); // initialize badge on mount
+    window.addEventListener("roots:cart-updated", handler);
+    return () => window.removeEventListener("roots:cart-updated", handler);
+  }, []);
+
 
   const toggleMenu = () => setMenuOpen(prev => !prev);
 

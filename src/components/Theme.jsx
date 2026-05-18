@@ -5,11 +5,10 @@ const ThemeSwitch = () => {
   const [isDark, setIsDark] = useState(false);
 
   const toggleTheme = () => {
-    // Animate switch but lock on light + show message
+    // Animate switch but lock on light mode (do not change global colour scheme)
     setIsDark(prev => !prev);
     setTimeout(() => {
       setIsDark(false); // Snap back to light
-      alert('Coming Soon...'); // Or implement toast
     }, 300); // Match animation duration
     document.documentElement.classList.remove('dark'); // Ensure no dark
   };

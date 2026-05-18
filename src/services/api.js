@@ -183,7 +183,67 @@ export const removeFromCart = (productId, signal) =>
   api.delete(`/api/cart/items/${productId}`, { signal }).then((res) => res.data);
 
 // =========================
+// MERCHANT
+// =========================
+export const getMerchantProducts = (signal) =>
+  api.get('/api/merchant/products', { signal }).then((res) => res.data);
+
+export const createMerchantProduct = (data, config = {}) =>
+  api.post('/api/merchant/products', data, config).then((res) => res.data);
+
+export const updateMerchantProduct = (id, data, config = {}) =>
+  api.put(`/api/merchant/products/${id}`, data, config).then((res) => res.data);
+
+export const deleteMerchantProduct = (id, signal) =>
+  api.delete(`/api/merchant/products/${id}`, { signal }).then((res) => res.data);
+
+export const getMerchantOrders = (signal) =>
+  api.get('/api/merchant/orders', { signal }).then((res) => res.data);
+
+export const updateOrderStatus = (orderId, status, signal) =>
+  api
+    .put(
+      `/api/merchant/orders/${orderId}/status`,
+      { status },
+      { signal }
+    )
+    .then((res) => res.data);
+
+export const getMerchantAnalytics = (signal) =>
+  api.get('/api/merchant/analytics', { signal }).then((res) => res.data);
+
+// =========================
+// ADMIN
+// =========================
+export const getAnalytics = (signal) =>
+  api.get('/api/admin/dashboard/stats', { signal }).then((res) => res.data);
+
+export const getOrders = (params, signal) =>
+  api.get('/api/admin/dashboard/orders', { params, signal }).then((res) => res.data);
+
+export const updateSystemSettings = (data, signal) =>
+  api.put('/api/admin/settings/', data, { signal }).then((res) => res.data);
+
+// =========================
+// ADMIN USERS (role management)
+// =========================
+// PATCH /api/admin/users/{user_id}/role
+export const updateUserRole = (userId, role, signal) =>
+  api
+    .patch(`/api/admin/users/${userId}/role`, { role }, { signal })
+    .then((res) => res.data);
+
+// GET /api/admin/users/ (admin users list)
+// Backend must return role + merchant_approved (or frontend will have no button gating)
+export const getUsers = (signal) =>
+  api.get('/api/admin/users/', { signal }).then((res) => res.data);
+
+// =========================
 // EXPORT
 // =========================
 export default api;
+
+
+
+
 

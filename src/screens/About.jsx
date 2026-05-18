@@ -1,4 +1,6 @@
 import Footer from '../components/Footer';
+import { useNavigate } from 'react-router-dom';
+
 
 // ═══════════════════════════════════════════════════════════
 // ABOUT PAGE
@@ -54,7 +56,9 @@ import { useState, useEffect, useRef } from 'react';
 import './About.css';
 
 export default function AboutPage() {
+  const navigate = useNavigate();
   const [heroRef, heroVis] = useReveal();
+
   const [splitRef, splitVis] = useReveal();
   const [valuesRef, valuesVis] = useReveal();
   const [teamRef, teamVis] = useReveal();
@@ -64,8 +68,11 @@ export default function AboutPage() {
     <div className="page">
       <section className="about-hero">
         <div ref={heroRef} className={`reveal ${heroVis ? "visible" : ""}`}>
-          <Badge label="OUR STORY" />
+          <div className="about-our-story-cta">
+            <button type="button" className="about-our-story-btn" onClick={() => navigate('/about')}>OUR STORY</button>
+          </div>
           <h1 className="about-title">Art Is Not<br /><em style={{ color: "var(--gold)" }}>Decoration.</em><br />It Is Memory.</h1>
+
           <p className="about-subtitle" style={{ marginTop: 24 }}>
             Roots was founded on a simple belief: that the people who create the world's most powerful art
             should be the ones who benefit most from its existence.
@@ -94,8 +101,8 @@ export default function AboutPage() {
         <div className={`about-content reveal-right ${splitVis ? "visible" : ""}`}>
           <h2>Why We Started</h2>
           <p>
-            In 2017, our founder Nana Kwame was cataloguing a collection at auction and realised that a Ghanaian
-            Ashanti mask fetching £40,000 had been acquired from its maker for less than £200. The artisan —
+            In 2026, our founders Carter Dave and Domnic Murray was cataloguing a collection at auction and realised that a Ghanaian
+            Ashanti seat fetching £40,000 had been acquired from its maker for less than £200. The artisan —
             a master carver with forty years of skill — had received less than 0.5% of its market value.
           </p>
           <p>
@@ -146,7 +153,17 @@ export default function AboutPage() {
           <Badge label="JOIN US" />
           <h2 className="cta-title">Start Your Collection</h2>
           <p className="cta-sub">Every purchase directly sustains an artisan family and preserves a living tradition.</p>
-          <button className="cta-btn">EXPLORE THE COLLECTION</button>
+          <button
+            type="button"
+            className="cta-btn"
+            onClick={() =>
+              navigate('/', { state: { scrollToCollection: true, scrollToTop: true } })
+            }
+          >
+            EXPLORE THE COLLECTION
+          </button>
+
+
         </div>
       </section>
  
