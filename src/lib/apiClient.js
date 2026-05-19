@@ -3,7 +3,9 @@ import axios from 'axios'
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
   withCredentials: true,
-  headers: { 'Content-Type': 'application/json' },
+  // No default Content-Type — axios sets it automatically per request:
+  //   FormData  → multipart/form-data; boundary=...
+  //   plain object → application/json
 })
 
 // Normalize all URLs - strip trailing slashes before every request

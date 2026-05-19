@@ -115,8 +115,17 @@ function CartDrawer({ isOpen, onClose }) {
   const [shouldFetch, setShouldFetch] = useState(false);
 
   useEffect(() => {
-    if (isOpen) setShouldFetch(prev => (prev ? prev : true));
+    if (isOpen) {
+      setShouldFetch((prev) => (prev ? prev : true));
+    }
   }, [isOpen]);
+
+  useEffect(() => {
+    // Initialize shouldFetch after mount/open to satisfy exhaustive deps / avoid sync updates in effect body.
+    if (!isOpen) return;
+    queueMicrotask(() => setShouldFetch((prev) => (prev ? prev : true)));
+  }, [isOpen]);
+
 
   const { data: cart, loading, error, refetch } = useApi(
     getCart,

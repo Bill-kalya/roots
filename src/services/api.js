@@ -27,6 +27,63 @@ export const tokenStore = {
 const api = apiClient;
 
 // =========================
+// AXIOS INTERCEPTORS
+// =========================
+// NOTE: src/lib/apiClient.js already contains a similar setup, but some flows
+// import this module directly. These interceptors ensure Authorization is
+// attached for every request made via `src/services/api.js`.
+
+api.interceptors.request.use((config) => {
+  const token = tokenStore.get();
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle 401 responses — token expired or invalid (refresh once, then redirect)
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const original = error.config;
+
+    if (error.response?.status === 401 && original && !original._retry) {
+      original._retry = true;
+
+      try {
+        // Try to refresh using the refresh token we store
+        const refresh_token = tokenStore.getRefresh();
+        if (!refresh_token) throw new Error('Missing refresh token');
+
+        // Use raw axios to avoid calling back into the same retry flow
+        const { default: axios } = await import('axios');
+        const refreshRes = await axios.post(
+          `${original.baseURL || api.defaults.baseURL}/api/auth/refresh`,
+          { refresh_token },
+          { withCredentials: true }
+        );
+
+        tokenStore.set(refreshRes.data.access_token);
+        if (refreshRes.data.refresh_token) {
+          tokenStore.setRefresh(refreshRes.data.refresh_token);
+        }
+
+        original.headers = original.headers || {};
+        original.headers.Authorization = `Bearer ${tokenStore.get()}`;
+        return api(original);
+      } catch {
+        tokenStore.clear();
+        window.location.href = '/login';
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+
+// =========================
 // AUTH
 // =========================
 export async function register(email, password, full_name, interests = [], signal) {

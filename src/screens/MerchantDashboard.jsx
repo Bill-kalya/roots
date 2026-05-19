@@ -6,7 +6,6 @@ import {
   createMerchantProduct,
   updateMerchantProduct,
   deleteMerchantProduct,
-  updateOrderStatus,
 } from '../services/api';
 import './merchant.css';
 import { toast } from 'sonner';
@@ -71,13 +70,10 @@ const MerchantDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSaveProduct = async (productData, isFormData = false) => {
+  const handleSaveProduct = async (productData) => {
     try {
-      // Many apiClient wrappers accept either:
-      // - raw JSON body
-      // - FormData body (multipart)
-      // If your API client already handles multipart headers, passing `isFormData` won't hurt.
-      const config = isFormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+      // For FormData, do NOT manually set Content-Type (axios will add boundary correctly).
+      const config = {};
 
       if (editingProduct) {
         await updateMerchantProduct(editingProduct.id, productData, config);
@@ -86,7 +82,6 @@ const MerchantDashboard = () => {
         await createMerchantProduct(productData, config);
         toast.success('Product created!');
       }
-
 
       await loadMerchantData();
       setShowProductForm(false);
@@ -117,7 +112,7 @@ const MerchantDashboard = () => {
     }
   };
 
-  const updateOrderStatus = async (orderId, status) => {
+  const handleUpdateOrderStatus = async (orderId, status) => {
     try {
       // minimal optimistic UI
       setOrders((prev) =>
@@ -125,7 +120,6 @@ const MerchantDashboard = () => {
       );
 
       await updateOrderStatus(orderId, status);
-
 
       toast.success('Order status updated!');
       await loadMerchantData();
@@ -266,7 +260,7 @@ const MerchantDashboard = () => {
                   <td>
                     <select
                       value={order.status}
-                      onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                      onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
                       className="status-select"
                     >
                       <option value="pending">Pending</option>
@@ -310,26 +304,33 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
     is_featured: product?.is_featured || false,
   });
 
+  const isEditing = Boolean(product);
+
+
   const [imagePreview, setImagePreview] = useState(product?.image_url || null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    const data = new FormData();
+    data.append('name', formData.name);
+    data.append('description', formData.description);
+    data.append('price', formData.price);
+    data.append('origin', formData.origin);
+    data.append('tag', formData.tag || '');
+    data.append('stock', formData.stock);
+    data.append('is_featured', formData.is_featured ? 'true' : 'false');
+
     if (formData.image_file) {
-      const data = new FormData();
-
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key === 'image_file') {
-          data.append('image', value);
-        } else if (key !== 'image_url') {
-          data.append(key, value);
-        }
-      });
-
-      onSave(data, true);
-    } else {
-      onSave(formData, false);
+      data.append('image', formData.image_file);
+    } else if (!isEditing) {
+      // New product — image is required
+      toast.error('Please select a product image');
+      return;
     }
+    // Editing with no new file: do not append `image` so backend keeps existing image.
+
+    onSave(data);
   };
 
   return (
@@ -421,6 +422,7 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
                 value={formData.origin}
                 onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
                 placeholder="e.g., Kenya, Ghana"
+                required
               />
             </div>
             <div className="form-group">

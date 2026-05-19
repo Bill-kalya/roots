@@ -54,8 +54,22 @@ const AdminDashboard = () => {
   const onPromoteDemote = async (userId, targetRole) => {
     setUpdatingUserIds((prev) => ({ ...prev, [userId]: true }));
     try {
-      await updateUserRole(userId, targetRole);
+      const res = await updateUserRole(userId, targetRole);
       await fetchUsers();
+
+      if (res?.requires_relogin) {
+        // Existing JWT for that user still contains the old role.
+        // They must log out + log back in for the new token claims to take effect.
+        window.dispatchEvent(
+          new CustomEvent('sonner:toast', {
+            detail: {
+              title: 'Role updated',
+              description: 'User must log out and log back in for the change to take effect.',
+              type: 'info',
+            },
+          })
+        );
+      }
     } catch (e) {
       console.error('Error updating user role:', e);
     } finally {

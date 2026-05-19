@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+
 import { useParams, useNavigate } from "react-router-dom";
 import Nav from "../components/Nav";
 import Footer from "../components/Footer";
 import "./ProductDetails.css";
+import { addToCart } from "../services/api";
+
 
 const PRODUCTS = [
   {
@@ -140,7 +143,20 @@ export default function ProductDetails() {
               </div>
             </div>
 
-            <button className="add-cart-large">ADD TO BASKET</button>
+            <button
+              className="add-cart-large"
+              onClick={async () => {
+                try {
+                  await addToCart(product.id, 1);
+                  window.dispatchEvent(new CustomEvent("roots:cart-updated"));
+                } catch (e) {
+                  console.error("addToCart failed", e);
+                }
+              }}
+            >
+              ADD TO BASKET
+            </button>
+
           </div>
         </div>
       </div>
