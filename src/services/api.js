@@ -203,7 +203,7 @@ export async function verifyEnrollMfa({ code, access_token }, signal) {
 // PRODUCTS
 // =========================
 export const getProducts = (params, signal) =>
-  api.get('/api/products', { params, signal }).then((res) => res.data);
+api.get('/api/products/', { params, signal }).then((res) => res.data);
 
 export const getProduct = (id, signal) =>
   api.get(`/api/products/${id}`, { signal }).then((res) => res.data);

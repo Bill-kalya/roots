@@ -1,6 +1,5 @@
-- [ ] Update src/screens/MerchantDashboard.jsx: ProductFormModal.handleSubmit to always submit FormData
-- [ ] Ensure create requires image; edit allows image omission (keep existing image_url)
-- [ ] Ensure no manual Content-Type set and handleSaveProduct still works with FormData
-- [ ] (Backend) Make update route image optional on PUT /merchant/products/{id} if not already
-- [ ] Run frontend lint/build and do manual testing of create/edit flows
+- [ ] Replace DataProvider useEffect in src/screens/Rootslanding.jsx with real API calls to /api/products and /api/testimonials (with AbortController).
+- [ ] Update refetchProducts and refetchTestimonials callbacks in src/screens/Rootslanding.jsx to perform real API calls.
+- [ ] Remove STATIC_PRODUCTS constant from src/screens/Rootslanding.jsx, keep STATIC_TESTIMONIALS as fallback.
+- [ ] Ensure code compiles and no references remain to removed STATIC_PRODUCTS.
 

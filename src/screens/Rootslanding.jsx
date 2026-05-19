@@ -9,110 +9,7 @@ import api, { addToCart } from "../services/api";
 
 
 
-// ─── Static Data (replaces broken API calls) ──────────────────────────────────
-const STATIC_PRODUCTS = [
-  {
-    id: 1,
-    name: "Ebony Queen Mask",
-    description:
-      "Hand-carved ceremonial mask from Ghanaian Ashanti artisans.",
-
-    longDescription:
-      "This ceremonial mask was carved from aged ebony wood by master artisans from the Ashanti region of Ghana. Traditionally used during royal festivals and ancestral ceremonies, every curve symbolizes protection, wisdom, and continuity of heritage.",
-
-    origin: "Kumasi, Ghana",
-
-    artisan:
-      "Crafted by Kwaku Mensah, a third-generation wood sculptor specializing in ceremonial carvings.",
-
-    materials: ["Ebony Wood", "Natural Dye", "Bronze Inlay"],
-
-    dimensions: "48cm x 22cm",
-
-    weight: "3.1kg",
-
-    year: "2025",
-
-    price: 12800,
-
-    image_url: `${import.meta.env.BASE_URL}mask.jpg`,
-
-    gallery: [
-      `${import.meta.env.BASE_URL}mask.jpg`,
-      `${import.meta.env.BASE_URL}mask-side.jpg`,
-      `${import.meta.env.BASE_URL}mask-back.jpg`,
-    ],
-
-    tag: "Featured",
-  },
-  {
-    id: 2,
-    name: "Kente Royal Stole",
-    description:
-      "Handwoven Kente cloth using seven traditional colors.",
-
-    longDescription:
-      "Woven on traditional looms by master weavers from Ghana, this Kente stole is crafted using seven symbolic colors. Each stripe pattern honors the lineage of royal textiles and carries cultural meaning from festivals, court ceremonies, and family celebrations.",
-
-    origin: "Bonwire, Ghana",
-
-    artisan:
-      "Crafted by Akosua Ntim, a heritage weaver trained in royal Kente patterns.",
-
-    materials: ["Handspun Cotton", "Natural Dye", "Kente Loom Thread"],
-
-    dimensions: "200cm x 55cm",
-
-    weight: "0.9kg",
-
-    year: "2025",
-
-    price: 4500,
-
-    image_url: `${import.meta.env.BASE_URL}kente.jpg`,
-
-    gallery: [
-      `${import.meta.env.BASE_URL}kente.jpg`,
-      `${import.meta.env.BASE_URL}kente-pattern.jpg`,
-      `${import.meta.env.BASE_URL}kente-fold.jpg`,
-    ],
-
-    tag: "New",
-  },
-  {
-    id: 3,
-    name: "Bronze Warrior",
-    description:
-      "Lost-wax cast Benin bronze sculpture with ceremonial presence.",
-
-    longDescription:
-      "Cast using the lost-wax technique by skilled artisans from the Benin heritage tradition, this bronze warrior figure captures posture, strength, and ceremonial symbolism. The surface is finished to bring out rich tones and lasting detail.",
-
-    origin: "Benin City, Nigeria",
-
-    artisan:
-      "Crafted by Emeka Okafor, a bronze specialist preserving the lost-wax craft.",
-
-    materials: ["Bronze Alloy", "Natural Patina"],
-
-    dimensions: "36cm x 18cm",
-
-    weight: "4.7kg",
-
-    year: "2025",
-
-    price: 28500,
-
-    image_url: `${import.meta.env.BASE_URL}necklace.jpg`,
-
-    gallery: [
-      `${import.meta.env.BASE_URL}necklace.jpg`,
-      `${import.meta.env.BASE_URL}bronze-side.jpg`,
-      `${import.meta.env.BASE_URL}bronze-back.jpg`,
-    ],
-  },
-];
-
+// NOTE: STATIC_PRODUCTS was removed; products now load from the API.
 
 const STATIC_TESTIMONIALS = [
   {
@@ -143,33 +40,69 @@ function DataProvider({ children }) {
   });
 
   useEffect(() => {
-    // Simulate async load with static data
-    const timer = setTimeout(() => {
-      setData({
-        products: STATIC_PRODUCTS,
-        testimonials: STATIC_TESTIMONIALS,
-        productsLoading: false,
-        testimonialsLoading: false,
-        productsError: null,
-        testimonialsError: null
-      });
-    }, 800);
-    return () => clearTimeout(timer);
+    const controller = new AbortController();
+
+    const fetchAll = async () => {
+      setData(prev => ({ ...prev, productsLoading: true, testimonialsLoading: true }));
+      try {
+        const [productsRes, testimonialsRes] = await Promise.allSettled([
+api.get('/api/products/', { signal: controller.signal }),
+          api.get('/api/testimonials', { signal: controller.signal }),
+        ]);
+
+        setData(prev => ({
+          ...prev,
+          products:
+            productsRes.status === 'fulfilled'
+              ? (productsRes.value.data?.items ?? productsRes.value.data ?? [])
+              : [],
+          productsLoading: false,
+          productsError: productsRes.status === 'rejected' ? productsRes.reason : null,
+
+          testimonials:
+            testimonialsRes.status === 'fulfilled'
+              ? (testimonialsRes.value.data?.items ?? testimonialsRes.value.data ?? [])
+              : STATIC_TESTIMONIALS,
+          testimonialsLoading: false,
+          testimonialsError: null,
+        }));
+      } catch (err) {
+        if (err?.name === 'CanceledError') return;
+        setData(prev => ({
+          ...prev,
+          productsLoading: false,
+          testimonialsLoading: false,
+          productsError: err,
+        }));
+      }
+    };
+
+    fetchAll();
+    return () => controller.abort();
   }, []);
 
-  const refetchProducts = useCallback(() => {
+  const refetchProducts = useCallback(async () => {
     setData(prev => ({ ...prev, productsLoading: true, productsError: null }));
-    setTimeout(() => {
-      setData(prev => ({ ...prev, products: STATIC_PRODUCTS, productsLoading: false }));
-    }, 500);
+    try {
+const res = await api.get('/api/products/');
+      const products = res.data?.items ?? res.data ?? [];
+      setData(prev => ({ ...prev, products, productsLoading: false }));
+    } catch (err) {
+      setData(prev => ({ ...prev, productsLoading: false, productsError: err }));
+    }
   }, []);
 
-  const refetchTestimonials = useCallback(() => {
+  const refetchTestimonials = useCallback(async () => {
     setData(prev => ({ ...prev, testimonialsLoading: true, testimonialsError: null }));
-    setTimeout(() => {
-      setData(prev => ({ ...prev, testimonials: STATIC_TESTIMONIALS, testimonialsLoading: false }));
-    }, 500);
+    try {
+      const res = await api.get('/api/testimonials');
+      const testimonials = res.data?.items ?? res.data ?? [];
+      setData(prev => ({ ...prev, testimonials, testimonialsLoading: false }));
+    } catch (err) {
+      setData(prev => ({ ...prev, testimonialsLoading: false, testimonialsError: err }));
+    }
   }, []);
+
 
   return (
     <DataContext.Provider value={{ ...data, refetchProducts, refetchTestimonials }}>
@@ -352,7 +285,7 @@ function ProductCard({ product, delay }) {
 
 
   // Note: Landing products currently use numeric ids (1,2,3...).
-  // If your backend cart expects UUID product_ids, update STATIC_PRODUCTS id values accordingly.
+
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
