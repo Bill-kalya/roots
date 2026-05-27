@@ -1,16 +1,24 @@
 // Basket.jsx — Production cart page (FastAPI + PostgreSQL + Redis backend)
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+
 import "./Basket.css";
 import Nav from "../components/Nav";
 import Footer from "../components/Footer";
-import { getCart, removeFromCart, addToCart } from "../services/api";
-import { useApi, useMutation } from "../hooks/useApi";
+import { removeFromCart, addToCart } from "../services/api";
+import { resolveImageUrl } from "../lib/apiClient";
+import { useMutation } from "../hooks/useApi";
+import { useCart } from "../contexts/CartContext.jsx";
+
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatPrice(amount) {
-  return `KSh ${Number(amount).toLocaleString("en-KE")}`;
+import { useCurrency } from "../contexts/CurrencyContext.jsx";
+import { formatMoney } from "../lib/formatMoney";
+
+function formatPrice(amount, currency) {
+  return formatMoney(amount, currency);
 }
+
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -30,15 +38,15 @@ function BasketItemSkeleton() {
 
 // ─── Single cart item row ─────────────────────────────────────────────────────
 
-function BasketItem({ item, onQuantityChange, onRemove, disabled }) {
-  const displayPrice = formatPrice(item.price * item.quantity);
+function BasketItem({ item, onQuantityChange, onRemove, disabled, currency }) {
+  const displayPrice = formatPrice(item.price * item.quantity, currency);
 
   return (
     <div className="basket-item" role="row" aria-label={item.name}>
       <div className="basket-item-image-wrap">
         {item.image_url ? (
           <img
-            src={item.image_url}
+src={resolveImageUrl(item.image_url)}
             alt={item.name}
             className="basket-item-image"
             loading="lazy"
@@ -52,7 +60,8 @@ function BasketItem({ item, onQuantityChange, onRemove, disabled }) {
       <div className="basket-item-details">
         <h3 className="basket-item-name">{item.name}</h3>
         <p className="basket-item-origin">{item.origin}</p>
-        <p className="basket-item-unit-price">{formatPrice(item.price)} each</p>
+        <p className="basket-item-unit-price">{formatPrice(item.price, currency)} each</p>
+
       </div>
 
       <div className="basket-item-qty" role="group" aria-label={`Quantity for ${item.name}`}>
@@ -87,11 +96,12 @@ function BasketItem({ item, onQuantityChange, onRemove, disabled }) {
 
 // ─── Order summary panel ──────────────────────────────────────────────────────
 
-function OrderSummary({ items, onCheckout, checkingOut }) {
+function OrderSummary({ items, onCheckout, checkingOut, currency }) {
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   // Shipping: free over KSh 10,000, otherwise KSh 850
   const shipping = subtotal >= 10000 ? 0 : 850;
   const total = subtotal + shipping;
+
 
   return (
     <aside className="order-summary" aria-label="Order summary">
@@ -100,7 +110,8 @@ function OrderSummary({ items, onCheckout, checkingOut }) {
       <div className="order-summary-rows">
         <div className="order-summary-row">
           <span>Subtotal ({items.reduce((n, i) => n + i.quantity, 0)} items)</span>
-          <span>{formatPrice(subtotal)}</span>
+          <span>{formatPrice(subtotal, currency)}</span>
+
         </div>
         <div className="order-summary-row">
           <span>Shipping</span>
@@ -110,7 +121,8 @@ function OrderSummary({ items, onCheckout, checkingOut }) {
         </div>
         {shipping > 0 && (
           <p className="order-summary-shipping-note">
-            Add {formatPrice(10000 - subtotal)} more for free shipping
+            Add {formatPrice(10000 - subtotal, currency)} more for free shipping
+
           </p>
         )}
       </div>
@@ -119,7 +131,8 @@ function OrderSummary({ items, onCheckout, checkingOut }) {
 
       <div className="order-summary-total">
         <span>Total</span>
-        <span>{formatPrice(total)}</span>
+        <span>{formatPrice(total, currency)}</span>
+
       </div>
 
       <button
@@ -156,22 +169,20 @@ function EmptyBasket() {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Basket() {
-  // Cart data from Redis-backed FastAPI endpoint
-  const { data: cart, loading, error, refetch } = useApi(getCart, []);
+  const { currency } = useCurrency();
+
+
+  const { items: cartItems, loading, refetch } = useCart();
 
   // Local optimistic items list
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    if (cart?.items) setItems(cart.items);
-  }, [cart]);
+    setItems(cartItems);
+  }, [cartItems]);
 
-  // Listen for cart updates fired from ProductCard "Add to Cart"
-  useEffect(() => {
-    const handler = () => refetch();
-    window.addEventListener("roots:cart-updated", handler);
-    return () => window.removeEventListener("roots:cart-updated", handler);
-  }, [refetch]);
+  const error = false;
+
 
   const { mutate: doRemove, loading: removing } = useMutation(
     useCallback((id) => removeFromCart(id), [])
@@ -186,7 +197,7 @@ export default function Basket() {
 
   const mutating = removing || adding;
 
-  // ── Quantity change: optimistic update then sync ─────────────────────────
+  // ── Quantity change: update then sync ─────────────────────────────
   const handleQuantityChange = async (productId, newQty) => {
     if (newQty < 1) return;
     if (typeof productId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId)) {
@@ -194,15 +205,12 @@ export default function Basket() {
       return;
     }
 
-    // Optimistic
-    setItems((prev) =>
-      prev.map((i) => (i.product_id === productId ? { ...i, quantity: newQty } : i))
-    );
     setActionError("");
     try {
       // addToCart with absolute qty — adjust your API to accept `quantity` as absolute
       // or use a PATCH /api/cart/items/:id endpoint
       await doAdd(productId, newQty);
+      await refetch();
     } catch (err) {
       setActionError(
         err?.response?.data?.detail ||
@@ -210,7 +218,6 @@ export default function Basket() {
           err.message ||
           "Failed to update quantity."
       );
-      refetch(); // roll back by re-fetching
     }
   };
 
@@ -226,11 +233,10 @@ export default function Basket() {
       return;
     }
 
-    // Optimistic
-    setItems((prev) => prev.filter((i) => i.product_id !== productId));
     setActionError("");
     try {
       await doRemove(productId);
+      await refetch();
     } catch (err) {
       setActionError(
         err?.response?.data?.detail ||
@@ -238,7 +244,6 @@ export default function Basket() {
           err.message ||
           "Failed to remove item."
       );
-      refetch();
     }
   };
 
@@ -296,8 +301,10 @@ export default function Basket() {
                   onQuantityChange={handleQuantityChange}
                   onRemove={handleRemove}
                   disabled={mutating}
+                  currency={currency}
                 />
               ))}
+
             </section>
 
             {/* ── Summary column ───────────────────────────────────────── */}
@@ -306,7 +313,9 @@ export default function Basket() {
                 items={items}
                 onCheckout={handleCheckout}
                 checkingOut={checkingOut}
+                currency={currency}
               />
+
             )}
           </div>
         </div>

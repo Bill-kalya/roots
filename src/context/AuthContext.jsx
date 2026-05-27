@@ -32,17 +32,58 @@ function getUserFromStorage() {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => getUserFromStorage());
+  const [user, setUser] = useState(() => {
+    const stored = getUserFromStorage();
+    return stored;
+  });
+  const [loading, setLoading] = useState(false);
 
-  // Call this after a successful login to sync state
+  const loadUser = useCallback(() => {
+    try {
+      const u = getUserFromStorage();
+      setUser(u);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUser();
+    const handler = () => loadUser();
+    window.addEventListener('roots:auth-changed', handler);
+    return () => window.removeEventListener('roots:auth-changed', handler);
+  }, [loadUser]);
+
   const syncUser = useCallback(() => {
     setUser(getUserFromStorage());
   }, []);
 
+  const login = useCallback((userData, token) => {
+    try {
+      if (token) tokenStore.set(token);
+      // userData shape: allow avatar/name/email/full_name
+      if (userData && typeof userData === 'object') {
+        // persist full user payload for Nav avatar fallback
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
+      setUser(userData || getUserFromStorage());
+    } finally {
+      setLoading(false);
+      window.dispatchEvent(new Event('roots:auth-changed'));
+    }
+  }, []);
+
   const clearUser = useCallback(() => {
     tokenStore.clear();
+    localStorage.removeItem('user');
     setUser(null);
+    window.dispatchEvent(new Event('roots:auth-changed'));
   }, []);
+
+  const logout = clearUser;
+
 
   // Re-sync if token changes in another tab
   useEffect(() => {
@@ -52,7 +93,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, syncUser, clearUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, syncUser, clearUser }}>
+
       {children}
     </AuthContext.Provider>
   );

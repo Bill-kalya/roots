@@ -1,8 +1,11 @@
 // CartDrawer.jsx — Production slide-out cart drawer (FastAPI + Redis backend)
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import "./CartDrawer.css";
-import { getCart, removeFromCart, addToCart } from "../services/api";
-import { useApi, useMutation } from "../hooks/useApi";
+import { removeFromCart, addToCart } from "../services/api";
+import { resolveImageUrl } from "../lib/apiClient";
+import { useMutation } from "../hooks/useApi";
+import { useCart } from "../contexts/CartContext.jsx";
+
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -33,7 +36,7 @@ function DrawerItem({ item, onRemove, onQtyChange, disabled }) {
       <div className="drawer-item-image-wrap">
         {item.image_url ? (
           <img
-            src={item.image_url}
+src={resolveImageUrl(item.image_url)}
             alt={item.name}
             className="drawer-item-image"
             loading="lazy"
@@ -110,41 +113,16 @@ function getApiErrorMessage(err) {
 function CartDrawer({ isOpen, onClose }) {
   const drawerRef = useRef(null);
 
-  // Fetch cart — lazy: only load when drawer opens for the first time
-
-  const [shouldFetch, setShouldFetch] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setShouldFetch((prev) => (prev ? prev : true));
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    // Initialize shouldFetch after mount/open to satisfy exhaustive deps / avoid sync updates in effect body.
-    if (!isOpen) return;
-    queueMicrotask(() => setShouldFetch((prev) => (prev ? prev : true)));
-  }, [isOpen]);
-
-
-  const { data: cart, loading, error, refetch } = useApi(
-    getCart,
-    [shouldFetch],
-    { immediate: shouldFetch }
-  );
-
-  // Re-fetch whenever another part of the app updates the cart
-  useEffect(() => {
-    const handler = () => { if (shouldFetch) refetch(); };
-    window.addEventListener("roots:cart-updated", handler);
-    return () => window.removeEventListener("roots:cart-updated", handler);
-  }, [shouldFetch, refetch]);
+  const { items: cartItems, loading, refetch } = useCart();
 
   // Optimistic local items
   const [items, setItems] = useState([]);
   useEffect(() => {
-    if (cart?.items) setItems(cart.items);
-  }, [cart]);
+    setItems(cartItems);
+  }, [cartItems]);
+
+  const error = false; // CartContext currently doesn't expose error; keep existing UI stable.
+
 
   const { mutate: doRemove, loading: removing } = useMutation(
     useCallback((id) => removeFromCart(id), [])

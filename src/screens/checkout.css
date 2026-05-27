@@ -845,59 +845,53 @@
   }
 }
 /* ─────────────────────────────────────────────────────────────
-   Artisan Chat Button — add to Checkout.css
+   Floating Chat Button — on Checkout page
 ───────────────────────────────────────────────────────────── */
 
-/* Artisan name byline below item origin */
-.item-artisan {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 12px;
-  color: #C4861A;
-  letter-spacing: 1.5px;
-  font-style: italic;
-  margin-top: 3px;
-}
-
-/* Chat button — sits below qty controls inside each order item */
-.artisan-chat-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 10px;
-  padding: 8px 14px;
-  background: transparent;
-  border: 1px solid rgba(196, 134, 26, 0.35);
-  border-radius: 20px;
-  color: #C4861A;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 12px;
-  letter-spacing: 1.5px;
+.checkout-chat-floating {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 200;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.artisan-chat-btn:hover {
-  background: rgba(196, 134, 26, 0.1);
-  border-color: #C4861A;
+  background: #2d2f31;
   color: #F0C060;
-}
-
-.artisan-chat-btn:hover .artisan-chat-btn-icon {
-  color: #F0C060;
-}
-
-.artisan-chat-btn-icon {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  color: #C4861A;
-  transition: color 0.2s ease;
-}
-
-/* Ensure item-info stretches so the chat btn sits flush left */
-.order-item .item-info {
+  font-size: 22px;
+  box-shadow:
+    6px 6px 14px rgba(30, 19, 12, 0.7),
+    -6px -6px 14px rgba(90, 56, 32, 0.7);
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
+
+.checkout-chat-floating:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 3px 3px 8px #1e130c,
+    inset -3px -3px 8px #5a3820,
+    6px 6px 16px rgba(30, 19, 12, 0.55),
+    -6px -6px 16px rgba(90, 56, 32, 0.55);
+}
+
+.checkout-chat-floating:active {
+  transform: translateY(0px);
+}
+
+@media (max-width: 768px) {
+  .checkout-chat-floating {
+    right: 16px;
+    bottom: 16px;
+    width: 52px;
+    height: 52px;
+  }
+}
+
+/* Note: legacy inline chat button styles removed from checkout.scss to avoid
+   placing chat inline between form fields. */
+

@@ -7,6 +7,8 @@ import {
   useLocation,
 } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import CurrencyProvider from './contexts/CurrencyContext.jsx';
+
 
 import Nav from './components/Nav';
 import RootsLanding from './screens/Rootslanding';
@@ -16,6 +18,8 @@ import Login from './screens/Login';
 import Register from './screens/Register';
 import AdminDashboard from './screens/AdminDashboard';
 import MerchantDashboard from './screens/MerchantDashboard';
+import MerchantProfile from './screens/MerchantProfile';
+
 import Chat from './screens/Chat';
 import Artisans from './screens/Artisans';
 import Origins from './screens/Origins';
@@ -134,8 +138,10 @@ const AppContent = () => {
 const App = () => (
   <Router basename={import.meta.env.BASE_URL || '/'}>
     <AuthProvider>
-      <AppContent />
-      <AppToaster />
+      <CurrencyProvider>
+        <AppContent />
+        <AppToaster />
+      </CurrencyProvider>
     </AuthProvider>
   </Router>
 );

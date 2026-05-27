@@ -6,8 +6,10 @@ import {
   createMerchantProduct,
   updateMerchantProduct,
   deleteMerchantProduct,
+  updateOrderStatus,
 } from '../services/api';
 import './merchant.css';
+import { resolveImageUrl } from '../lib/apiClient';
 import { toast } from 'sonner';
 
 
@@ -27,8 +29,8 @@ const MerchantDashboard = () => {
   const [error, setError] = useState(null);
 
   const applyMerchantData = (productsData, ordersData, analyticsData) => {
-    setProducts(productsData?.items || []);
-    setOrders(ordersData?.items || []);
+    setProducts(Array.isArray(productsData) ? productsData : (productsData?.items ?? []));
+    setOrders(Array.isArray(ordersData) ? ordersData : (ordersData?.items ?? []));
     setAnalytics(analyticsData || {});
     setLoading(false);
   };
@@ -44,6 +46,9 @@ const MerchantDashboard = () => {
         getMerchantAnalytics(),
       ]);
 
+      console.log('MerchantDashboard raw productsData:', productsData);
+      console.log('MerchantDashboard raw ordersData:', ordersData);
+      console.log('MerchantDashboard raw analyticsData:', analyticsData);
 
       applyMerchantData(productsData, ordersData, analyticsData);
     } catch (err) {
@@ -154,6 +159,8 @@ const MerchantDashboard = () => {
     );
   }
 
+  console.log('MerchantDashboard Products state:', products);
+
   return (
     <div className="merchant-main">
       {error && (
@@ -203,33 +210,49 @@ const MerchantDashboard = () => {
       <div className="merchant-section">
         <h2>Your Products</h2>
         <div className="products-grid">
-          {products.map((product) => (
-            <div key={product.id} className="product-card">
-              <img src={product.image_url} alt={product.name} className="product-image" />
-              <div className="product-info">
-                <h3>{product.name}</h3>
-                <p className="product-price">${product.price}</p>
-                <p className="product-stock">Stock: {product.stock} units</p>
-                <div className="product-actions">
-                  <button
-                    className="btn btn-sm"
-                    onClick={() => {
-                      setEditingProduct(product);
-                      setShowProductForm(true);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDeleteProduct(product.id)}
-                  >
-                    Delete
-                  </button>
+          {products.map((product, idx) => {
+            const resolved = resolveImageUrl(product.image_url);
+            if (idx < 5) {
+              console.log('MerchantDashboard product image:', {
+                raw: product.image_url,
+                resolved,
+                productId: product.id,
+              });
+            }
+            // Ensure visibility even if the global landing page animation CSS
+            // expects `product-card-visible`.
+            return (
+              <div key={product.id ?? idx} className="product-card product-card-visible">
+                <img
+                  src={resolved}
+                  alt={product.name}
+                  className="product-image"
+                />
+                <div className="product-info">
+                  <h3>{product.name}</h3>
+                  <p className="product-price">${product.price}</p>
+                  <p className="product-stock">Stock: {product.stock} units</p>
+                  <div className="product-actions">
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => {
+                        setEditingProduct(product);
+                        setShowProductForm(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => handleDeleteProduct(product.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -295,13 +318,21 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
   const [formData, setFormData] = useState({
     name: product?.name || '',
     description: product?.description || '',
+    long_description: product?.long_description || '',
     price: product?.price || '',
     image_url: product?.image_url || '',
     image_file: null,
+    gallery: Array.isArray(product?.gallery) ? product.gallery : [],
     origin: product?.origin || '',
     tag: product?.tag || '',
     stock: product?.stock || 0,
     is_featured: product?.is_featured || false,
+    artisan: product?.artisan || '',
+    weight: product?.weight || '',
+    dimensions: product?.dimensions || '',
+    year: product?.year ?? '',
+    materials: Array.isArray(product?.materials) ? product.materials : [],
+    materials_text: (Array.isArray(product?.materials) ? product.materials : []).join(', '),
   });
 
   const isEditing = Boolean(product);
@@ -315,11 +346,23 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
     const data = new FormData();
     data.append('name', formData.name);
     data.append('description', formData.description);
+    data.append('long_description', formData.long_description || '');
     data.append('price', formData.price);
     data.append('origin', formData.origin);
     data.append('tag', formData.tag || '');
     data.append('stock', formData.stock);
     data.append('is_featured', formData.is_featured ? 'true' : 'false');
+
+    // NEW optional product fields
+    data.append('artisan', formData.artisan || '');
+    data.append('weight', formData.weight || '');
+    data.append('dimensions', formData.dimensions || '');
+    data.append('year', formData.year === '' || formData.year === null ? '' : String(formData.year));
+
+    // Materials text field -> array expected by backend (e.g., ['cotton','wool'])
+    // If your backend accepts comma-separated strings, keep as string.
+    // Otherwise, adjust backend parsing accordingly.
+    data.append('materials', formData.materials_text || '');
 
     if (formData.image_file) {
       data.append('image', formData.image_file);
@@ -359,6 +402,15 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows="4"
               required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Long Description</label>
+            <textarea
+              value={formData.long_description}
+              onChange={(e) => setFormData({ ...formData, long_description: e.target.value })}
+              rows="4"
             />
           </div>
           <div className="form-row">
@@ -434,6 +486,68 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
                 placeholder="e.g., Handwoven, Rare"
               />
             </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Artisan</label>
+              <input
+                type="text"
+                value={formData.artisan}
+                onChange={(e) => setFormData({ ...formData, artisan: e.target.value })}
+                placeholder="e.g., Kofi Asante"
+              />
+            </div>
+            <div className="form-group">
+              <label>Weight</label>
+              <input
+                type="text"
+                value={formData.weight}
+                onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                placeholder="e.g., 1200g"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Dimensions</label>
+              <input
+                type="text"
+                value={formData.dimensions}
+                onChange={(e) => setFormData({ ...formData, dimensions: e.target.value })}
+                placeholder="e.g., 30x10x5 cm"
+              />
+            </div>
+            <div className="form-group">
+              <label>Year</label>
+              <input
+                type="number"
+                value={formData.year}
+                onChange={(e) => setFormData({ ...formData, year: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
+                placeholder="e.g., 2024"
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Materials (comma-separated)</label>
+            <input
+              type="text"
+              value={formData.materials_text}
+              onChange={(e) => {
+                const text = e.target.value;
+                setFormData({
+                  ...formData,
+                  materials_text: text,
+                  materials: text
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                });
+              }}
+              placeholder="e.g., Wood, Brass, Cotton"
+            />
           </div>
           <div className="form-group">
             <label>

@@ -43,44 +43,65 @@ api.interceptors.request.use((config) => {
 });
 
 // Handle 401 responses — token expired or invalid (refresh once, then redirect)
+// Deduplicate concurrent refresh requests to avoid refresh storms + rate limiting.
+let refreshPromise = null
+
+async function refreshAccessToken(original) {
+  if (refreshPromise) return refreshPromise
+
+  // Try to refresh using the refresh token we store
+  const refresh_token = tokenStore.getRefresh()
+  if (!refresh_token) {
+    tokenStore.clear()
+    window.location.href = '/login'
+    return Promise.reject(new Error('Missing refresh token'))
+  }
+
+  const { default: axios } = await import('axios')
+
+  refreshPromise = axios
+    .post(
+      `${original.baseURL || api.defaults.baseURL}/api/auth/refresh`,
+      { refresh_token },
+      { withCredentials: true }
+    )
+    .then((refreshRes) => {
+      tokenStore.set(refreshRes.data.access_token)
+      if (refreshRes.data.refresh_token) tokenStore.setRefresh(refreshRes.data.refresh_token)
+      return refreshRes.data
+    })
+    .finally(() => {
+      refreshPromise = null
+    })
+
+  return refreshPromise
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const original = error.config;
+    const original = error.config
 
     if (error.response?.status === 401 && original && !original._retry) {
-      original._retry = true;
+      original._retry = true
 
       try {
-        // Try to refresh using the refresh token we store
-        const refresh_token = tokenStore.getRefresh();
-        if (!refresh_token) throw new Error('Missing refresh token');
+        const data = await refreshAccessToken(original)
 
-        // Use raw axios to avoid calling back into the same retry flow
-        const { default: axios } = await import('axios');
-        const refreshRes = await axios.post(
-          `${original.baseURL || api.defaults.baseURL}/api/auth/refresh`,
-          { refresh_token },
-          { withCredentials: true }
-        );
-
-        tokenStore.set(refreshRes.data.access_token);
-        if (refreshRes.data.refresh_token) {
-          tokenStore.setRefresh(refreshRes.data.refresh_token);
-        }
-
-        original.headers = original.headers || {};
-        original.headers.Authorization = `Bearer ${tokenStore.get()}`;
-        return api(original);
+        original.headers = original.headers || {}
+        original.headers.Authorization = `Bearer ${data.access_token || tokenStore.get()}`
+        return api(original)
       } catch {
-        tokenStore.clear();
-        window.location.href = '/login';
+        tokenStore.clear()
+        window.location.href = '/login'
       }
     }
 
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
+; 
+
 
 
 // =========================
@@ -240,10 +261,36 @@ export const removeFromCart = (productId, signal) =>
   api.delete(`/api/cart/items/${productId}`, { signal }).then((res) => res.data);
 
 // =========================
+// CHECKOUT
+// =========================
+// POST /api/checkout
+// Backend is expected to:
+// - validate auth, inventory, prices, totals, shipping/tax, etc.
+// - create an order and request the payment gateway
+// - return { checkout_url?: string, order_id?: string, ... }
+export const createCheckoutSession = (payload, signal) =>
+  api.post('/api/checkout', payload, { signal }).then((res) => res.data);
+
+
+// =========================
 // MERCHANT
 // =========================
 export const getMerchantProducts = (signal) =>
   api.get('/api/merchant/products', { signal }).then((res) => res.data);
+
+// =========================
+// Public merchant profile / listing (customer view)
+// =========================
+export const getMerchantById = (merchantId, signal) =>
+  api
+    .get(`/api/merchants/${merchantId}`, { signal })
+    .then((res) => res.data);
+
+export const getMerchantProductsByMerchantId = (merchantId, signal) =>
+  api
+    .get(`/api/merchants/${merchantId}/products`, { signal })
+    .then((res) => res.data);
+
 
 export const createMerchantProduct = (data, config = {}) =>
   api.post('/api/merchant/products', data, config).then((res) => res.data);

@@ -6,62 +6,6 @@ import "./chat.css";
 import Nav from "../components/Nav";
 import Footer from "../components/Footer";
 
-// ─── Sample conversation seed ────────────────────────────────────────────────
-const INITIAL_MESSAGES = [
-  {
-    id: 1,
-    from: "merchant",
-    text: "Akwaaba! Welcome to Roots. How can I help you today?",
-    time: "09:14",
-    status: "read",
-  },
-  {
-    id: 2,
-    from: "customer",
-    text: "Hello! I'm interested in the Yoruba Gelede Mask. Is it still available?",
-    time: "09:16",
-    status: "read",
-  },
-  {
-    id: 3,
-    from: "merchant",
-    text: "Yes, it is! This is a beautiful piece — hand-carved by Master Adewale in Abeokuta. It comes with a full provenance certificate and is wrapped in authentic kente cloth for shipping.",
-    time: "09:17",
-    status: "read",
-  },
-  {
-    id: 4,
-    from: "customer",
-    text: "That sounds wonderful. Does it ship to the UK?",
-    time: "09:19",
-    status: "read",
-  },
-  {
-    id: 5,
-    from: "merchant",
-    text: "Absolutely — we ship worldwide. UK delivery takes 5–8 business days and is fully insured. Shall I reserve it for you?",
-    time: "09:20",
-    status: "read",
-  },
-];
-
-// ─── Default merchant profile ────────────────────────────────────────────────────────
-const DEFAULT_MERCHANT = {
-  name: "Roots Atelier",
-  subtitle: "African Art & Artifacts",
-  initials: "RA",
-  online: true,
-  responseTime: "Replies within minutes",
-};
-
-// ─── Quick reply suggestions ─────────────────────────────────────────────────
-const QUICK_REPLIES = [
-  "Is this item still available?",
-  "Do you offer custom sizing?",
-  "What's the return policy?",
-  "Can I see more photos?",
-];
-
 // ─── Timestamp helper ────────────────────────────────────────────────────────
 function getTime() {
   return new Date().toLocaleTimeString("en-KE", {
@@ -71,19 +15,23 @@ function getTime() {
   });
 }
 
+
 // ─── Message Bubble ───────────────────────────────────────────────────────────
-function MessageBubble({ message, prevFrom }) {
+function MessageBubble({ message, prevFrom, merchant }) {
   const isCustomer = message.from === "customer";
+  const safeMerchant = merchant || { name: "Merchant", initials: "RA" };
   const showAvatar = !isCustomer && prevFrom !== "merchant";
+
 
   return (
     <div
       className={`message-row ${isCustomer ? "message-row-customer" : "message-row-merchant"}`}
-      aria-label={`${isCustomer ? "You" : merchant.name}: ${message.text}`}
+      aria-label={`${isCustomer ? "You" : safeMerchant.name}: ${message.text}`}
     >
+
       {!isCustomer && (
         <div className={`message-avatar ${showAvatar ? "" : "message-avatar-hidden"}`} aria-hidden="true">
-          {showAvatar ? merchant.initials : ""}
+          {showAvatar ? safeMerchant.initials : ""}
         </div>
       )}
 
@@ -106,9 +54,11 @@ function MessageBubble({ message, prevFrom }) {
 
 // ─── Typing Indicator ─────────────────────────────────────────────────────────
 function TypingIndicator({ merchant }) {
+  const safeMerchant = merchant || { name: "Merchant", initials: "RA" };
   return (
-    <div className="message-row message-row-merchant" aria-label={`${merchant.name} is typing`}>
-      <div className="message-avatar">{merchant.initials}</div>
+    <div className="message-row message-row-merchant" aria-label={`${safeMerchant.name} is typing`}>
+      <div className="message-avatar">{safeMerchant.initials}</div>
+
       <div className="bubble bubble-merchant bubble-typing">
         <span className="typing-dot" style={{ animationDelay: "0ms" }} />
         <span className="typing-dot" style={{ animationDelay: "160ms" }} />
@@ -120,6 +70,9 @@ function TypingIndicator({ merchant }) {
 
 // ─── Chat Header ─────────────────────────────────────────────────────────────
 function ChatHeader({ onBack, merchant }) {
+  // Guard: don't render until merchant data arrives from WebSocket
+  if (!merchant) return null;
+
   return (
     <div className="chat-header" role="banner">
       <button className="chat-back-btn" onClick={onBack} aria-label="Go back" type="button">
@@ -129,25 +82,30 @@ function ChatHeader({ onBack, merchant }) {
       <div className="chat-header-identity">
         <div className="chat-header-avatar" aria-hidden="true">
           {merchant.initials}
-          {MERCHANT.online && <div className="online-ring" />}
+          {merchant.online && <div className="online-ring" />}
         </div>
         <div className="chat-header-info">
-          <div className="chat-header-name">{MERCHANT.name}</div>
+          <div className="chat-header-name">{merchant.name}</div>
           <div className="chat-header-sub">
-            {MERCHANT.online ? (
+            {merchant.online ? (
               <>
                 <span className="online-dot" aria-hidden="true" />
                 Online now
               </>
             ) : (
-              MERCHANT.responseTime
+              merchant.responseTime
             )}
           </div>
         </div>
       </div>
 
       <div className="chat-header-actions">
-        <button className="chat-action-btn" aria-label="View merchant profile" type="button" title="Profile">
+        <button
+          className="chat-action-btn"
+          aria-label="View merchant profile"
+          type="button"
+          title="Profile"
+        >
           ◎
         </button>
         <button className="chat-action-btn" aria-label="More options" type="button" title="More">
@@ -159,25 +117,43 @@ function ChatHeader({ onBack, merchant }) {
 }
 
 // ─── Pinned Product Card ──────────────────────────────────────────────────────
-function PinnedProduct() {
+function PinnedProduct({ product }) {
+  if (!product) return null;
+
   return (
     <div className="pinned-product" role="region" aria-label="Pinned product">
       <div className="pinned-visual" aria-hidden="true">🎭</div>
       <div className="pinned-info">
         <div className="pinned-label">DISCUSSING</div>
-        <div className="pinned-name">Yoruba Gelede Mask</div>
-        <div className="pinned-price">KSh 24,500</div>
+        <div className="pinned-name">{product.name || "Product"}</div>
+        <div className="pinned-price">
+          {product.price ? `KSh ${product.price}` : ""}
+        </div>
       </div>
-      <button className="pinned-btn" type="button" aria-label="View product">
+      <button
+        className="pinned-btn"
+        type="button"
+        aria-label="View product"
+        onClick={() => {
+          if (product?.id) {
+            window.location.href = `/product/${product.id}`;
+          }
+        }}
+        disabled={!product?.id}
+      >
         VIEW →
       </button>
     </div>
   );
 }
 
+
 // ─── Message Input Bar ────────────────────────────────────────────────────────
-function InputBar({ onSend, onQuickReply, showQuickReplies }) {
+function InputBar({ onSend, onQuickReply, showQuickReplies, quickReplies }) {
+  const safeQuickReplies = Array.isArray(quickReplies) ? quickReplies : [];
+
   const [text, setText] = useState("");
+
   const textareaRef = useRef(null);
 
   const handleSend = useCallback(() => {
@@ -208,9 +184,10 @@ function InputBar({ onSend, onQuickReply, showQuickReplies }) {
 
   return (
     <div className="input-area">
-      {showQuickReplies && (
+      {showQuickReplies && safeQuickReplies.length > 0 && (
         <div className="quick-replies" role="list" aria-label="Quick reply suggestions">
-          {QUICK_REPLIES.map((q) => (
+          {safeQuickReplies.map((q) => (
+
             <button
               key={q}
               className="quick-reply-chip"
@@ -223,6 +200,7 @@ function InputBar({ onSend, onQuickReply, showQuickReplies }) {
           ))}
         </div>
       )}
+
 
       <div className="input-bar">
         <button className="input-icon-btn" aria-label="Attach file" type="button">
@@ -271,17 +249,28 @@ function DateDivider({ label }) {
 export default function Chat() {
   const location = useLocation();
   const chatState = location.state || {};
-  const merchant = chatState.artisanName ? {
-    name: `${chatState.artisanName} (Artisan)`,
-    subtitle: `Piece from ${chatState.pieceOrigin}`,
-    initials: chatState.artisanName ? chatState.artisanName.slice(0,2).toUpperCase() : "RA",
-    online: true,
-    responseTime: "Replies within minutes",
-  } : DEFAULT_MERCHANT;
 
-  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  const [merchant, setMerchant] = useState(null);
+  const [pinnedProduct, setPinnedProduct] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
-  const [showQuickReplies, setShowQuickReplies] = useState(true);
+  const [showQuickReplies, setShowQuickReplies] = useState(false);
+  // Quick replies are expected to be provided by backend.
+  // Keep as state-ready; UI currently hides quick replies unless backend provides them.
+  // quickReplies intentionally unused for now
+  const [quickReplies] = useState([]);
+
+  // Keep quickReplies unused for now (no backend quick-reply frame wired yet).
+  void quickReplies;
+
+
+
+
+
+
+
+
+
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -294,34 +283,261 @@ export default function Chat() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
-  const handleSend = useCallback((text) => {
-    const newMsg = {
-      id: Date.now(),
-      from: "customer",
-      text,
-      time: getTime(),
-      status: "sent",
-    };
+  const WS_BASE = import.meta.env.VITE_WS_URL || "ws://localhost:8000";
+  const roomId = chatState.roomId ?? null;
 
-    setMessages((prev) => [...prev, newMsg]);
-    setShowQuickReplies(false);
 
-    // Simulate merchant typing + reply
-    setTimeout(() => setTyping(true), 800);
-    setTimeout(() => {
-      setTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          from: "merchant",
-          text: getMerchantReply(text),
-          time: getTime(),
-          status: "delivered",
-        },
-      ]);
-    }, 2800);
+  const wsRef = useRef(null);
+  const reconnectTimerRef = useRef(null);
+  const reconnectCountRef = useRef(0);
+  const MAX_RECONNECTS = 5;
+
+  const wsStatusRef = useRef("disconnected");
+  // Production UI may show connection status later; keep state minimal for now.
+  // const [wsStatus, setWsStatus] = useState("disconnected");
+
+
+  useEffect(() => {
+    document.body.classList.add("roots-body");
+    return () => document.body.classList.remove("roots-body");
   }, []);
+
+  const connectRef = useRef(null);
+
+  const connect = useCallback(() => {
+    if (!roomId) {
+
+
+
+
+
+
+      // Missing room context; UI will stay in an empty state.
+      return;
+    }
+
+    const token = localStorage.getItem("access_token");
+
+
+    const url = `${WS_BASE}/ws/chat/${roomId}${token ? `?token=${token}` : ""}`;
+
+    try {
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+
+
+      ws.onopen = () => {
+        reconnectCountRef.current = 0;
+        wsStatusRef.current = "connected";
+
+
+        // Handshake: request conversation context + message history.
+        // Backend is expected to respond with frames: `conversation` and `history`.
+        const handshake = {
+          type: "handshake",
+          room_id: roomId,
+        };
+        try {
+          ws.send(JSON.stringify(handshake));
+        } catch {
+          // ignore
+        }
+      };
+
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (!data) return;
+
+          if (data.type === "typing") {
+            setTyping(true);
+            return;
+          }
+
+          if (data.type === "conversation") {
+            setTyping(false);
+            const conv = data.conversation || data;
+            const merchantData = conv.merchant || conv.artisan || conv.partner || null;
+            if (merchantData) {
+              const initials =
+                merchantData.initials ||
+                (merchantData.name ? merchantData.name.slice(0, 2).toUpperCase() : "RA");
+              setMerchant({
+                name: merchantData.name || "Merchant",
+                initials,
+                subtitle: merchantData.subtitle || "",
+                online: Boolean(merchantData.online ?? true),
+                responseTime: merchantData.responseTime || "",
+              });
+            }
+
+            const pinned = conv.pinned_product || conv.pinnedProduct || conv.product || null;
+            if (pinned && (pinned.id || pinned.product_id)) {
+              setPinnedProduct({
+                id: pinned.id ?? pinned.product_id,
+                name: pinned.name || pinned.title || "Product",
+                price: pinned.price ?? null,
+              });
+            } else {
+              setPinnedProduct(null);
+            }
+            return;
+          }
+
+          if (data.type === "history") {
+            setTyping(false);
+            const items = data.messages || data.history || [];
+            const normalized = (Array.isArray(items) ? items : []).map((m) => ({
+              id: m.id ?? Date.now(),
+              from: m.from ?? (m.sender === "customer" ? "customer" : "merchant"),
+              text: m.text ?? m.body ?? "",
+              time: m.time ?? getTime(),
+              status: m.status ?? "delivered",
+            }));
+            setMessages(normalized);
+            return;
+          }
+
+          if (data.type === "message") {
+            setTyping(false);
+
+            // Backend echoes a delivery receipt back to the sender.
+            // If the message id already exists locally, update its status.
+            const incomingId = data.id ?? null;
+            setMessages((prev) => {
+              if (incomingId != null) {
+                const idx = prev.findIndex((m) => m.id === incomingId);
+                if (idx !== -1) {
+                  const next = [...prev];
+                  next[idx] = {
+                    ...next[idx],
+                    status: data.status ?? next[idx].status,
+                    time: data.time ?? next[idx].time,
+                    text: data.text ?? next[idx].text,
+                    from: data.from ?? next[idx].from,
+                  };
+                  return next;
+                }
+              }
+
+              return [
+                ...prev,
+                {
+                  id: data.id ?? Date.now(),
+                  from: data.from ?? "merchant",
+                  text: data.text ?? "",
+                  time: data.time ?? getTime(),
+                  status: data.status ?? "delivered",
+                },
+              ];
+            });
+
+            return;
+          }
+
+
+          if (data.type === "read") {
+            setTyping(false);
+            setMessages((prev) =>
+              prev.map((m) => (m.from === "customer" ? { ...m, status: "read" } : m))
+            );
+          }
+
+        } catch {
+          // ignore malformed frames
+        }
+      };
+
+      ws.onclose = (event) => {
+        wsStatusRef.current = "disconnected";
+
+        if (event.code !== 1000 && reconnectCountRef.current < MAX_RECONNECTS) {
+
+          const delay = Math.min(1000 * 2 ** reconnectCountRef.current, 30000);
+          reconnectCountRef.current += 1;
+          // Avoid capturing stale/undeclared `connect` in callbacks.
+          reconnectTimerRef.current = setTimeout(() => {
+            if (wsRef.current) {
+              // no-op; just ensure we schedule reconnection.
+            }
+            connectRef.current();
+          }, delay);
+        }
+      };
+
+
+      ws.onerror = () => {
+        wsStatusRef.current = "error";
+        try {
+          ws.close();
+        } catch {
+          // ignore
+        }
+      };
+    } catch {
+      // Failed to create websocket
+    }
+
+
+
+  }, [roomId, WS_BASE]);
+
+  useEffect(() => {
+
+    // connect is stable across renders (useCallback)
+    connect();
+
+    return () => {
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      try {
+        wsRef.current?.close(1000, "component unmount");
+      } catch {
+        // ignore
+      }
+    };
+  }, [connect]);
+
+
+  const sendWs = useCallback((payload) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(payload));
+      return true;
+    }
+    return false;
+  }, []);
+
+
+  const handleSend = useCallback(
+    (text) => {
+      if (!roomId) return;
+
+      const id = Date.now();
+      const msg = {
+        id,
+        from: "customer",
+        text,
+        time: getTime(),
+        status: "sent",
+      };
+
+      setMessages((prev) => [...prev, msg]);
+      setShowQuickReplies(false);
+
+      sendWs({
+        type: "message",
+        room_id: roomId,
+        text,
+        time: msg.time,
+        id,
+        from: "customer",
+      });
+    },
+    [roomId, sendWs]
+  );
+
+
+
 
   const handleQuickReply = useCallback(
     (text) => handleSend(text),
@@ -348,64 +564,43 @@ export default function Chat() {
               placeholder="Search messages…"
               className="sidebar-search-input"
               aria-label="Search conversations"
+              disabled
             />
           </div>
 
           <div className="sidebar-convos" role="list">
-            {/* Active conversation */}
-            <div className="convo-item convo-item-active" role="listitem">
-              <div className="convo-avatar" aria-hidden="true">RA</div>
-              <div className="convo-body">
-                <div className="convo-top">
-                  <span className="convo-name">Roots Atelier</span>
-                  <span className="convo-time">09:20</span>
-                </div>
-                <div className="convo-preview">Absolutely — we ship worldwide…</div>
-              </div>
-              <div className="convo-online" aria-label="Online" />
-            </div>
-
-            {/* Past conversation placeholders */}
-            {[
-              { name: "Kente Studio",    preview: "Your order has been dispatched", time: "Yesterday", init: "KS" },
-              { name: "Adire House",     preview: "Thank you for your purchase!",   time: "Mon",       init: "AH" },
-              { name: "Bronze & Clay",   preview: "We'll have more stock by…",      time: "Sun",       init: "BC" },
-            ].map((c) => (
-              <div key={c.name} className="convo-item" role="listitem">
-                <div className="convo-avatar convo-avatar-muted" aria-hidden="true">{c.init}</div>
-                <div className="convo-body">
-                  <div className="convo-top">
-                    <span className="convo-name">{c.name}</span>
-                    <span className="convo-time">{c.time}</span>
-                  </div>
-                  <div className="convo-preview">{c.preview}</div>
-                </div>
-              </div>
-            ))}
+            {/* Production: conversation list should be provided by backend.
+                Until supported, keep it empty to avoid static placeholders. */}
           </div>
         </aside>
 
         {/* ── Main chat pane ── */}
-<section className="chat-pane" aria-label={`Conversation with ${merchant.name}`}>
+<section className="chat-pane" aria-label={`Conversation`}>
           <ChatHeader onBack={() => window.history.back()} merchant={merchant} />
 
-          <PinnedProduct />
+
+          <PinnedProduct product={pinnedProduct} />
 
           <div className="messages-area" role="log" aria-live="polite" aria-label="Messages">
             <DateDivider label="Today" />
 
-            {messages.map((msg, i) => (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                prevFrom={i > 0 ? messages[i - 1].from : null}
-                merchant={merchant}
-              />
-            ))}
+            {messages.length === 0 ? (
+              <div style={{ color: "#7A5C3A", padding: "10px 0" }}>No messages yet.</div>
+            ) : (
+              messages.map((msg, i) => (
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  prevFrom={i > 0 ? messages[i - 1].from : null}
+                  merchant={merchant}
+                />
+              ))
+            )}
 
-            {typing && <TypingIndicator merchant={merchant} />}
+            {typing && merchant && <TypingIndicator merchant={merchant} />}
             <div ref={bottomRef} />
           </div>
+
 
           <InputBar
             onSend={handleSend}
@@ -418,22 +613,4 @@ export default function Chat() {
   );
 }
 
-// ─── Simulated merchant replies ───────────────────────────────────────────────
-function getMerchantReply(customerText) {
-  const t = customerText.toLowerCase();
-  if (t.includes("available") || t.includes("stock"))
-    return "Yes, this piece is available and ready to ship! It's one of our most sought-after works.";
-  if (t.includes("price") || t.includes("cost") || t.includes("discount"))
-    return "The price is KSh 24,500. For returning customers we occasionally offer exclusive member discounts — shall I check for you?";
-  if (t.includes("ship") || t.includes("deliver") || t.includes("uk") || t.includes("us"))
-    return "We ship worldwide with full insurance. Delivery is typically 5–8 business days. All pieces are wrapped in traditional cloth for protection.";
-  if (t.includes("photo") || t.includes("image") || t.includes("picture"))
-    return "Of course! I'll send additional photos shortly. We can also arrange a short video call if you'd like to see the piece up close.";
-  if (t.includes("return") || t.includes("refund"))
-    return "We offer a 14-day return policy. If you're not fully satisfied with your piece, we'll arrange collection at no cost to you.";
-  if (t.includes("custom") || t.includes("size"))
-    return "Some of our artisans do accept custom commissions. Could you share more about what you have in mind?";
-  if (t.includes("provenance") || t.includes("authentic") || t.includes("certificate"))
-    return "Every Roots piece comes with a signed provenance document including the artisan's name, origin community, and cultural context. Authenticity is at the heart of what we do.";
-  return "Thank you for reaching out! I'd be happy to help. Could you share a little more so I can assist you best?";
-}
+

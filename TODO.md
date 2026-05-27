@@ -1,5 +1,7 @@
-- [ ] Replace DataProvider useEffect in src/screens/Rootslanding.jsx with real API calls to /api/products and /api/testimonials (with AbortController).
-- [ ] Update refetchProducts and refetchTestimonials callbacks in src/screens/Rootslanding.jsx to perform real API calls.
-- [ ] Remove STATIC_PRODUCTS constant from src/screens/Rootslanding.jsx, keep STATIC_TESTIMONIALS as fallback.
-- [ ] Ensure code compiles and no references remain to removed STATIC_PRODUCTS.
+# TODO
+- [ ] Wire “VIEW MERCHANT” on ProductDetails to open chat with that merchant (instead of navigating to merchant profile)
+- [ ] Ensure Chat screen receives correct roomId/merchant context via router state
+- [ ] Update Chat to use merchantId from router state when roomId isn’t provided (or derive roomId)
+- [ ] Update ProductDetails styling if needed
+- [ ] Smoke test: open product page → click View Merchant → chat opens and loads
 

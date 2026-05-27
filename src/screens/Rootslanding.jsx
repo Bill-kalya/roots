@@ -5,7 +5,8 @@ import "./Rootslanding.css";
 import Cart from "../components/Cart";
 import Footer from "../components/Footer";
 import Nav from "../components/Nav";
-import api, { addToCart } from "../services/api";
+import api, { addToCart, subscribeNewsletter } from "../services/api";
+import { resolveImageUrl } from "../lib/apiClient";
 
 
 
@@ -46,22 +47,40 @@ function DataProvider({ children }) {
       setData(prev => ({ ...prev, productsLoading: true, testimonialsLoading: true }));
       try {
         const [productsRes, testimonialsRes] = await Promise.allSettled([
-api.get('/api/products/', { signal: controller.signal }),
+          api.get('/api/products/', { signal: controller.signal }),
           api.get('/api/testimonials', { signal: controller.signal }),
         ]);
+
+        const normalizeList = (data) => {
+          // Try common shapes:
+          // - { items: [...] }
+          // - { results: [...] }
+          // - { products: [...] }
+          // - [...] (array)
+          if (Array.isArray(data)) return data;
+          if (!data || typeof data !== 'object') return [];
+          return (
+            data.items ||
+            data.results ||
+            data.products ||
+            data.data?.items ||
+            data.data?.results ||
+            []
+          );
+        };
 
         setData(prev => ({
           ...prev,
           products:
             productsRes.status === 'fulfilled'
-              ? (productsRes.value.data?.items ?? productsRes.value.data ?? [])
+              ? normalizeList(productsRes.value.data)
               : [],
           productsLoading: false,
           productsError: productsRes.status === 'rejected' ? productsRes.reason : null,
 
           testimonials:
             testimonialsRes.status === 'fulfilled'
-              ? (testimonialsRes.value.data?.items ?? testimonialsRes.value.data ?? [])
+              ? normalizeList(testimonialsRes.value.data)
               : STATIC_TESTIMONIALS,
           testimonialsLoading: false,
           testimonialsError: null,
@@ -273,9 +292,16 @@ function MarqueeBanner() {
 function ProductCard({ product, delay }) {
   const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
-  const [inView, setInView] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [cardRef, cardInView] = useInView(0.1);
+
+  // Product id field varies by backend shape.
+  const productId =
+    product?.id ??
+    product?.product_id ??
+    product?.pk ??
+    product?._id;
+
 
   // addToCart imported from services/api (Vite/ESM)
 
@@ -289,10 +315,18 @@ function ProductCard({ product, delay }) {
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
-    if (addingToCart) return;
+
+    // Redirect to login if not authenticated
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      navigate('/login', { state: { next: window.location.pathname } });
+      return;
+    }
+
+    if (addingToCart || !productId) return;
     setAddingToCart(true);
     try {
-      await addToCart(product.id, 1);
+      await addToCart(productId, 1);
       window.dispatchEvent(new CustomEvent("roots:cart-updated"));
     } catch (err) {
       // optional: surface error to user
@@ -311,12 +345,18 @@ function ProductCard({ product, delay }) {
       ref={cardRef}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => navigate("/product/" + product.id)}
+      onClick={(e) => {
+        // Prevent card navigation when user clicks the add-to-basket button.
+        if (e.target.closest('button.product-cart-btn')) return;
+        if (!productId) return;
+        navigate("/product/" + productId);
+      }}
       className={[
         "product-card",
         hovered ? "product-card-hovered" : "",
         cardInView ? "product-card-visible" : "",
       ].join(" ")}
+
 
       style={{ transitionDelay: `${delay}ms` }}
       aria-label={product.name}
@@ -324,7 +364,7 @@ function ProductCard({ product, delay }) {
       <div className="product-visual">
         {product.image_url ? (
           <img
-            src={product.image_url}
+src={resolveImageUrl(product.image_url)}
             alt={product.name}
             className="product-image"
             loading="lazy"
@@ -506,8 +546,13 @@ function NewsletterSection() {
       return;
     }
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API
-    setSuccess(true);
+    try {
+      await subscribeNewsletter(email);
+      setSuccess(true);
+    } catch (err) {
+      console.error("subscribeNewsletter failed", err);
+      alert("Subscription failed. Please try again.");
+    }
     setEmail("");
     setLoading(false);
     setTimeout(() => setSuccess(false), 5000);

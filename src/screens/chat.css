@@ -8,6 +8,10 @@
    Shell
 ───────────────────────────────────────────────────────────── */
 .roots-chat {
+  /* Reserve space for the fixed Nav so chat never overlaps it */
+  --nav-top: 50px;
+  --nav-min-height: clamp(2.5rem, 10vw, 4rem);
+
   background: var(--background);
   min-height: 100vh;
   display: flex;
@@ -15,16 +19,19 @@
   font-family: 'Cormorant Garamond', Georgia, serif;
   color: var(--text);
   overflow: hidden;
+
+  padding-top: calc(var(--nav-top) + var(--nav-min-height));
 }
 
-/* Full-height panel below the fixed Nav (Nav is 72px tall) */
+/* Full-height panel below the fixed Nav */
 .chat-shell {
   display: grid;
   grid-template-columns: clamp(280px, 80vw, 320px) 1fr;
-  height: calc(100vh - clamp(3.5rem, 10vh, 4.5rem));
-  margin-top: clamp(3.5rem, 10vh, 4.5rem);
+  height: calc(100vh - (var(--nav-top) + var(--nav-min-height)));
+  margin-top: 0;
   overflow: hidden;
 }
+
 
 /* ─────────────────────────────────────────────────────────────
    Sidebar — conversation list
@@ -784,10 +791,14 @@
    Breakpoint: 768px — hide sidebar, full-width chat
 ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .roots-chat {
+    --nav-top: 54px;
+  }
+
   .chat-shell {
     grid-template-columns: 1fr;
-    margin-top: 60px;
-    height: calc(100vh - 60px);
+    margin-top: 0;
+    height: calc(100vh - (var(--nav-top) + var(--nav-min-height)));
   }
 
   .chat-sidebar {
