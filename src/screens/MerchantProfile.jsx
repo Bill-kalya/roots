@@ -107,6 +107,21 @@ export default function MerchantProfile() {
         </div>
 
         <div className="merchant-section">
+          <div className="merchant-cta-row" style={{ marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => {
+                // Open direct chat with this merchant.
+                // Chat.jsx uses router state: { roomId }.
+                navigate('/chat', { state: { roomId: merchantId } });
+              }}
+              disabled={!merchantId}
+            >
+              TALK TO MERCHANT
+            </button>
+          </div>
+
           <h2>Products</h2>
           <div className="products-grid">
             {products.length === 0 ? (

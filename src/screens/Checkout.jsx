@@ -190,7 +190,14 @@ function DeliveryForm({ data, onChange }) {
   );
 }
 
-function PaymentForm({ paymentMethod, setPaymentMethod, cardData, onCardChange }) {
+function PaymentForm({
+  paymentMethod,
+  setPaymentMethod,
+  cardData,
+  onCardChange,
+  mpesaPhone,
+  onMpesaPhoneChange,
+}) {
   function formatCardNumber(value) {
     return value
       .replace(/\D/g, "")
@@ -279,7 +286,9 @@ function PaymentForm({ paymentMethod, setPaymentMethod, cardData, onCardChange }
             <input
               id="mpesa-phone"
               type="tel"
-              placeholder="+254 700 000 000"
+              placeholder="0748 623 579"
+              value={mpesaPhone}
+              onChange={(e) => onMpesaPhoneChange(e.target.value)}
               autoComplete="tel"
             />
           </Field>
@@ -306,6 +315,7 @@ export default function Checkout() {
 
 
   const [paymentMethod, setPaymentMethod] = useState("card");
+  const [mpesaPhone, setMpesaPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -328,9 +338,253 @@ export default function Checkout() {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setSubmitting(false);
-    setSubmitted(true);
+
+    try {
+      if (paymentMethod === "mpesa") {
+        // Validate cart
+        if (!items || items.length === 0) {
+          alert("Your cart is empty.");
+          setSubmitting(false);
+          return;
+        }
+
+        // Calculate subtotal
+        const subtotal = items.reduce((sum, item) => {
+          const price = Number(item.price || 0);
+          const qty = Number(item.quantity || 1);
+
+          return sum + price * qty;
+        }, 0);
+
+        // Shipping logic
+        const shipping = subtotal >= 10000 ? 0 : 850;
+
+        // Final total
+        const total = Math.ceil(subtotal + shipping);
+
+        // Prevent invalid STK requests
+        if (total < 1) {
+          alert("Invalid cart total.");
+          setSubmitting(false);
+          return;
+        }
+
+        // Normalize phone to 254XXXXXXXXX
+        const raw = mpesaPhone.trim().replace(/\s+/g, "").replace("+", "");
+        const phone = raw.startsWith("0") ? "254" + raw.slice(1) : raw;
+
+        if (!phone || !/^2547\d{8}$/.test(phone)) {
+          alert("Enter a valid Safaricom number e.g. 0712 345 678");
+          setSubmitting(false);
+          return;
+        }
+
+        const { startMpesaPayment, getPaymentStatus } =
+          await import("../api/payments.js");
+
+        const response = await startMpesaPayment({
+          phone,
+          amount: total,
+          order_reference: `ROOTS-${Date.now()}`,
+        });
+
+        const checkoutRequestId = response.checkout_request_id;
+
+
+        if (!checkoutRequestId) {
+          throw new Error("Missing checkout_request_id from backend response.");
+        }
+
+        alert("Check your phone and enter your M-Pesa PIN.");
+
+        // Poll for payment status every 3 seconds, stop after 2 minutes
+        let attempts = 0;
+        const MAX_ATTEMPTS = 40;
+
+        const interval = setInterval(async () => {
+          attempts += 1;
+
+          if (attempts > MAX_ATTEMPTS) {
+            clearInterval(interval);
+            setSubmitting(false);
+            alert("Payment confirmation timed out. If you paid, contact support.");
+            return;
+          }
+
+          try {
+            const statusRes = await getPaymentStatus(checkoutRequestId);
+            const status = statusRes?.status;
+
+            if (status === "completed") {
+              clearInterval(interval);
+              setSubmitted(true);
+              setSubmitting(false);
+            } else if (status === "failed") {
+              clearInterval(interval);
+              setSubmitting(false);
+              alert("Payment was not completed. Please try again.");
+            }
+          } catch {
+            clearInterval(interval);
+            setSubmitting(false);
+            alert("Could not confirm payment. Contact support if you were charged.");
+          }
+        }, 3000);
+
+        return;
+      }
+
+      if (paymentMethod === "card") {
+        if (!items || items.length === 0) {
+          alert("Your cart is empty.");
+          setSubmitting(false);
+          return;
+        }
+
+        const subtotal = items.reduce((sum, item) => {
+          const price = Number(item.price || 0);
+          const qty = Number(item.quantity || 1);
+          return sum + price * qty;
+        }, 0);
+
+        const shipping = subtotal >= 10000 ? 0 : 850;
+        const totalKES = Math.ceil(subtotal + shipping);
+
+        const { createOrder: createInternalOrder } = await import("../api/orders.js");
+        const { createStripePaymentIntent } = await import("../api/payments.js");
+
+        const internalOrder = await createInternalOrder({
+          shipping_fee: shipping,
+          payment_method: "card",
+          delivery,
+          cancel_url: window.location.origin + "/payments/cancel",
+          success_url: window.location.origin + "/payments/success",
+        });
+
+        // Amount/currency contract:
+        // backend should convert/store correctly. We pass KES amount and let backend create the Stripe PI.
+        const amount = totalKES;
+        const currency = "KES";
+
+        const { loadStripe } = await import("@stripe/stripe-js");
+        const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
+        if (!stripe) {
+          setSubmitting(false);
+          alert("Stripe failed to initialize. Missing VITE_STRIPE_PUBLISHABLE_KEY.");
+          return;
+        }
+
+        // NOTE: This implementation expects your backend to return a PaymentIntent client_secret.
+        const { client_secret } = await createStripePaymentIntent({
+          order_id: internalOrder.id,
+          amount,
+          currency,
+        });
+
+        if (!client_secret) {
+          setSubmitting(false);
+          alert("Missing client_secret from backend.");
+          return;
+        }
+
+        // Because this app currently uses plain inputs (not Stripe Elements),
+        // we cannot securely confirm with raw card data.
+        // The backend should instead support a PCI-compliant flow using Stripe Elements.
+        // For now, we attempt confirm with a minimal payload. If you use Stripe Elements,
+        // replace this section with Elements-based confirmation.
+        const { error } = await stripe.confirmCardPayment(client_secret, {
+          payment_method: {
+            card: undefined,
+            billing_details: {
+              name: cardData.name,
+              email: delivery.email,
+              phone: delivery.phone,
+              address: {
+                line1: delivery.address,
+                city: delivery.city,
+                country: delivery.country,
+              },
+            },
+          },
+        });
+
+        if (error) {
+          setSubmitting(false);
+          alert(error.message || "Card payment failed.");
+          return;
+        }
+
+        setSubmitted(true);
+        setSubmitting(false);
+        return;
+      }
+
+      if (paymentMethod === "paypal") {
+        // IMPORTANT: PayPal expects a currency it supports (recommended USD).
+        // Backend will create the internal pending order + PayPal order.
+        if (!items || items.length === 0) {
+          alert("Your cart is empty.");
+          setSubmitting(false);
+          return;
+        }
+
+
+        const subtotal = items.reduce((sum, item) => {
+          const price = Number(item.price || 0);
+          const qty = Number(item.quantity || 1);
+          return sum + price * qty;
+        }, 0);
+
+        const shipping = subtotal >= 10000 ? 0 : 850;
+        const totalKES = Math.ceil(subtotal + shipping);
+
+        // For now, pass amount/currency exactly as backend expects.
+        // Recommended setup is PayPal->USD, so your backend can convert if it stores KES.
+        const amount = totalKES;
+        const currency = "USD";
+
+        const { createOrder: createInternalOrder } = await import("../api/orders.js");
+        const { createPaypalOrder } = await import("../api/payments.js");
+
+        // 1) Create internal pending ROOTS order first (required by backend schema)
+        // OrderCreate expects: shipping_fee, payment_method, delivery, cancel_url, success_url, mpesa_phone?
+        const internalOrder = await createInternalOrder({
+          shipping_fee: shipping,
+          payment_method: "paypal",
+          delivery,
+          cancel_url: window.location.origin + "/paypal/cancel",
+          success_url: window.location.origin + "/paypal/success",
+        });
+
+        // 2) Create PayPal order linked to internal order id
+        const response = await createPaypalOrder({
+          order_id: internalOrder.id,
+          amount,
+          currency,
+        });
+
+
+        const approvalUrl = response?.approval_url || response?.approvalUrl;
+        if (!approvalUrl) {
+          throw new Error("Missing approval_url from PayPal create-order response.");
+        }
+
+        // Redirect user to PayPal to approve payment
+        window.location.href = approvalUrl;
+        return;
+      }
+
+      alert("This payment method is not implemented yet.");
+
+      setSubmitting(false);
+    } catch (err) {
+      console.error(err);
+
+      alert("Payment failed.");
+
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -408,6 +662,8 @@ export default function Checkout() {
             setPaymentMethod={setPaymentMethod}
             cardData={cardData}
             onCardChange={setCardData}
+            mpesaPhone={mpesaPhone}
+            onMpesaPhoneChange={setMpesaPhone}
           />
 
           <button

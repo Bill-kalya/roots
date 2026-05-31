@@ -1,0 +1,258 @@
+.page-shell {
+  min-height: 100vh;
+  background: #0e0805;
+  padding: 140px 20px 60px;
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.page-container {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: rgba(241,193,122,0.7);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  letter-spacing: 0.5px;
+  transition: color 0.2s;
+  width: fit-content;
+}
+.back-btn:hover { color: #f1c17a; }
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-title {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: rgba(255,255,255,0.35);
+  margin: 0;
+  font-family: Georgia, serif;
+}
+
+/* ── Section ── */
+.settings-section {
+  background: #1a0f07;
+  border: 1px solid rgba(241,193,122,0.1);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.section-title {
+  font-size: 11px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: rgba(241,193,122,0.55);
+  padding: 16px 20px 10px;
+  margin: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.section-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Row ── */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  gap: 16px;
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row-label {
+  font-size: 14px;
+  color: rgba(255,255,255,0.82);
+}
+
+.row-desc {
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.32);
+  font-family: Georgia, serif;
+}
+
+.row-control {
+  flex-shrink: 0;
+}
+
+/* ── Toggle ── */
+.toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.22s;
+  padding: 0;
+}
+
+.toggle.on {
+  background: linear-gradient(90deg, #a15d38, #f7a54b);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  transition: left 0.22s;
+}
+
+.toggle.on .toggle-thumb {
+  left: calc(100% - 21px);
+}
+
+/* ── Select ── */
+.settings-select {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 7px 12px;
+  color: #fff;
+  font-size: 13px;
+  font-family: Georgia, serif;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.settings-select:focus {
+  border-color: rgba(161,93,56,0.5);
+}
+
+.settings-select option {
+  background: #1a0f07;
+}
+
+/* ── Theme pills ── */
+.theme-pills {
+  display: flex;
+  gap: 6px;
+}
+
+.theme-pill {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 100px;
+  padding: 6px 14px;
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.theme-pill.active {
+  background: rgba(161,93,56,0.2);
+  border-color: rgba(161,93,56,0.5);
+  color: #f7a54b;
+}
+
+/* ── Ghost small button ── */
+.btn-ghost-sm {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 100px;
+  padding: 7px 16px;
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.btn-ghost-sm:hover {
+  background: rgba(161,93,56,0.1);
+  border-color: rgba(161,93,56,0.3);
+  color: #f7a54b;
+}
+
+/* ── Danger zone ── */
+.danger-zone {
+  background: rgba(180,40,40,0.06);
+  border: 1px solid rgba(220,80,80,0.15);
+  border-radius: 18px;
+  padding: 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.danger-title {
+  font-size: 11px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: rgba(220,100,100,0.7);
+  margin: 0;
+}
+
+.btn-danger {
+  background: rgba(220,60,60,0.12);
+  border: 1px solid rgba(220,60,60,0.3);
+  border-radius: 100px;
+  padding: 9px 22px;
+  color: #e07070;
+  font-size: 13px;
+  cursor: pointer;
+  width: fit-content;
+  transition: all 0.18s;
+}
+
+.btn-danger:hover {
+  background: rgba(220,60,60,0.2);
+  border-color: rgba(220,60,60,0.5);
+}
+
+.delete-confirm p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  margin: 0;
+  font-family: Georgia, serif;
+}
+
+.delete-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (max-width: 480px) {
+  .settings-row { flex-wrap: wrap; gap: 10px; }
+  .theme-pills { flex-direction: column; }
+}

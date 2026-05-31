@@ -1,7 +1,20 @@
-# TODO
-- [ ] Wire “VIEW MERCHANT” on ProductDetails to open chat with that merchant (instead of navigating to merchant profile)
-- [ ] Ensure Chat screen receives correct roomId/merchant context via router state
-- [ ] Update Chat to use merchantId from router state when roomId isn’t provided (or derive roomId)
-- [ ] Update ProductDetails styling if needed
-- [ ] Smoke test: open product page → click View Merchant → chat opens and loads
+# TODO - PayPal redirect + capture integration (frontend)
+
+- [ ] Update `src/api/payments.js` with PayPal endpoints:
+  - [ ] `createPaypalOrder({ amount, currency })`
+  - [ ] `capturePaypalOrder({ paypal_order_id })`
+- [ ] Update `src/screens/Checkout.jsx` to implement PayPal flow:
+  - [ ] call create-order with totals
+  - [ ] redirect browser to `approval_url`
+- [ ] Add PayPal return/cancel routes and pages:
+  - [ ] Create `src/screens/PaypalSuccess.jsx` (calls capture on load)
+  - [ ] Create `src/screens/PaypalCancel.jsx` (shows cancelled state)
+  - [ ] Wire routes in `src/App.jsx`
+- [ ] Basic UI handling:
+  - [ ] loading state on success
+  - [ ] error message if capture fails
+- [ ] Smoke test:
+  - [ ] PayPal checkout redirects properly
+  - [ ] PayPal redirects back to `/paypal/success`
+  - [ ] capture endpoint gets called and confirmation shows
 

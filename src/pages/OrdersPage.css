@@ -1,0 +1,274 @@
+/* Re-uses .page-shell, .page-container, .back-btn from ProfilePage.css */
+/* Import ProfilePage.css or copy those shared rules into a shared file */
+
+.page-shell {
+  min-height: 100vh;
+  background: #0e0805;
+  padding: 140px 20px 60px;
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.page-container {
+  max-width: 780px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: rgba(241,193,122,0.7);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  letter-spacing: 0.5px;
+  transition: color 0.2s;
+  width: fit-content;
+}
+.back-btn:hover { color: #f1c17a; }
+
+/* ── Page header ── */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-title {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: rgba(255,255,255,0.35);
+  margin: 0;
+  font-family: Georgia, serif;
+}
+
+/* ── Filter pills ── */
+.filter-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 100px;
+  padding: 7px 18px;
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.filter-pill:hover {
+  background: rgba(161,93,56,0.08);
+  border-color: rgba(161,93,56,0.3);
+  color: #f7a54b;
+}
+
+.filter-pill.active {
+  background: rgba(161,93,56,0.2);
+  border-color: rgba(161,93,56,0.5);
+  color: #f7a54b;
+}
+
+/* ── Orders list ── */
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Order card ── */
+.order-card {
+  background: #1a0f07;
+  border: 1px solid rgba(241,193,122,0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.order-card.expanded {
+  border-color: rgba(161,93,56,0.35);
+}
+
+.order-card-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.order-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.order-id {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.order-date {
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  font-family: Georgia, serif;
+}
+
+.order-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.status-badge {
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-weight: 600;
+}
+
+.order-total {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1c17a;
+}
+
+.order-chevron {
+  color: rgba(255,255,255,0.4);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.order-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* ── Expanded items ── */
+.order-items {
+  padding: 0 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.order-items-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin-bottom: 4px;
+}
+
+.order-item-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.order-item-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: rgba(161,93,56,0.15);
+  border: 1px solid rgba(161,93,56,0.2);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.order-item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumb-placeholder {
+  font-size: 22px;
+  opacity: 0.5;
+}
+
+.order-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.item-name {
+  font-size: 13.5px;
+  color: rgba(255,255,255,0.85);
+}
+
+.item-qty {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+}
+
+.item-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1c17a;
+}
+
+/* ── Order actions ── */
+.order-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn-ghost {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 100px;
+  padding: 8px 18px;
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.btn-ghost:hover {
+  background: rgba(161,93,56,0.1);
+  border-color: rgba(161,93,56,0.35);
+  color: #f7a54b;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 60px 0;
+  color: rgba(255,255,255,0.3);
+  font-size: 14px;
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+}

@@ -50,9 +50,21 @@ export default function ProductDetails() {
 
   const safeGallery = useMemo(() => {
     if (!product) return [];
-    if (Array.isArray(product.gallery)) return product.gallery;
-    if (typeof product.gallery === "string") return [product.gallery];
-    return product.image_url ? [product.image_url] : [];
+
+    let gallery = [];
+    if (Array.isArray(product.gallery)) gallery = product.gallery;
+    else if (typeof product.gallery === "string") gallery = [product.gallery];
+    else if (product.image_url) gallery = [product.image_url];
+
+    // Ensure at least 3 photos for the UI.
+    // If backend only provides 1 image_url, duplicate it so that the
+    // product details page can always render 3 thumbnails.
+    if (gallery.length > 0 && gallery.length < 3) {
+      const first = gallery[0];
+      while (gallery.length < 3) gallery.push(first);
+    }
+
+    return gallery;
   }, [product]);
 
   const mainImageSrc = useMemo(() => {
