@@ -225,6 +225,36 @@
   }
   .ig input::placeholder{color:rgba(44,24,16,.3);}
   .ig input:focus{border-bottom-color:var(--terracotta);}
+
+  .pw-wrap{
+    position: relative;
+  }
+
+  .pw-wrap input{
+    padding-right: 95px;
+  }
+
+  .pw-toggle{
+    position:absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid rgba(196,134,26,0.35);
+    background: rgba(245,236,215,0.25);
+    color: #c9a96a;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor:pointer;
+    transition: all .2s ease;
+  }
+
+  .pw-toggle:hover{
+    border-color: rgba(196,134,26,0.7);
+    color: var(--terracotta);
+  }
+
   .ig::after{
     content:'';position:absolute;bottom:0;left:0;
     width:0;height:1.5px;background:var(--terracotta);transition:width .4s ease;

@@ -1,11 +1,33 @@
 import axios from 'axios'
 
+import { tokenStore } from './tokenStore.js'
+
+function resolveApiBaseUrl() {
+  const raw = import.meta.env.VITE_API_URL;
+
+  // Treat empty string / whitespace as unset
+  if (!raw || (typeof raw === 'string' && raw.trim().length === 0)) {
+    return 'http://localhost:8000';
+  }
+
+  const value = String(raw).trim();
+
+  // Guard against misconfigured values like ':8000'
+  if (/^:\d+$/.test(value)) {
+    return `http://localhost${value}`;
+  }
+
+  // If someone configured just '8000' or similar, also guard (optional)
+  if (/^\d+$/.test(value)) {
+    return `http://localhost:${value}`;
+  }
+
+  return value;
+}
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000',
+  baseURL: resolveApiBaseUrl(),
   withCredentials: true,
-  // No default Content-Type — axios sets it automatically per request:
-  //   FormData  → multipart/form-data; boundary=...
-  //   plain object → application/json
 })
 
 // NOTE:
@@ -14,66 +36,111 @@ const apiClient = axios.create({
 // when the canonical URL expects a trailing slash.
 // Keeping URLs as-is avoids the redirect + extra latency.
 
-
 // Attach auth token automatically
-apiClient.interceptors.request.use(config => {
-  const token = localStorage.getItem('access_token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+apiClient.interceptors.request.use((config) => {
+  const token = tokenStore.getAccess()
+  if (token) {
+    config.headers = config.headers || {}
+    config.headers.Authorization = `Bearer ${token}`
+  }
   return config
 })
 
-// Handle 401 globally - refresh token or redirect to login
-// Deduplicate concurrent refresh requests to avoid refresh storms + rate limiting.
-let refreshPromise = null
+function _emitAuthExpired(detail = 'Token refresh failed') {
+  // Let pending microtasks settle first.
+  setTimeout(() => {
+    window.dispatchEvent(
+      new CustomEvent('roots:auth-expired', { detail })
+    )
+  }, 0)
+}
 
-async function refreshAccessToken(original) {
-  if (refreshPromise) return refreshPromise
+// Deduplicate/queue concurrent 401 refreshes.
+let _refreshInFlight = null
+let _queue = []
 
-  const refreshToken = localStorage.getItem('refresh_token')
-  if (!refreshToken) {
-    localStorage.removeItem('access_token')
-    window.location.href = '/login'
-    return Promise.reject(new Error('Missing refresh token'))
-  }
+async function _doRefresh() {
+  if (_refreshInFlight) return _refreshInFlight
 
-  refreshPromise = axios
-    .post(
-      `${original.baseURL}/api/auth/refresh`,
+  _refreshInFlight = (async () => {
+    const refreshToken = tokenStore.getRefresh()
+    if (!refreshToken) {
+      tokenStore.clear()
+      throw new Error('Missing refresh token')
+    }
+
+    // Use a plain axios instance to avoid re-entering this interceptor chain.
+    const plainAxios = axios
+
+    const res = await plainAxios.post(
+      `${apiClient.defaults.baseURL}/api/auth/refresh`,
       { refresh_token: refreshToken },
       { withCredentials: true }
     )
-    .then(({ data }) => {
-      localStorage.setItem('access_token', data.access_token)
-      if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token)
-      return data
-    })
-    .finally(() => {
-      refreshPromise = null
-    })
 
-  return refreshPromise
+    tokenStore.setTokens(res.data.access_token, res.data.refresh_token)
+    return res.data
+  })()
+
+  try {
+    return await _refreshInFlight
+  } catch (e) {
+    tokenStore.clear()
+    _emitAuthExpired(e?.message || 'Token expired')
+    throw e
+  } finally {
+    _refreshInFlight = null
+  }
 }
 
 apiClient.interceptors.response.use(
-  res => res,
-  async error => {
+  (res) => res,
+  async (error) => {
     const original = error.config
-    if (error.response?.status === 401 && !original._retry) {
-      original._retry = true
-      try {
-        const data = await refreshAccessToken(original)
-        original.headers.Authorization = `Bearer ${data.access_token}`
-        return apiClient(original)
-      } catch {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
-        window.location.href = '/login'
-      }
+
+    if (error.response?.status !== 401 || !original || original._retry) {
+      return Promise.reject(error)
     }
-    return Promise.reject(error)
+
+    original._retry = true
+
+    // While refresh is in flight, queue the retry handlers.
+    if (_refreshInFlight) {
+      return new Promise((resolve, reject) => {
+        _queue.push({ resolve, reject, original })
+      })
+    }
+
+    try {
+      const data = await _doRefresh()
+      // Replay queued requests + current one.
+      const token = tokenStore.getAccess() || data.access_token
+
+      // Resolve queued
+      const queued = _queue
+      _queue = []
+      queued.forEach(({ resolve, reject, original: queuedOriginal }) => {
+        try {
+          queuedOriginal.headers = queuedOriginal.headers || {}
+          queuedOriginal.headers.Authorization = `Bearer ${token}`
+          resolve(apiClient(queuedOriginal))
+        } catch (e) {
+          reject(e)
+        }
+      })
+
+      original.headers = original.headers || {}
+      original.headers.Authorization = `Bearer ${token}`
+      return apiClient(original)
+    } catch (e) {
+      // Reject queued
+      const queued = _queue
+      _queue = []
+      queued.forEach(({ reject }) => reject(e))
+      return Promise.reject(error)
+    }
   }
 )
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Image URL resolver
@@ -128,7 +195,7 @@ export function resolveImageUrl(imageUrl) {
   return url;
 }
 
-
-
 export default apiClient
+
+
 

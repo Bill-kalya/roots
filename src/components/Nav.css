@@ -161,6 +161,7 @@
   }
 }
 
+
 @media (max-width: 768px) {
   .nav {
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -187,6 +188,26 @@
   }
 }
 
+.currency-selector {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.3);
+  color: inherit;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.currency-selector:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(241, 193, 122, 0.25);
+}
+
+@media (max-width: 768px) {
+  .nav-right .currency-selector {
+    display: none;
+  }
+}
 
 
 .nav-right .shop-now-btn.custom-btn {

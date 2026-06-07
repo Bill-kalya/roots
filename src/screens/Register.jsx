@@ -29,7 +29,10 @@ const Register = () => {
     email: "",
     password: ""
   });
+  const [showPassword, setShowPassword] = useState(false);
+
   const [focusedInput, setFocusedInput] = useState(null);
+
 
   const stepTitles = {
     1: "Begin your story with us",
@@ -333,17 +336,28 @@ const Register = () => {
             <div style={S.fieldWrap}>
               <div>
                 <label style={S.label}>Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Min. 8 characters"
-                  value={form.password}
-                  onChange={handleChange}
-                  style={inputStyle("password")}
-                  onFocus={() => setFocusedInput("password")}
-                  onBlur={() => setFocusedInput(null)}
-                />
+                <div className="reg-pw-wrap">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Min. 8 characters"
+                    value={form.password}
+                    onChange={handleChange}
+                    style={inputStyle("password")}
+                    onFocus={() => setFocusedInput("password")}
+                    onBlur={() => setFocusedInput(null)}
+                  />
+                  <button
+                    type="button"
+                    className="reg-pw-toggle"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
                 {/* Strength bar */}
+
                 <div style={S.strengthBar}>
                   {[1, 2, 3, 4].map(n => (
                     <div key={n} style={S.strengthSegment(pw.score >= n, pw.score)} />

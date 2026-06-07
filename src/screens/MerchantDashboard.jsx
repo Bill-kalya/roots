@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   getMerchantProducts,
   getMerchantOrders,
@@ -12,8 +13,8 @@ import './merchant.css';
 import { resolveImageUrl } from '../lib/apiClient';
 import { toast } from 'sonner';
 
-
 const MerchantDashboard = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [analytics, setAnalytics] = useState({
@@ -139,6 +140,61 @@ const MerchantDashboard = () => {
     loadMerchantData();
   };
 
+  const normalizeMerchantOrderRow = (order) => {
+    const id = order?.id ?? order?._id ?? order?.order_id ?? '';
+
+    const customer_name =
+      order?.customer_name ??
+      order?.customer?.name ??
+      order?.customer?.full_name ??
+      order?.user?.email ??
+      'Unknown';
+
+    const itemsArray = Array.isArray(order?.items) ? order.items : [];
+
+    const rawTotal =
+      order?.total_amount ??
+      order?.total ??
+      order?.amount_total ??
+      order?.amount ??
+      0;
+
+    const totalNumber =
+      typeof rawTotal === 'number'
+        ? rawTotal
+        : typeof rawTotal === 'string'
+          ? Number(rawTotal)
+          : 0;
+
+    const total_display =
+      typeof rawTotal === 'string' && rawTotal.includes('$')
+        ? rawTotal
+        : `$${(Number.isFinite(totalNumber) ? totalNumber : 0).toFixed(2)}`;
+
+    const rawStatus = (order?.status ?? order?.order_status ?? '').toString();
+
+    const status_label =
+      rawStatus
+        .replace(/_/g, ' ')
+        .trim()
+        .replace(/\b\w/g, (m) => m.toUpperCase()) || 'Unknown';
+
+    const status_badge_key = rawStatus
+      .replace(/\s+/g, '-')
+      .replace(/_/g, '-')
+      .toLowerCase();
+
+    return {
+      id,
+      customer_name,
+      items_count: itemsArray.length,
+      total_display,
+      status: rawStatus ? status_badge_key : 'pending',
+      status_label,
+      status_badge_key,
+    };
+  };
+
   if (loading) {
     return (
       <div className="merchant-container">
@@ -174,15 +230,24 @@ const MerchantDashboard = () => {
 
       <div className="merchant-header">
         <h1>Merchant Dashboard</h1>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setEditingProduct(null);
-            setShowProductForm(true);
-          }}
-        >
-          + Add New Product
-        </button>
+        <div className="merchant-header-actions">
+          <button
+            className="btn btn-ghost"
+            onClick={() => navigate('/profile')}
+            aria-label="Go to user dashboard"
+          >
+            View User Dashboard
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setEditingProduct(null);
+              setShowProductForm(true);
+            }}
+          >
+            + Add New Product
+          </button>
+        </div>
       </div>
 
       <div className="stats-grid">
@@ -271,30 +336,33 @@ const MerchantDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
-                <tr key={order.id}>
-                  <td>#{String(order.id).slice(0, 8)}</td>
-                  <td>{order.customer_name}</td>
-                  <td>{order.items?.length || 0} items</td>
-                  <td>${order.total}</td>
-                  <td>
-                    <span className={`status-badge status-${order.status}`}>{order.status}</span>
-                  </td>
-                  <td>
-                    <select
-                      value={order.status}
-                      onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                      className="status-select"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="paid">Paid</option>
-                      <option value="shipped">Shipped</option>
-                      <option value="delivered">Delivered</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
+              {orders.map((order) => {
+                const normalized = normalizeMerchantOrderRow(order);
+                return (
+                  <tr key={normalized.id}>
+                    <td>#{String(normalized.id).slice(0, 8)}</td>
+                    <td>{normalized.customer_name}</td>
+                    <td>{normalized.items_count} items</td>
+                    <td>{normalized.total_display}</td>
+                    <td>
+                      <span className={`status-badge status-${normalized.status_badge_key}`}>{normalized.status_label}</span>
+                    </td>
+                    <td>
+                      <select
+                        value={normalized.status}
+                        onChange={(e) => handleUpdateOrderStatus(normalized.id, e.target.value)}
+                        className="status-select"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

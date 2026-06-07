@@ -3,7 +3,7 @@
 
 .page-shell {
   min-height: 100vh;
-  background: #0e0805;
+  background: var(--background);
   padding: 140px 20px 60px;
   font-family: 'Playfair Display', Georgia, serif;
 }
@@ -246,7 +246,6 @@
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 100px;
   padding: 8px 18px;
-  color: rgba(255,255,255,0.6);
   font-size: 12px;
   cursor: pointer;
   transition: all 0.18s;
@@ -272,3 +271,41 @@
 .empty-icon {
   font-size: 2.5rem;
 }
+
+/* ── Responsive (Roots theme breakpoints) ── */
+@media (min-width: 901px) {
+  /* laptop landscape: give the content a bit more breathing room */
+  .page-shell {
+    padding-top: 140px;
+  }
+  .page-container {
+    max-width: 860px;
+  }
+
+  .order-card-header {
+    padding: 20px 26px;
+  }
+  .order-items {
+    padding-left: 26px;
+    padding-right: 26px;
+  }
+}
+
+@media (max-width: 900px) {
+  .page-container { max-width: 720px; }
+}
+
+@media (max-width: 560px) {
+  .page-shell { padding: 120px 16px 48px; }
+  .page-container { gap: 18px; }
+
+  .page-title { font-size: 1.55rem; }
+
+  .order-card-header { padding: 14px 14px; gap: 10px; }
+  .order-items { padding: 0 14px 14px; }
+  .order-item-row { gap: 10px; }
+  .order-item-thumb { width: 46px; height: 46px; }
+  .order-actions { flex-direction: column; }
+}
+
+

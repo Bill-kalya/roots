@@ -8,6 +8,8 @@ import Button from "./Button";
 import Search from "./Search";
 import "./Nav.css";
 import CartDrawer from "./CartDrawer";
+import { useCurrency } from "../contexts/CurrencyContext.jsx";
+
 
 function ProfileWrapper({ user, logout, navigate }) {
 
@@ -182,6 +184,8 @@ function ProfileWrapper({ user, logout, navigate }) {
 function Nav() {
   const { user, logout } = useAuth();
   const { itemCount: basketCount } = useCart();
+  const { currency, changeCurrency, CURRENCY_MAP } = useCurrency();
+
   const [scrolled, setScrolled] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -255,7 +259,27 @@ const handleCollectionClick = (e) => {
             ☰
           </button>
           <Search value={searchQuery} onChange={setSearchQuery} placeholder="Search collection..." />
+
+          <select
+            className="currency-selector"
+            value={currency.code}
+            onChange={(e) => changeCurrency(e.target.value)}
+            aria-label="Select currency"
+          >
+            {Array.from(
+              new Map(Object.values(CURRENCY_MAP).map((c) => [c.code, c])).values()
+            ).map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.symbol} {c.code}
+              </option>
+            ))}
+            {currency?.code !== "EUR" && (
+              <option value="EUR">€ EUR</option>
+            )}
+          </select>
+
           <button className="basket-btn" onClick={toggleCart}>
+
             <span className="basket-icon">
               <svg
                 xmlns="http://www.w3.org/2000/svg"

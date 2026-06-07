@@ -4,19 +4,28 @@ import "./checkout.css";
 
 import Footer from "../components/Footer";
 import { useCart } from "../contexts/CartContext.jsx";
+import { getShippingRates } from "../api/shipping.js";
+
 
 
 // NOTE: This component currently only implements the frontend UI.
 // It assumes the backend enforces auth and returns 401 when missing/expired.
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+
+
 
 function CheckoutSteps({ current = 1 }) {
+  const navigate = useNavigate();
   const steps = ["CART", "CHECKOUT", "CONFIRM"];
+  const stepRoutes = ["/basket", "/checkout", "/confirm"];
+
   return (
     <div className="checkout-steps" aria-label="Checkout progress">
       {steps.map((step, i) => {
         const state = i < current ? "done" : i === current ? "active" : "idle";
+        const isClickable = i < current; // only allow going back to completed steps
+
         return (
           <React.Fragment key={step}>
             {i > 0 && (
@@ -24,7 +33,15 @@ function CheckoutSteps({ current = 1 }) {
                 ›
               </span>
             )}
-            <span className={`checkout-step checkout-step-${state}`}>{step}</span>
+            <button
+              className={`checkout-step checkout-step-${state}`}
+              onClick={() => isClickable && navigate(stepRoutes[i])}
+              disabled={!isClickable}
+              type="button"
+              aria-current={i === current ? "step" : undefined}
+            >
+              {step}
+            </button>
           </React.Fragment>
         );
       })}
@@ -309,13 +326,28 @@ function PaymentForm({
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const { items, loading: cartLoading } = useCart();
 
+
   const cartError = false;
+
+  const backToBasket = () => {
+    const from = location?.state?.from;
+    navigate(from || '/basket');
+  };
+
 
 
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [mpesaPhone, setMpesaPhone] = useState("");
+
+  const [ratesLoading, setRatesLoading] = useState(false);
+  const [shippingRates, setShippingRates] = useState([]);
+  const [ratesError, setRatesError] = useState("");
+  const [selectedRateId, setSelectedRateId] = useState(null);
+
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -331,13 +363,143 @@ export default function Checkout() {
 
   const [cardData, setCardData] = useState({ number: "", expiry: "", cvv: "", name: "" });
 
+  // Estimate a single package from cart line-items.
+  // Assumes cart items include these fields; if backend/cart doesn't yet provide them,
+  // the call will fail and we show a user-friendly error.
+  const packageEstimate = React.useMemo(() => {
+    const safeNum = (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const itemsArr = Array.isArray(items) ? items : [];
+    const totalQty = itemsArr.reduce((s, i) => s + safeNum(i.quantity) || 0, 0);
+
+    const weight_kg = itemsArr.reduce((sum, i) => sum + safeNum(i.weight_kg) * (safeNum(i.quantity) || 1), 0);
+
+    const length_cm = Math.max(
+      ...itemsArr.map((i) => safeNum(i.length_cm) || 0)
+    );
+    const width_cm = Math.max(
+      ...itemsArr.map((i) => safeNum(i.width_cm) || 0)
+    );
+    const height_cm = Math.max(
+      ...itemsArr.map((i) => safeNum(i.height_cm) || 0)
+    );
+
+    const fragile = itemsArr.some((i) => Boolean(i.fragile));
+
+    return {
+      weight_kg: weight_kg || 0.5,
+      length_cm: length_cm || 10,
+      width_cm: width_cm || 10,
+      height_cm: height_cm || 2,
+      fragile,
+      totalQty,
+    };
+  }, [items]);
+
+  // Debounced rate fetch based on selected destination country.
+  React.useEffect(() => {
+    let alive = true;
+
+    const fetchRates = async () => {
+      setRatesError("");
+
+      const country = delivery?.country;
+      if (!country) return;
+
+      const normalized = String(country).trim().toLowerCase();
+
+      // Kenya shipping is free. Avoid calling the rates endpoint so we never hit
+      // backend 422 errors caused by missing dimensional fields.
+      if (normalized === "kenya" || normalized === "ke") {
+        const freeRate = {
+          id: "free_local_delivery",
+          carrier: "Local Delivery",
+          service: "Local Delivery",
+          cost: 0,
+          currency: "KES",
+          free_shipping: true,
+          estimated_delivery_days: null,
+        };
+
+        setShippingRates([freeRate]);
+        setSelectedRateId(freeRate.id);
+        setRatesError("");
+        setRatesLoading(false);
+        return;
+      }
+
+      // Shipping zones table uses country_code (2-letter).
+      // Your UI stores full country name right now; backend can accept either.
+      const country_code = country;
+
+      setRatesLoading(true);
+      try {
+        const data = await getShippingRates({
+          country_code,
+          package: {
+            weight_kg: packageEstimate.weight_kg,
+            length_cm: packageEstimate.length_cm,
+            width_cm: packageEstimate.width_cm,
+            height_cm: packageEstimate.height_cm,
+          },
+          fragile: packageEstimate.fragile,
+        });
+
+
+        const rates = data?.rates || [];
+        if (!alive) return;
+
+        setShippingRates(rates);
+        setSelectedRateId((prev) => {
+          if (prev && rates.some((r) => r.id === prev)) return prev;
+          return rates[0]?.id || null;
+        });
+      } catch (err) {
+        if (!alive) return;
+        const msg =
+          err?.response?.data?.detail ||
+          err?.message ||
+          "Could not fetch shipping rates.";
+        setRatesError(msg);
+        setShippingRates([]);
+        setSelectedRateId(null);
+      } finally {
+        if (alive) setRatesLoading(false);
+      }
+    };
+
+    const t = setTimeout(fetchRates, 350);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+  }, [delivery?.country, packageEstimate]);
+
+
   useEffect(() => {
     document.body.classList.add("roots-body");
     return () => document.body.classList.remove("roots-body");
   }, []);
 
+  const selectedRate = React.useMemo(() => {
+    return shippingRates.find((r) => r.id === selectedRateId) || null;
+  }, [shippingRates, selectedRateId]);
+
+  const getShippingFee = () => {
+    // If rates exist, use the selected rate cost.
+    // Fallback to legacy values if rates haven't loaded yet.
+    if (selectedRate?.cost != null) return Number(selectedRate.cost);
+
+    const subtotalFallback = items?.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1), 0) || 0;
+    return subtotalFallback >= 10000 ? 0 : 850;
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
+
 
     try {
       if (paymentMethod === "mpesa") {
@@ -356,8 +518,9 @@ export default function Checkout() {
           return sum + price * qty;
         }, 0);
 
-        // Shipping logic
-        const shipping = subtotal >= 10000 ? 0 : 850;
+        // Shipping fee from selected carrier rate (fallback to legacy if rates not ready)
+        const shipping = getShippingFee();
+
 
         // Final total
         const total = Math.ceil(subtotal + shipping);
@@ -447,8 +610,9 @@ export default function Checkout() {
           return sum + price * qty;
         }, 0);
 
-        const shipping = subtotal >= 10000 ? 0 : 850;
+        const shipping = getShippingFee();
         const totalKES = Math.ceil(subtotal + shipping);
+
 
         const { createOrder: createInternalOrder } = await import("../api/orders.js");
         const { createStripePaymentIntent } = await import("../api/payments.js");
@@ -529,14 +693,13 @@ export default function Checkout() {
           return;
         }
 
-
         const subtotal = items.reduce((sum, item) => {
           const price = Number(item.price || 0);
           const qty = Number(item.quantity || 1);
           return sum + price * qty;
         }, 0);
 
-        const shipping = subtotal >= 10000 ? 0 : 850;
+        const shipping = getShippingFee();
         const totalKES = Math.ceil(subtotal + shipping);
 
         // For now, pass amount/currency exactly as backend expects.
@@ -547,27 +710,51 @@ export default function Checkout() {
         const { createOrder: createInternalOrder } = await import("../api/orders.js");
         const { createPaypalOrder } = await import("../api/payments.js");
 
-        // 1) Create internal pending ROOTS order first (required by backend schema)
-        // OrderCreate expects: shipping_fee, payment_method, delivery, cancel_url, success_url, mpesa_phone?
-        const internalOrder = await createInternalOrder({
-          shipping_fee: shipping,
-          payment_method: "paypal",
-          delivery,
-          cancel_url: window.location.origin + "/paypal/cancel",
-          success_url: window.location.origin + "/paypal/success",
-        });
+        let internalOrder;
+        try {
+          // 1) Create internal pending ROOTS order first (required by backend schema)
+          internalOrder = await createInternalOrder({
+            shipping_fee: shipping,
+            payment_method: "paypal",
+            delivery,
+            cancel_url: window.location.origin + "/paypal/cancel",
+            success_url: window.location.origin + "/paypal/success",
+          });
+        } catch (err) {
+          const detail = err?.response?.data?.detail || err?.message || "Could not create order.";
+          alert(`Order error: ${detail}`);
+          setSubmitting(false);
+          return;
+        }
 
-        // 2) Create PayPal order linked to internal order id
-        const response = await createPaypalOrder({
-          order_id: internalOrder.id,
-          amount,
-          currency,
-        });
+        let response;
+        try {
+          // 2) Create PayPal order linked to internal order id
+          response = await createPaypalOrder({
+            order_id: internalOrder.id,
+            amount,
+            currency,
+          });
+        } catch (err) {
+          const status = err?.response?.status;
+          const detail = err?.response?.data?.detail || err?.message;
 
+          if (status === 503) {
+            alert("PayPal is not available right now. Please try M-Pesa or card.");
+          } else if (status === 502) {
+            alert("Could not reach PayPal. Please try again in a moment.");
+          } else {
+            alert(`PayPal error: ${detail || "Unknown error"}`);
+          }
+          setSubmitting(false);
+          return;
+        }
 
         const approvalUrl = response?.approval_url || response?.approvalUrl;
         if (!approvalUrl) {
-          throw new Error("Missing approval_url from PayPal create-order response.");
+          alert("Missing approval URL from PayPal. Please try again.");
+          setSubmitting(false);
+          return;
         }
 
         // Redirect user to PayPal to approve payment
@@ -580,9 +767,8 @@ export default function Checkout() {
       setSubmitting(false);
     } catch (err) {
       console.error(err);
-
-      alert("Payment failed.");
-
+      const detail = err?.response?.data?.detail || err?.message;
+      alert(detail ? `Payment failed: ${detail}` : "Payment failed. Please try again.");
       setSubmitting(false);
     }
   };
@@ -655,7 +841,83 @@ export default function Checkout() {
           <h2 className="checkout-heading">Complete Your Order</h2>
           <p className="checkout-subtitle">SHIPPING & PAYMENT DETAILS</p>
 
+          <button
+            type="button"
+            className="back-to-basket-btn"
+            onClick={backToBasket}
+          >
+             Back to Basket
+          </button>
+
+
           <DeliveryForm data={delivery} onChange={setDelivery} />
+
+          <fieldset className="form-fieldset">
+            <div className="section-label">
+              <div className="section-label-line" />
+              <span>Shipping Options</span>
+            </div>
+
+            {ratesLoading && (
+              <p className="checkout-subtitle" style={{ margin: 0 }}>
+                Fetching live shipping rates…
+              </p>
+            )}
+
+            {ratesError && (
+              <div className="checkout-error" role="alert">
+                ⚠ {ratesError}
+              </div>
+            )}
+
+            {!ratesLoading && !ratesError && shippingRates.length === 0 && (
+              <p className="checkout-subtitle" style={{ margin: 0 }}>
+                Enter your delivery country to see available carriers.
+              </p>
+            )}
+
+            {shippingRates.length > 0 && (
+              <div className="shipping-rates" role="radiogroup" aria-label="Available shipping methods">
+                {shippingRates.map((r) => {
+                  const active = r.id === selectedRateId;
+                  return (
+                    <button
+                      key={r.id}
+                      type="button"
+                      className={`shipping-rate ${active ? "shipping-rate-active" : ""}`}
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => setSelectedRateId(r.id)}
+                    >
+                      <div className="shipping-rate-top">
+                        <div>
+                          <div className="shipping-rate-carrier">{r.carrier || r.service || "Carrier"}</div>
+                          <div className="shipping-rate-meta">
+                            {r.estimated_delivery_days != null
+                              ? `Est. ${r.estimated_delivery_days} days`
+                              : "Delivery estimate unavailable"}
+                          </div>
+                        </div>
+                        <div className="shipping-rate-cost">
+                          {r.cost != null ? `KSh ${Number(r.cost).toLocaleString("en-KE")}` : "—"}
+                        </div>
+                      </div>
+
+                      {r.customs_info && (
+                        <div className="shipping-rate-customs">
+                          <strong>Customs/Taxes:</strong> {r.customs_info}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="customs-info-banner" role="note">
+              ℹ Import duties and taxes may be charged by your country’s customs authority and are not included in the product price.
+            </div>
+          </fieldset>
 
           <PaymentForm
             paymentMethod={paymentMethod}

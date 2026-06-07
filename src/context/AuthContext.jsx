@@ -1,9 +1,14 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { tokenStore } from '../services/api.js';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+
+import { useNavigate } from 'react-router-dom';
+
+import { tokenStore } from '../lib/tokenStore.js';
+
+import { fetchAndInitEncryptionKey, clearEncryption } from '../utils/authEncryption.js';
+
 
 const AuthContext = createContext(null);
 
-// Decode JWT payload without a library
 function decodeToken(token) {
   try {
     const payload = token.split('.')[1];
@@ -13,88 +18,147 @@ function decodeToken(token) {
   }
 }
 
-function getUserFromStorage() {
-  const token = tokenStore.get();
+function deriveUserFromToken() {
+  const token = tokenStore.getAccess();
   if (!token) return null;
+
   const payload = decodeToken(token);
   if (!payload) return null;
+
   // Reject expired tokens immediately
   if (payload.exp && payload.exp * 1000 < Date.now()) {
     tokenStore.clear();
     return null;
   }
+
+  const roleRaw = payload.role;
+  const role = typeof roleRaw === 'string' ? roleRaw.trim().toUpperCase() : null;
+
   return {
     id: payload.sub,
     email: payload.email,
-    role: payload.role, // 'USER' | 'MERCHANT' | 'ADMIN'
+    role,
     full_name: payload.full_name,
   };
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const stored = getUserFromStorage();
-    return stored;
-  });
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState(() => deriveUserFromToken());
   const [loading, setLoading] = useState(false);
 
-  const loadUser = useCallback(() => {
-    try {
-      const u = getUserFromStorage();
-      setUser(u);
-    } catch {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadUser();
-    const handler = () => loadUser();
-    window.addEventListener('roots:auth-changed', handler);
-    return () => window.removeEventListener('roots:auth-changed', handler);
-  }, [loadUser]);
+  // Guards against double-firing in React 18 Strict Mode.
+  const handlingExpiryRef = useRef(false);
 
   const syncUser = useCallback(() => {
-    setUser(getUserFromStorage());
+    setUser(deriveUserFromToken());
   }, []);
 
-  const login = useCallback((userData, token) => {
-    try {
-      if (token) tokenStore.set(token);
-      // userData shape: allow avatar/name/email/full_name
-      if (userData && typeof userData === 'object') {
-        // persist full user payload for Nav avatar fallback
-        localStorage.setItem('user', JSON.stringify(userData));
+  const clearAuth = useCallback(() => {
+    tokenStore.clear();
+    setUser(null);
+    window.dispatchEvent(new Event('roots:auth-changed'));
+    navigate('/login');
+  }, [navigate]);
+
+  useEffect(() => {
+    const onAuthChanged = () => syncUser();
+    window.addEventListener('roots:auth-changed', onAuthChanged);
+
+    const onAuthExpired = () => {
+      if (handlingExpiryRef.current) return;
+      handlingExpiryRef.current = true;
+
+      clearAuth();
+
+      // Allow future events
+      setTimeout(() => {
+        handlingExpiryRef.current = false;
+      }, 0);
+    };
+
+    window.addEventListener('roots:auth-expired', onAuthExpired);
+
+    // Cross-tab logout: if another tab removes tokens, clear this tab.
+    const onStorage = () => {
+      const accessNow = tokenStore.getAccess();
+      if (!accessNow) {
+        // If we have no access token, ensure this tab is logged out.
+        // Avoid loops by just syncing/clearing.
+        if (user) {
+          clearAuth();
+        } else {
+          setUser(null);
+        }
       }
-      setUser(userData || getUserFromStorage());
-    } finally {
+    };
+
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      window.removeEventListener('roots:auth-changed', onAuthChanged);
+      window.removeEventListener('roots:auth-expired', onAuthExpired);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [clearAuth, syncUser, user]);
+
+  const login = useCallback(async (accessToken, refreshToken, rememberMe) => {
+    try {
+      if (rememberMe) {
+        tokenStore.persist(accessToken, refreshToken);
+      } else {
+        tokenStore.session(accessToken, refreshToken);
+      }
+
+      // Initialize client-side encryption after we have the access token.
+      try {
+        await fetchAndInitEncryptionKey(accessToken);
+      } catch {
+        // Do not block login UX if encryption is misconfigured.
+      }
+
       setLoading(false);
+      setUser(deriveUserFromToken());
       window.dispatchEvent(new Event('roots:auth-changed'));
+    } catch {
+      setLoading(false);
+      throw new Error('Login failed');
     }
   }, []);
 
-  const clearUser = useCallback(() => {
+
+  const logout = useCallback(() => {
+    clearEncryption();
     tokenStore.clear();
-    localStorage.removeItem('user');
     setUser(null);
     window.dispatchEvent(new Event('roots:auth-changed'));
-  }, []);
+    navigate('/login');
+  }, [navigate]);
 
-  const logout = clearUser;
 
-
-  // Re-sync if token changes in another tab
-  useEffect(() => {
-    const handler = () => setUser(getUserFromStorage());
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
-  }, []);
+  const isAuthenticated = Boolean(user);
+  const isAdmin = user?.role === 'ADMIN';
+  const isMerchant = user?.role === 'MERCHANT';
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, syncUser, clearUser }}>
+    <AuthContext.Provider
+      value={{
+        // Public API
+        login,
+        logout,
+        syncUser,
 
+        // Derived booleans
+        isAuthenticated,
+        isAdmin,
+        isMerchant,
+
+        // Optional: expose user and loading for UI
+        user,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

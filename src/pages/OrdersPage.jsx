@@ -1,39 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import "./OrdersPage.css";
 
-// Mock orders — swap with your real API/context data
-const MOCK_ORDERS = [
-  {
-    id: "ORD-2041",
-    date: "May 18, 2025",
-    status: "Delivered",
-    total: "$134.00",
-    items: [
-      { name: "Woven Sisal Basket", qty: 1, price: "$74.00", img: null },
-      { name: "Terracotta Bowl Set", qty: 2, price: "$60.00", img: null },
-    ],
-  },
-  {
-    id: "ORD-1987",
-    date: "Apr 2, 2025",
-    status: "In Transit",
-    total: "$89.00",
-    items: [
-      { name: "Hand-dyed Indigo Runner", qty: 1, price: "$89.00", img: null },
-    ],
-  },
-  {
-    id: "ORD-1754",
-    date: "Feb 14, 2025",
-    status: "Delivered",
-    total: "$210.00",
-    items: [
-      { name: "Carved Ebony Tray", qty: 1, price: "$120.00", img: null },
-      { name: "Raffia Wall Art", qty: 1, price: "$90.00", img: null },
-    ],
-  },
-];
 
 const STATUS_COLORS = {
   Delivered: { bg: "rgba(74,180,100,0.12)", text: "#5ecb78", border: "rgba(74,180,100,0.25)" },
@@ -109,9 +78,42 @@ export default function OrdersPage() {
   const [filter, setFilter] = useState("All");
   const filters = ["All", "Delivered", "In Transit", "Processing"];
 
-  const visible = filter === "All"
-    ? MOCK_ORDERS
-    : MOCK_ORDERS.filter(o => o.status === filter);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await api.get("/api/user/orders/");
+        const data = res?.data;
+
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.orders)
+            ? data.orders
+            : [];
+
+        if (!alive) return;
+        setOrders(list);
+      } catch (e) {
+        if (!alive) return;
+        setError(e?.response?.data?.message || e?.message || "Failed to load orders");
+      } finally {
+        if (!alive) return;
+        setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const visible = filter === "All" ? orders : orders.filter((o) => o.status === filter);
 
   return (
     <div className="page-shell">
@@ -144,13 +146,23 @@ export default function OrdersPage() {
 
         {/* Orders list */}
         <div className="orders-list">
-          {visible.length === 0 ? (
+          {loading ? (
+            <div className="empty-state">
+              <span className="empty-icon">⏳</span>
+              <p>Loading orders…</p>
+            </div>
+          ) : error ? (
+            <div className="empty-state">
+              <span className="empty-icon">⚠️</span>
+              <p>{error}</p>
+            </div>
+          ) : visible.length === 0 ? (
             <div className="empty-state">
               <span className="empty-icon">📦</span>
               <p>No orders found</p>
             </div>
           ) : (
-            visible.map(order => <OrderCard key={order.id} order={order} />)
+            visible.map((order) => <OrderCard key={order.id || order.order_id} order={order} />)
           )}
         </div>
 

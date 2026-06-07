@@ -1,15 +1,20 @@
-export function formatMoney(amount, currency = 'KES') {
-  const num = typeof amount === 'number' ? amount : Number(amount);
+export function formatMoney(amountInKes, currency) {
+  const num = typeof amountInKes === "number" ? amountInKes : Number(amountInKes);
   const safe = Number.isFinite(num) ? num : 0;
 
-  if (currency === 'USD') {
-    return `$${safe.toLocaleString('en-US', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    })}`;
+  if (!currency || !currency.rate) {
+    return `KSh ${safe.toLocaleString("en-KE")}`;
   }
 
-  // Default: KES
-  return `KSh ${safe.toLocaleString('en-KE')}`;
+  const converted = safe * currency.rate;
+  const isKES = currency.code === "KES";
+
+  return new Intl.NumberFormat("en", {
+    style: "currency",
+    currency: currency.code,
+    minimumFractionDigits: isKES ? 0 : 2,
+    maximumFractionDigits: isKES ? 0 : 2,
+  }).format(converted);
 }
+
 

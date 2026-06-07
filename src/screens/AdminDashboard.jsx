@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -36,8 +37,8 @@ ChartJS.register(
   Filler
 );
 
-
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [updatingUserIds, setUpdatingUserIds] = useState({});
 
@@ -104,11 +105,65 @@ const AdminDashboard = () => {
       revenueGrowth: analytics.revenue_growth || 0,
       orderGrowth: analytics.order_growth || 0,
     });
-    setRecentOrders(orders.items || []);
+    const items = orders?.items || [];
+    setRecentOrders(items);
     setTopProducts(analytics.top_products || []);
     setSalesData(analytics.sales_by_day || {});
     setMaintenanceMode(analytics.maintenance_mode || false);
     setLoading(false);
+  };
+
+  const normalizeOrderRow = (order) => {
+    const id = order?.id ?? order?._id ?? order?.order_id ?? '';
+
+
+    const customer_name =
+      order?.customer_name ??
+      order?.customer?.name ??
+      order?.customer?.full_name ??
+      order?.user?.email ??
+      'Unknown';
+
+    const rawTotal =
+      order?.total_amount ??
+      order?.total ??
+      order?.totalAmount ??
+      order?.amount_total ??
+      order?.amount ??
+      0;
+
+    const totalNumber =
+      typeof rawTotal === 'number'
+        ? rawTotal
+        : typeof rawTotal === 'string'
+          ? Number(rawTotal)
+          : 0;
+
+    const total_display =
+      typeof rawTotal === 'string' && rawTotal.includes('$')
+        ? rawTotal
+        : `$${(Number.isFinite(totalNumber) ? totalNumber : 0).toFixed(2)}`;
+
+    const rawStatus = (order?.status ?? order?.order_status ?? '').toString();
+
+    const status_label =
+      rawStatus
+        .replace(/_/g, ' ')
+        .trim()
+        .replace(/\b\w/g, (m) => m.toUpperCase()) || 'Unknown';
+
+    const status_badge_key = rawStatus
+      .replace(/\s+/g, '-')
+      .replace(/_/g, '-')
+      .toLowerCase();
+
+    return {
+      id,
+      customer_name,
+      total_display,
+      status_label,
+      status_badge_key,
+    };
   };
 
   useEffect(() => {
@@ -203,6 +258,13 @@ const AdminDashboard = () => {
       <div className="admin-header">
         <h1>Dashboard Overview</h1>
         <div className="admin-header-actions">
+          <button
+            className="btn btn-ghost"
+            onClick={() => navigate('/profile')}
+            aria-label="Go to user dashboard"
+          >
+            View User Dashboard
+          </button>
           <button className="btn btn-primary" onClick={fetchDashboardData}>
             Refresh Data
           </button>
@@ -319,20 +381,23 @@ const AdminDashboard = () => {
               </thead>
 
               <tbody>
-                {recentOrders.map(order => (
-                  <tr key={order.id}>
-                    <td>#{order.id.slice(0, 8)}</td>
-                    <td>{order.customer_name}</td>
-                    <td>${order.total}</td>
-                    <td>
-                      <span
-                        className={`status-badge status-${order.status}`}
-                      >
-                        {order.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {recentOrders.map((order) => {
+                  const normalized = normalizeOrderRow(order);
+                  return (
+                    <tr key={normalized.id}>
+                      <td>#{String(normalized.id).slice(0, 8)}</td>
+                      <td>{normalized.customer_name}</td>
+                      <td>{normalized.total_display}</td>
+                      <td>
+                        <span
+                          className={`status-badge status-${normalized.status_badge_key}`}
+                        >
+                          {normalized.status_label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

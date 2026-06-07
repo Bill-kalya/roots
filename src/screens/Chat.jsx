@@ -2,19 +2,11 @@
 // Customer ↔ Merchant direct messaging screen
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
+import { useChat } from "../hooks/useChat";
+
 import "./chat.css";
 import Nav from "../components/Nav";
 import Footer from "../components/Footer";
-
-// ─── Timestamp helper ────────────────────────────────────────────────────────
-function getTime() {
-  return new Date().toLocaleTimeString("en-KE", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
-
 
 // ─── Message Bubble ───────────────────────────────────────────────────────────
 function MessageBubble({ message, prevFrom, merchant }) {
@@ -22,15 +14,16 @@ function MessageBubble({ message, prevFrom, merchant }) {
   const safeMerchant = merchant || { name: "Merchant", initials: "RA" };
   const showAvatar = !isCustomer && prevFrom !== "merchant";
 
-
   return (
     <div
       className={`message-row ${isCustomer ? "message-row-customer" : "message-row-merchant"}`}
       aria-label={`${isCustomer ? "You" : safeMerchant.name}: ${message.text}`}
     >
-
       {!isCustomer && (
-        <div className={`message-avatar ${showAvatar ? "" : "message-avatar-hidden"}`} aria-hidden="true">
+        <div
+          className={`message-avatar ${showAvatar ? "" : "message-avatar-hidden"}`}
+          aria-hidden="true"
+        >
           {showAvatar ? safeMerchant.initials : ""}
         </div>
       )}
@@ -70,7 +63,6 @@ function TypingIndicator({ merchant }) {
 
 // ─── Chat Header ─────────────────────────────────────────────────────────────
 function ChatHeader({ onBack, merchant }) {
-  // Guard: don't render until merchant data arrives from WebSocket
   if (!merchant) return null;
 
   return (
@@ -100,12 +92,7 @@ function ChatHeader({ onBack, merchant }) {
       </div>
 
       <div className="chat-header-actions">
-        <button
-          className="chat-action-btn"
-          aria-label="View merchant profile"
-          type="button"
-          title="Profile"
-        >
+        <button className="chat-action-btn" aria-label="View merchant profile" type="button" title="Profile">
           ◎
         </button>
         <button className="chat-action-btn" aria-label="More options" type="button" title="More">
@@ -126,18 +113,14 @@ function PinnedProduct({ product }) {
       <div className="pinned-info">
         <div className="pinned-label">DISCUSSING</div>
         <div className="pinned-name">{product.name || "Product"}</div>
-        <div className="pinned-price">
-          {product.price ? `KSh ${product.price}` : ""}
-        </div>
+        <div className="pinned-price">{product.price ? `KSh ${product.price}` : ""}</div>
       </div>
       <button
         className="pinned-btn"
         type="button"
         aria-label="View product"
         onClick={() => {
-          if (product?.id) {
-            window.location.href = `/product/${product.id}`;
-          }
+          if (product?.id) window.location.href = `/product/${product.id}`;
         }}
         disabled={!product?.id}
       >
@@ -147,13 +130,10 @@ function PinnedProduct({ product }) {
   );
 }
 
-
 // ─── Message Input Bar ────────────────────────────────────────────────────────
 function InputBar({ onSend, onQuickReply, showQuickReplies, quickReplies }) {
   const safeQuickReplies = Array.isArray(quickReplies) ? quickReplies : [];
-
   const [text, setText] = useState("");
-
   const textareaRef = useRef(null);
 
   const handleSend = useCallback(() => {
@@ -161,9 +141,7 @@ function InputBar({ onSend, onQuickReply, showQuickReplies, quickReplies }) {
     if (!trimmed) return;
     onSend(trimmed);
     setText("");
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
   }, [text, onSend]);
 
   const handleKeyDown = (e) => {
@@ -187,7 +165,6 @@ function InputBar({ onSend, onQuickReply, showQuickReplies, quickReplies }) {
       {showQuickReplies && safeQuickReplies.length > 0 && (
         <div className="quick-replies" role="list" aria-label="Quick reply suggestions">
           {safeQuickReplies.map((q) => (
-
             <button
               key={q}
               className="quick-reply-chip"
@@ -201,11 +178,8 @@ function InputBar({ onSend, onQuickReply, showQuickReplies, quickReplies }) {
         </div>
       )}
 
-
       <div className="input-bar">
-        <button className="input-icon-btn" aria-label="Attach file" type="button">
-          ⊕
-        </button>
+        <button className="input-icon-btn" aria-label="Attach file" type="button">⊕</button>
 
         <textarea
           ref={textareaRef}
@@ -250,26 +224,14 @@ export default function Chat() {
   const location = useLocation();
   const chatState = location.state || {};
 
+  const { merchantId } = chatState;
+  const { messages, conversation, sendMessage, status } = useChat({ merchantId });
+
   const [merchant, setMerchant] = useState(null);
   const [pinnedProduct, setPinnedProduct] = useState(null);
-  const [messages, setMessages] = useState([]);
   const [typing, setTyping] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
-  // Quick replies are expected to be provided by backend.
-  // Keep as state-ready; UI currently hides quick replies unless backend provides them.
-  // quickReplies intentionally unused for now
   const [quickReplies] = useState([]);
-
-  // Keep quickReplies unused for now (no backend quick-reply frame wired yet).
-  void quickReplies;
-
-
-
-
-
-
-
-
 
   const bottomRef = useRef(null);
 
@@ -278,266 +240,49 @@ export default function Chat() {
     return () => document.body.classList.remove("roots-body");
   }, []);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
-  const WS_BASE = import.meta.env.VITE_WS_URL || "ws://localhost:8000";
-  const roomId = chatState.roomId ?? null;
-
-
-  const wsRef = useRef(null);
-  const reconnectTimerRef = useRef(null);
-  const reconnectCountRef = useRef(0);
-  const MAX_RECONNECTS = 5;
-
-  const wsStatusRef = useRef("disconnected");
-  // Production UI may show connection status later; keep state minimal for now.
-  // const [wsStatus, setWsStatus] = useState("disconnected");
-
-
   useEffect(() => {
-    document.body.classList.add("roots-body");
-    return () => document.body.classList.remove("roots-body");
-  }, []);
+    if (!conversation) return;
 
-  const connectRef = useRef(null);
+    const conv = conversation;
+    const merchantData = conv.merchant || conv.artisan || conv.partner || null;
 
-  const connect = useCallback(() => {
-    if (!roomId) {
+    if (merchantData) {
+      const initials =
+        merchantData.initials ||
+        (merchantData.name ? merchantData.name.slice(0, 2).toUpperCase() : "RA");
 
-
-
-
-
-
-      // Missing room context; UI will stay in an empty state.
-      return;
+      setMerchant({
+        name: merchantData.name || "Merchant",
+        initials,
+        subtitle: merchantData.subtitle || "",
+        online: Boolean(merchantData.online ?? true),
+        responseTime: merchantData.responseTime || "",
+      });
     }
 
-    const token = localStorage.getItem("access_token");
-
-
-    const url = `${WS_BASE}/ws/chat/${roomId}${token ? `?token=${token}` : ""}`;
-
-    try {
-      const ws = new WebSocket(url);
-      wsRef.current = ws;
-
-
-      ws.onopen = () => {
-        reconnectCountRef.current = 0;
-        wsStatusRef.current = "connected";
-
-
-        // Handshake: request conversation context + message history.
-        // Backend is expected to respond with frames: `conversation` and `history`.
-        const handshake = {
-          type: "handshake",
-          room_id: roomId,
-        };
-        try {
-          ws.send(JSON.stringify(handshake));
-        } catch {
-          // ignore
-        }
-      };
-
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (!data) return;
-
-          if (data.type === "typing") {
-            setTyping(true);
-            return;
-          }
-
-          if (data.type === "conversation") {
-            setTyping(false);
-            const conv = data.conversation || data;
-            const merchantData = conv.merchant || conv.artisan || conv.partner || null;
-            if (merchantData) {
-              const initials =
-                merchantData.initials ||
-                (merchantData.name ? merchantData.name.slice(0, 2).toUpperCase() : "RA");
-              setMerchant({
-                name: merchantData.name || "Merchant",
-                initials,
-                subtitle: merchantData.subtitle || "",
-                online: Boolean(merchantData.online ?? true),
-                responseTime: merchantData.responseTime || "",
-              });
-            }
-
-            const pinned = conv.pinned_product || conv.pinnedProduct || conv.product || null;
-            if (pinned && (pinned.id || pinned.product_id)) {
-              setPinnedProduct({
-                id: pinned.id ?? pinned.product_id,
-                name: pinned.name || pinned.title || "Product",
-                price: pinned.price ?? null,
-              });
-            } else {
-              setPinnedProduct(null);
-            }
-            return;
-          }
-
-          if (data.type === "history") {
-            setTyping(false);
-            const items = data.messages || data.history || [];
-            const normalized = (Array.isArray(items) ? items : []).map((m) => ({
-              id: m.id ?? Date.now(),
-              from: m.from ?? (m.sender === "customer" ? "customer" : "merchant"),
-              text: m.text ?? m.body ?? "",
-              time: m.time ?? getTime(),
-              status: m.status ?? "delivered",
-            }));
-            setMessages(normalized);
-            return;
-          }
-
-          if (data.type === "message") {
-            setTyping(false);
-
-            // Backend echoes a delivery receipt back to the sender.
-            // If the message id already exists locally, update its status.
-            const incomingId = data.id ?? null;
-            setMessages((prev) => {
-              if (incomingId != null) {
-                const idx = prev.findIndex((m) => m.id === incomingId);
-                if (idx !== -1) {
-                  const next = [...prev];
-                  next[idx] = {
-                    ...next[idx],
-                    status: data.status ?? next[idx].status,
-                    time: data.time ?? next[idx].time,
-                    text: data.text ?? next[idx].text,
-                    from: data.from ?? next[idx].from,
-                  };
-                  return next;
-                }
-              }
-
-              return [
-                ...prev,
-                {
-                  id: data.id ?? Date.now(),
-                  from: data.from ?? "merchant",
-                  text: data.text ?? "",
-                  time: data.time ?? getTime(),
-                  status: data.status ?? "delivered",
-                },
-              ];
-            });
-
-            return;
-          }
-
-
-          if (data.type === "read") {
-            setTyping(false);
-            setMessages((prev) =>
-              prev.map((m) => (m.from === "customer" ? { ...m, status: "read" } : m))
-            );
-          }
-
-        } catch {
-          // ignore malformed frames
-        }
-      };
-
-      ws.onclose = (event) => {
-        wsStatusRef.current = "disconnected";
-
-        if (event.code !== 1000 && reconnectCountRef.current < MAX_RECONNECTS) {
-
-          const delay = Math.min(1000 * 2 ** reconnectCountRef.current, 30000);
-          reconnectCountRef.current += 1;
-          // Avoid capturing stale/undeclared `connect` in callbacks.
-          reconnectTimerRef.current = setTimeout(() => {
-            if (wsRef.current) {
-              // no-op; just ensure we schedule reconnection.
-            }
-            connectRef.current();
-          }, delay);
-        }
-      };
-
-
-      ws.onerror = () => {
-        wsStatusRef.current = "error";
-        try {
-          ws.close();
-        } catch {
-          // ignore
-        }
-      };
-    } catch {
-      // Failed to create websocket
+    const pinned = conv.pinned_product || conv.pinnedProduct || conv.product || null;
+    if (pinned && (pinned.id || pinned.product_id)) {
+      setPinnedProduct({
+        id: pinned.id ?? pinned.product_id,
+        name: pinned.name || pinned.title || "Product",
+        price: pinned.price ?? null,
+      });
+    } else {
+      setPinnedProduct(null);
     }
-
-
-
-  }, [roomId, WS_BASE]);
-
-  useEffect(() => {
-
-    // connect is stable across renders (useCallback)
-    connect();
-
-    return () => {
-      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-      try {
-        wsRef.current?.close(1000, "component unmount");
-      } catch {
-        // ignore
-      }
-    };
-  }, [connect]);
-
-
-  const sendWs = useCallback((payload) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(payload));
-      return true;
-    }
-    return false;
-  }, []);
-
+  }, [conversation]);
 
   const handleSend = useCallback(
     (text) => {
-      if (!roomId) return;
-
-      const id = Date.now();
-      const msg = {
-        id,
-        from: "customer",
-        text,
-        time: getTime(),
-        status: "sent",
-      };
-
-      setMessages((prev) => [...prev, msg]);
       setShowQuickReplies(false);
-
-      sendWs({
-        type: "message",
-        room_id: roomId,
-        text,
-        time: msg.time,
-        id,
-        from: "customer",
-      });
+      sendMessage(text);
     },
-    [roomId, sendWs]
+    [sendMessage]
   );
-
-
-
 
   const handleQuickReply = useCallback(
     (text) => handleSend(text),
@@ -549,13 +294,10 @@ export default function Chat() {
       <Nav />
 
       <main className="chat-shell">
-        {/* ── Sidebar: conversation list ── */}
         <aside className="chat-sidebar" aria-label="Conversations">
           <div className="sidebar-header">
             <h2 className="sidebar-title">Messages</h2>
-            <button className="sidebar-compose" aria-label="New conversation" type="button">
-              ✦
-            </button>
+            <button className="sidebar-compose" aria-label="New conversation" type="button">✦</button>
           </div>
 
           <div className="sidebar-search">
@@ -569,15 +311,18 @@ export default function Chat() {
           </div>
 
           <div className="sidebar-convos" role="list">
-            {/* Production: conversation list should be provided by backend.
-                Until supported, keep it empty to avoid static placeholders. */}
+            {/* Production: conversation list should be provided by backend. */}
           </div>
         </aside>
 
-        {/* ── Main chat pane ── */}
-<section className="chat-pane" aria-label={`Conversation`}>
+        <section className="chat-pane" aria-label="Conversation">
           <ChatHeader onBack={() => window.history.back()} merchant={merchant} />
 
+          {status === "error" && (
+            <div className="chat-error-banner" role="alert" style={{ color: "#7A5C3A", padding: "12px 16px" }}>
+              Unable to start chat. Check room resolution / websocket connection.
+            </div>
+          )}
 
           <PinnedProduct product={pinnedProduct} />
 
@@ -601,16 +346,17 @@ export default function Chat() {
             <div ref={bottomRef} />
           </div>
 
-
           <InputBar
             onSend={handleSend}
             onQuickReply={handleQuickReply}
             showQuickReplies={showQuickReplies}
+            quickReplies={quickReplies}
           />
         </section>
       </main>
+
+      <Footer />
     </div>
   );
 }
-
 

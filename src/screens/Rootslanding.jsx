@@ -7,6 +7,11 @@ import Footer from "../components/Footer";
 import Nav from "../components/Nav";
 import api, { addToCart, subscribeNewsletter } from "../services/api";
 import { resolveImageUrl } from "../lib/apiClient";
+import { useCurrency } from "../contexts/CurrencyContext.jsx";
+import { formatMoney } from "../lib/formatMoney.js";
+import { tokenStore } from "../lib/tokenStore.js";
+
+
 
 
 
@@ -291,9 +296,11 @@ function MarqueeBanner() {
 // ─── Product Card ─────────────────────────────────────────────────────────────
 function ProductCard({ product, delay }) {
   const navigate = useNavigate();
+  const { currency } = useCurrency();
   const [hovered, setHovered] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [cardRef, cardInView] = useInView(0.1);
+
 
   // Product id field varies by backend shape.
   const productId =
@@ -317,11 +324,12 @@ function ProductCard({ product, delay }) {
     e.stopPropagation();
 
     // Redirect to login if not authenticated
-    const token = localStorage.getItem('access_token');
-    if (!token) {
+    const accessToken = tokenStore.getAccess();
+    if (!accessToken) {
       navigate('/login', { state: { next: window.location.pathname } });
       return;
     }
+
 
     if (addingToCart || !productId) return;
     setAddingToCart(true);
@@ -336,9 +344,8 @@ function ProductCard({ product, delay }) {
     }
   };
 
-  const displayPrice = typeof product.price === "number"
-    ? `KSh ${product.price.toLocaleString("en-KE")}`
-    : product.price;
+  const displayPrice = formatMoney(product.price, currency);
+
 
   return (
     <article

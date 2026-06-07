@@ -347,6 +347,101 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
+   Shipping Options
+───────────────────────────────────────────────────────────── */
+
+.shipping-rates {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.shipping-rate {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: #2d2f31;
+  border-radius: 16px;
+  padding: 14px 16px;
+  cursor: pointer;
+  box-shadow:
+    inset 3px 3px 10px #1e130c,
+    inset -3px -3px 10px #5a3820;
+  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border: 1px solid rgba(196, 134, 26, 0.18);
+}
+
+.shipping-rate:hover {
+  transform: translateY(-1px);
+}
+
+.shipping-rate-active {
+  border-color: rgba(196, 134, 26, 0.6);
+  box-shadow:
+    inset 3px 3px 10px #1e130c,
+    inset -3px -3px 10px #5a3820,
+    0 0 0 1px rgba(196, 134, 26, 0.35);
+}
+
+.shipping-rate-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.shipping-rate-carrier {
+  font-family: 'Playfair Display', Georgia, serif;
+  color: #F0C060;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.shipping-rate-meta {
+  font-size: 11px;
+  color: #7A5C3A;
+  letter-spacing: 2px;
+}
+
+.shipping-rate-cost {
+  font-family: 'Playfair Display', Georgia, serif;
+  color: #C4861A;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.shipping-rate-customs {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #D4B896;
+  line-height: 1.6;
+  border-top: 1px solid rgba(196, 134, 26, 0.12);
+  padding-top: 10px;
+}
+
+.customs-info-banner {
+  padding: 14px 16px;
+  background: rgba(196, 134, 26, 0.07);
+  border: 1px solid rgba(196, 134, 26, 0.2);
+  border-radius: 16px;
+  color: #D4B896;
+  line-height: 1.6;
+  font-size: 13px;
+}
+
+.checkout-error {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  background: rgba(200, 40, 40, 0.12);
+  border: 1px solid rgba(200, 40, 40, 0.25);
+  border-radius: 16px;
+  color: #ffb3b3;
+  font-size: 13px;
+}
+
+/* ─────────────────────────────────────────────────────────────
    Trust Row
 ───────────────────────────────────────────────────────────── */
 .trust-row {

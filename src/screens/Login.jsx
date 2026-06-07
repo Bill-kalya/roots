@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { tokenStore } from '../lib/tokenStore.js';
+
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,7 +12,9 @@ const Login = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,7 +25,8 @@ const Login = () => {
     setError('');
 
     try {
-      const res = await login(email, password);
+      const res = await login(email, password, rememberMe);
+
 
       // MFA required — redirect to challenge screen
       if (res?.requires_mfa) {
@@ -29,33 +34,18 @@ const Login = () => {
         return;
       }
 
-      const { access_token, refresh_token } = res;
-
-      // Store tokens based on rememberMe preference
-      if (rememberMe) {
-        localStorage.setItem('access_token', access_token);
-      } else {
-        // Still use localStorage so tokenStore.get() works consistently,
-        // but clear on next session via expiry check in AuthContext
-        localStorage.setItem('access_token', access_token);
-      }
-      if (refresh_token) localStorage.setItem('refresh_token', refresh_token);
-
-      // Sync AuthContext with the new token
+      // Sync AuthContext with the new token (tokens are persisted by services/api.js login)
       syncUser();
 
-      // Decode role directly from token for immediate redirect
-      let role = 'USER';
-      try {
-        const payload = JSON.parse(
-          atob(access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
-        );
-        role = payload.role || 'USER';
-      } catch {
-        // fallback to USER if decode fails
-      }
+      // Role-based redirect based on decoded token inside AuthContext
+      const accessToken = tokenStore.getAccess();
+      const role = accessToken
+        ? JSON.parse(
+            atob(accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+          )?.role
+        : 'USER';
 
-      // Role-based redirect — ADMIN has highest privilege
+
       if (role === 'ADMIN') {
         navigate('/admin');
       } else if (role === 'MERCHANT') {
@@ -63,6 +53,7 @@ const Login = () => {
       } else {
         navigate('/');
       }
+
 
     } catch (err) {
       setError(err?.response?.data?.detail || err.message || 'Login failed. Try again.');
@@ -116,16 +107,31 @@ const Login = () => {
 
           <div className="ig">
             <label>Password</label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="pw-wrap">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="pw-toggle"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
 
+
+
+
+
           <div className="opts">
+
             <label className="rem">
               <input
                 type="checkbox"

@@ -166,9 +166,18 @@ export default function SettingsPage() {
             <div className="delete-confirm">
               <p>Are you sure? This cannot be undone.</p>
               <div className="delete-actions">
-                <button className="btn-danger" onClick={() => alert("Account deleted (demo)")}>
+                <button
+                  className="btn-danger"
+                  onClick={() => {
+                    // No confirmed backend endpoint for deleting the current user account.
+                    // Keep UI honest instead of claiming a success.
+                    setDeleteConfirm(false);
+                    window.alert("Account deletion is not available yet.");
+                  }}
+                >
                   Yes, delete
                 </button>
+
                 <button className="btn-ghost-sm" onClick={() => setDeleteConfirm(false)}>
                   Cancel
                 </button>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import api from "../services/api";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 import "./ProfilePage.css";
@@ -23,16 +24,35 @@ export default function ProfilePage() {
   });
 
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    // Call your update user API here
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    try {
+      setSaving(true);
+      setSaveError(null);
+
+      const payload = {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        location: form.location,
+        bio: form.bio,
+      };
+
+      await api.put("/api/user/profile/me", payload);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      setSaveError(err?.response?.data?.message || err?.message || "Failed to save profile");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -93,26 +113,29 @@ export default function ProfilePage() {
               <textarea name="bio" value={form.bio} onChange={handleChange} rows={3} placeholder="Tell us a little about yourself…" />
             </div>
             <div className="form-actions">
-              <button type="submit" className="btn-primary">
-                {saved ? "✓ Saved!" : "Save Changes"}
+              <button type="submit" className="btn-primary" disabled={saving}>
+                {saving ? "Saving…" : saved ? "✓ Saved!" : "Save Changes"}
               </button>
             </div>
+
+            {saveError ? <p className="form-error">{saveError}</p> : null}
           </form>
         </div>
 
-        {/* Stats row */}
+        {/* Stats row (no mock data) */}
         <div className="stats-row">
           {[
-            { label: "Orders", value: "12" },
-            { label: "Wishlist", value: "5" },
-            { label: "Reviews", value: "3" },
+            { label: "Orders", value: user?.orders_count },
+            { label: "Wishlist", value: user?.wishlist_count },
+            { label: "Reviews", value: user?.reviews_count },
           ].map((s) => (
             <div className="stat-card" key={s.label}>
-              <span className="stat-value">{s.value}</span>
+              <span className="stat-value">{typeof s.value === "number" ? s.value : "—"}</span>
               <span className="stat-label">{s.label}</span>
             </div>
           ))}
         </div>
+
 
         {/* Sign out */}
         <button

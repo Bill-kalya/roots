@@ -1,6 +1,9 @@
 // CartDrawer.jsx — Production slide-out cart drawer (FastAPI + Redis backend)
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import "./CartDrawer.css";
+import { useNavigate, useLocation } from "react-router-dom";
+
+
 import { removeFromCart, addToCart } from "../services/api";
 import { resolveImageUrl } from "../lib/apiClient";
 import { useMutation } from "../hooks/useApi";
@@ -112,6 +115,8 @@ function getApiErrorMessage(err) {
 
 function CartDrawer({ isOpen, onClose }) {
   const drawerRef = useRef(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const { items: cartItems, loading, refetch } = useCart();
 
@@ -301,9 +306,22 @@ function CartDrawer({ isOpen, onClose }) {
             <a href="/basket" className="view-basket-btn">
               View Full Basket
             </a>
-            <a href="/checkout" className="checkout-btn">
+          <button
+              type="button"
+              className="checkout-btn"
+              onClick={() => {
+                // Preserve the user's previous page when opening checkout.
+                // If we don't have info, fall back to the full basket.
+                const from = location?.state?.from || location?.pathname || "/basket";
+                navigate("/checkout", { state: { from } });
+              }}
+            >
               Checkout →
-            </a>
+            </button>
+
+
+
+
 
             <p className="cart-secure-note">🔒 Secure checkout · KES</p>
           </div>

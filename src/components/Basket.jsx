@@ -1,5 +1,7 @@
 // Basket.jsx — Production cart page (FastAPI + PostgreSQL + Redis backend)
 import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 import "./Basket.css";
 import Nav from "../components/Nav";
@@ -169,6 +171,8 @@ function EmptyBasket() {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Basket() {
+  const navigate = useNavigate();
+
   const { currency } = useCurrency();
 
 
@@ -252,7 +256,7 @@ export default function Basket() {
     setCheckingOut(true);
     try {
       // Navigate to checkout — wire to your checkout route / Stripe session
-      window.location.href = "/checkout";
+      navigate("/checkout", { state: { from: "/basket" } });
     } finally {
       setCheckingOut(false);
     }

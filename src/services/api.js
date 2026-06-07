@@ -1,106 +1,19 @@
 import apiClient from '../lib/apiClient.js';
+import { tokenStore } from '../lib/tokenStore.js';
 
 // =========================
-// CONFIG
-// =========================
-// BASE_URL handled by apiClient
-
-// =========================
-// TOKEN STORE
-// =========================
-export const tokenStore = {
-  get: () => localStorage.getItem('access_token'),
-  set: (token) => localStorage.setItem('access_token', token),
-
-  getRefresh: () => localStorage.getItem('refresh_token'),
-  setRefresh: (token) => localStorage.setItem('refresh_token', token),
-
-  clear: () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-  },
-};
-
-// =========================
-// API CLIENT INSTANCE (handles auth, refresh, normalization)
+// API CLIENT INSTANCE
 // =========================
 const api = apiClient;
 
 // =========================
-// AXIOS INTERCEPTORS
+// BACKWARDS COMPAT
 // =========================
-// NOTE: src/lib/apiClient.js already contains a similar setup, but some flows
-// import this module directly. These interceptors ensure Authorization is
-// attached for every request made via `src/services/api.js`.
+// Re-export tokenStore so older imports from this module keep working.
+// Also keep a legacy alias name.
+export { tokenStore };
+export const tokenStoreLegacy = tokenStore;
 
-api.interceptors.request.use((config) => {
-  const token = tokenStore.get();
-  if (token) {
-    config.headers = config.headers || {};
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Handle 401 responses — token expired or invalid (refresh once, then redirect)
-// Deduplicate concurrent refresh requests to avoid refresh storms + rate limiting.
-let refreshPromise = null
-
-async function refreshAccessToken(original) {
-  if (refreshPromise) return refreshPromise
-
-  // Try to refresh using the refresh token we store
-  const refresh_token = tokenStore.getRefresh()
-  if (!refresh_token) {
-    tokenStore.clear()
-    window.location.href = '/login'
-    return Promise.reject(new Error('Missing refresh token'))
-  }
-
-  const { default: axios } = await import('axios')
-
-  refreshPromise = axios
-    .post(
-      `${original.baseURL || api.defaults.baseURL}/api/auth/refresh`,
-      { refresh_token },
-      { withCredentials: true }
-    )
-    .then((refreshRes) => {
-      tokenStore.set(refreshRes.data.access_token)
-      if (refreshRes.data.refresh_token) tokenStore.setRefresh(refreshRes.data.refresh_token)
-      return refreshRes.data
-    })
-    .finally(() => {
-      refreshPromise = null
-    })
-
-  return refreshPromise
-}
-
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const original = error.config
-
-    if (error.response?.status === 401 && original && !original._retry) {
-      original._retry = true
-
-      try {
-        const data = await refreshAccessToken(original)
-
-        original.headers = original.headers || {}
-        original.headers.Authorization = `Bearer ${data.access_token || tokenStore.get()}`
-        return api(original)
-      } catch {
-        tokenStore.clear()
-        window.location.href = '/login'
-      }
-    }
-
-    return Promise.reject(error)
-  }
-)
-; 
 
 
 
@@ -116,21 +29,37 @@ export async function register(email, password, full_name, interests = [], signa
   return res.data;
 }
 
-export async function login(email, password, signal) {
+// NOTE: rememberMe controls where tokens are stored.
+// Signature kept backward compatible by placing rememberMe after optional signal,
+// but callers should pass rememberMe as the 3rd argument.
+export async function login(email, password, rememberMe = true, signal) {
+  // If old call style: login(email, password, signal)
+  // detect by type: signal is likely an object.
+  let _signal = signal
+  let _rememberMe = rememberMe
+  if (typeof rememberMe === 'object' && rememberMe !== null && _signal === undefined) {
+    _signal = rememberMe
+    _rememberMe = true
+  }
+
   const res = await api.post(
     '/api/auth/login',
     { email, password },
-    { signal }
+    { signal: _signal }
   );
 
-  // Token payload from backend: { access_token, refresh_token }
-  tokenStore.set(res.data.access_token);
-  if (res.data.refresh_token) {
-    tokenStore.setRefresh(res.data.refresh_token);
+  const { access_token, refresh_token } = res.data || {}
+
+  if (_rememberMe) {
+    tokenStore.persist(access_token, refresh_token)
+  } else {
+    tokenStore.session(access_token, refresh_token)
   }
+
 
   return res.data;
 }
+
 
 export async function logout() {
   try {
@@ -192,31 +121,20 @@ export async function verifyMfaLogin({ email, password, mfa_code }, signal) {
 
 export async function setupMfa(access_token, signal) {
   // Enable MFA: POST /api/auth/mfa/setup
-  const res = await api.post(
-    '/api/auth/mfa/setup',
-    {},
-    {
-      signal,
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    }
-  );
+  // No manual Authorization headers — interceptor in src/lib/apiClient.js handles it.
+  // Ensure token is current in tokenStore.
+  if (access_token) tokenStore.persist(access_token, tokenStore.getRefresh());
+
+  const res = await api.post('/api/auth/mfa/setup', {}, { signal });
   return res.data;
 }
 
 export async function verifyEnrollMfa({ code, access_token }, signal) {
   // Enable MFA verification: POST /api/auth/mfa/verify-enroll
-  const res = await api.post(
-    '/api/auth/mfa/verify-enroll',
-    { code },
-    {
-      signal,
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    }
-  );
+  // No manual Authorization headers — interceptor in src/lib/apiClient.js handles it.
+  if (access_token) tokenStore.persist(access_token, tokenStore.getRefresh());
+
+  const res = await api.post('/api/auth/mfa/verify-enroll', { code }, { signal });
   return res.data;
 }
 

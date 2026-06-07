@@ -1,20 +1,9 @@
-# TODO - PayPal redirect + capture integration (frontend)
+# TODO
 
-- [ ] Update `src/api/payments.js` with PayPal endpoints:
-  - [ ] `createPaypalOrder({ amount, currency })`
-  - [ ] `capturePaypalOrder({ paypal_order_id })`
-- [ ] Update `src/screens/Checkout.jsx` to implement PayPal flow:
-  - [ ] call create-order with totals
-  - [ ] redirect browser to `approval_url`
-- [ ] Add PayPal return/cancel routes and pages:
-  - [ ] Create `src/screens/PaypalSuccess.jsx` (calls capture on load)
-  - [ ] Create `src/screens/PaypalCancel.jsx` (shows cancelled state)
-  - [ ] Wire routes in `src/App.jsx`
-- [ ] Basic UI handling:
-  - [ ] loading state on success
-  - [ ] error message if capture fails
-- [ ] Smoke test:
-  - [ ] PayPal checkout redirects properly
-  - [ ] PayPal redirects back to `/paypal/success`
-  - [ ] capture endpoint gets called and confirmation shows
+- [x] Inspect current implementation of token store adapter and auth APIs.
+- [x] Validate whether the reported self-referential TDZ exists.
+- [x] Locate where `tokenStoreLegacy` / `tokenStore` is imported and used.
+- [ ] Implement canonical adapter changes (remove any self-reference, ensure required methods exist: get/set/getRefresh/setRefresh/clear/persist/session).
+- [ ] Run lint/build/tests (or at least Vite build) to confirm no runtime/import errors.
+- [ ] Update follow-up notes if any additional file needs edits.
 

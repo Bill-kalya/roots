@@ -196,11 +196,13 @@ export default function ProductDetails() {
                   }
 
                   // Open direct chat with the merchant.
-                  // Chat.jsx currently expects `roomId` from router state.
-                  // Use merchantId as the stable room identifier.
-                  navigate("/chat", { state: { roomId: merchantId } });
+                  // Chat.jsx resolves the deterministic room_id from backend using merchantId.
+                  const merchantName = product?.merchant?.full_name ?? "Merchant";
+                  navigate("/chat", { state: { merchantId, merchantName } });
+
                 }}
                 disabled={!(product?.merchant_id ?? product?.merchantId ?? product?.merchant?.id)}
+
               >
                 TALK TO MERCHANT
               </button>
@@ -209,11 +211,23 @@ export default function ProductDetails() {
                 className="add-cart-large"
                 onClick={async () => {
                   try {
-                    await addToCart(product.id, 1);
+                    const productId =
+                      product?.id ??
+                      product?.product_id ??
+                      product?.pk ??
+                      product?._id;
+
+                    if (!productId) {
+                      console.error("Invalid product", product);
+                      return;
+                    }
+
+                    await addToCart(productId, 1);
                     window.dispatchEvent(new CustomEvent("roots:cart-updated"));
                   } catch (e) {
                     console.error("addToCart failed", e);
                   }
+
                 }}
               >
                 ADD TO BASKET

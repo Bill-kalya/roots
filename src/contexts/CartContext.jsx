@@ -1,5 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { getCart } from "../services/api";
+import { tokenStore } from "../lib/tokenStore.js";
+
 
 const CartContext = createContext(null);
 
@@ -8,11 +10,12 @@ export function CartProvider({ children }) {
   const [loading, setLoading] = useState(false);
 
   const fetchCart = useCallback(async () => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
+    if (!tokenStore.hasTokens()) {
       setCart(null);
       return;
     }
+
+
 
     setLoading(true);
     try {
