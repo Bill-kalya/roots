@@ -225,6 +225,9 @@ export default function Chat() {
   const chatState = location.state || {};
 
   const { merchantId } = chatState;
+  const { room_id: roomIdFromState, convKeyHex } = chatState;
+
+
   const { messages, conversation, sendMessage, status } = useChat({ merchantId });
 
   const [merchant, setMerchant] = useState(null);

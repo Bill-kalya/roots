@@ -1,9 +1,9 @@
-# TODO
+# TODO (encryption/audit fixes)
 
-- [x] Inspect current implementation of token store adapter and auth APIs.
-- [x] Validate whether the reported self-referential TDZ exists.
-- [x] Locate where `tokenStoreLegacy` / `tokenStore` is imported and used.
-- [ ] Implement canonical adapter changes (remove any self-reference, ensure required methods exist: get/set/getRefresh/setRefresh/clear/persist/session).
-- [ ] Run lint/build/tests (or at least Vite build) to confirm no runtime/import errors.
-- [ ] Update follow-up notes if any additional file needs edits.
+- [ ] Inspect current encryption + chat + UI wiring to ensure encryption can be end-to-end.
+- [x] Plan confirmed and repo state verified by reading `src/utils/encryption.js`, `src/hooks/useChat.js`, `src/screens/Chat.jsx`, `src/screens/chat.css`.
+- [x] Update `src/utils/encryption.js`: added missing `encryptMessage()` + base64url helpers; kept wire format compatible with `decryptMessage()`.
+- [ ] Update `src/hooks/useChat.js`: encrypt outbound frames when key is ready; fix `read` frame targeting to use `message_id`; expose `encryptionStatus`.
+- [ ] Update `src/screens/Chat.jsx`: render lock indicator using `encryptionStatus`.
+- [ ] Run `npm run build` and fix any compile/lint errors.
 

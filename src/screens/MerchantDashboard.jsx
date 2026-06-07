@@ -425,12 +425,15 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
     data.append('artisan', formData.artisan || '');
     data.append('weight', formData.weight || '');
     data.append('dimensions', formData.dimensions || '');
-    data.append('year', formData.year === '' || formData.year === null ? '' : String(formData.year));
+    if (formData.year !== '' && formData.year !== null) {
+      data.append('year', String(formData.year));
+    }
 
-    // Materials text field -> array expected by backend (e.g., ['cotton','wool'])
-    // If your backend accepts comma-separated strings, keep as string.
-    // Otherwise, adjust backend parsing accordingly.
-    data.append('materials', formData.materials_text || '');
+    // Materials — backend expects JSON array string (e.g. ["Wood","Brass"])
+    data.append('materials', JSON.stringify(formData.materials));
+
+    // Gallery — was missing entirely
+    data.append('gallery', JSON.stringify(formData.gallery));
 
     if (formData.image_file) {
       data.append('image', formData.image_file);
