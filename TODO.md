@@ -1,9 +1,13 @@
-# TODO (encryption/audit fixes)
+## TODO - Stripe Elements card flow fix
 
-- [ ] Inspect current encryption + chat + UI wiring to ensure encryption can be end-to-end.
-- [x] Plan confirmed and repo state verified by reading `src/utils/encryption.js`, `src/hooks/useChat.js`, `src/screens/Chat.jsx`, `src/screens/chat.css`.
-- [x] Update `src/utils/encryption.js`: added missing `encryptMessage()` + base64url helpers; kept wire format compatible with `decryptMessage()`.
-- [ ] Update `src/hooks/useChat.js`: encrypt outbound frames when key is ready; fix `read` frame targeting to use `message_id`; expose `encryptionStatus`.
-- [ ] Update `src/screens/Chat.jsx`: render lock indicator using `encryptionStatus`.
-- [ ] Run `npm run build` and fix any compile/lint errors.
+- [x] Update `package.json` to add `@stripe/react-stripe-js`
+
+- [x] Patch `src/screens/Checkout.jsx` to use Stripe Elements (`<CardElement />`) and confirm with `card: cardElement`
+
+- [x] Install dependencies (`npm install`)
+
+- [x] Run `npm run lint`
+
+- [x] Run `npm run build`
+
 

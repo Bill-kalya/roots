@@ -6,14 +6,12 @@ import Footer from "../components/Footer";
 import { useCart } from "../contexts/CartContext.jsx";
 import { getShippingRates } from "../api/shipping.js";
 
-
-
-// NOTE: This component currently only implements the frontend UI.
-// It assumes the backend enforces auth and returns 401 when missing/expired.
-
 import { useNavigate, useLocation } from "react-router-dom";
 
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 function CheckoutSteps({ current = 1 }) {
   const navigate = useNavigate();
@@ -243,42 +241,29 @@ function PaymentForm({
 
       {paymentMethod === "card" && (
         <>
-          <div className="card-row">
-            <Field label="Card Number" htmlFor="card-number">
-              <input
-                id="card-number"
-                type="text"
-                placeholder="1234  5678  9012  3456"
-                value={cardData.number}
-                onChange={handleCard("number")}
-                autoComplete="cc-number"
-                inputMode="numeric"
-                maxLength={22}
-              />
-            </Field>
-            <Field label="Expiry" htmlFor="expiry">
-              <input
-                id="expiry"
-                type="text"
-                placeholder="MM / YY"
-                value={cardData.expiry}
-                onChange={handleCard("expiry")}
-                autoComplete="cc-exp"
-                inputMode="numeric"
-                maxLength={7}
-              />
-            </Field>
-            <Field label="CVV" htmlFor="cvv">
-              <input
-                id="cvv"
-                type="text"
-                placeholder="•••"
-                value={cardData.cvv}
-                onChange={handleCard("cvv")}
-                autoComplete="cc-csc"
-                inputMode="numeric"
-                maxLength={4}
-              />
+          <div className="form-row form-row-full">
+            <Field label="Card Details" htmlFor="card-element">
+              <div
+                id="card-element"
+                style={{
+                  padding: "10px 12px",
+                  border: "1px solid var(--border, #ccc)",
+                  borderRadius: "4px",
+                  background: "white",
+                }}
+              >
+                <CardElement
+                  options={{
+                    style: {
+                      base: {
+                        fontSize: "16px",
+                        color: "#1a1a1a",
+                        "::placeholder": { color: "#999" },
+                      },
+                    },
+                  }}
+                />
+              </div>
             </Field>
           </div>
 
@@ -324,21 +309,21 @@ function PaymentForm({
   );
 }
 
-export default function Checkout() {
+function CheckoutInner() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const { items, loading: cartLoading } = useCart();
 
+  const stripe = useStripe();
+  const elements = useElements();
 
   const cartError = false;
 
   const backToBasket = () => {
     const from = location?.state?.from;
-    navigate(from || '/basket');
+    navigate(from || "/basket");
   };
-
-
 
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [mpesaPhone, setMpesaPhone] = useState("");
@@ -363,9 +348,6 @@ export default function Checkout() {
 
   const [cardData, setCardData] = useState({ number: "", expiry: "", cvv: "", name: "" });
 
-  // Estimate a single package from cart line-items.
-  // Assumes cart items include these fields; if backend/cart doesn't yet provide them,
-  // the call will fail and we show a user-friendly error.
   const packageEstimate = React.useMemo(() => {
     const safeNum = (v) => {
       const n = Number(v);
@@ -373,19 +355,13 @@ export default function Checkout() {
     };
 
     const itemsArr = Array.isArray(items) ? items : [];
-    const totalQty = itemsArr.reduce((s, i) => s + safeNum(i.quantity) || 0, 0);
 
+    const totalQty = itemsArr.reduce((s, i) => s + safeNum(i.quantity) || 0, 0);
     const weight_kg = itemsArr.reduce((sum, i) => sum + safeNum(i.weight_kg) * (safeNum(i.quantity) || 1), 0);
 
-    const length_cm = Math.max(
-      ...itemsArr.map((i) => safeNum(i.length_cm) || 0)
-    );
-    const width_cm = Math.max(
-      ...itemsArr.map((i) => safeNum(i.width_cm) || 0)
-    );
-    const height_cm = Math.max(
-      ...itemsArr.map((i) => safeNum(i.height_cm) || 0)
-    );
+    const length_cm = Math.max(...itemsArr.map((i) => safeNum(i.length_cm) || 0));
+    const width_cm = Math.max(...itemsArr.map((i) => safeNum(i.width_cm) || 0));
+    const height_cm = Math.max(...itemsArr.map((i) => safeNum(i.height_cm) || 0));
 
     const fragile = itemsArr.some((i) => Boolean(i.fragile));
 
@@ -399,7 +375,6 @@ export default function Checkout() {
     };
   }, [items]);
 
-  // Debounced rate fetch based on selected destination country.
   React.useEffect(() => {
     let alive = true;
 
@@ -411,8 +386,6 @@ export default function Checkout() {
 
       const normalized = String(country).trim().toLowerCase();
 
-      // Kenya shipping is free. Avoid calling the rates endpoint so we never hit
-      // backend 422 errors caused by missing dimensional fields.
       if (normalized === "kenya" || normalized === "ke") {
         const freeRate = {
           id: "free_local_delivery",
@@ -431,8 +404,6 @@ export default function Checkout() {
         return;
       }
 
-      // Shipping zones table uses country_code (2-letter).
-      // Your UI stores full country name right now; backend can accept either.
       const country_code = country;
 
       setRatesLoading(true);
@@ -448,7 +419,6 @@ export default function Checkout() {
           fragile: packageEstimate.fragile,
         });
 
-
         const rates = data?.rates || [];
         if (!alive) return;
 
@@ -459,10 +429,7 @@ export default function Checkout() {
         });
       } catch (err) {
         if (!alive) return;
-        const msg =
-          err?.response?.data?.detail ||
-          err?.message ||
-          "Could not fetch shipping rates.";
+        const msg = err?.response?.data?.detail || err?.message || "Could not fetch shipping rates.";
         setRatesError(msg);
         setShippingRates([]);
         setSelectedRateId(null);
@@ -478,7 +445,6 @@ export default function Checkout() {
     };
   }, [delivery?.country, packageEstimate]);
 
-
   useEffect(() => {
     document.body.classList.add("roots-body");
     return () => document.body.classList.remove("roots-body");
@@ -489,50 +455,39 @@ export default function Checkout() {
   }, [shippingRates, selectedRateId]);
 
   const getShippingFee = () => {
-    // If rates exist, use the selected rate cost.
-    // Fallback to legacy values if rates haven't loaded yet.
     if (selectedRate?.cost != null) return Number(selectedRate.cost);
 
-    const subtotalFallback = items?.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1), 0) || 0;
+    const subtotalFallback =
+      items?.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1), 0) || 0;
     return subtotalFallback >= 10000 ? 0 : 850;
   };
 
   const handleSubmit = async () => {
     setSubmitting(true);
 
-
     try {
       if (paymentMethod === "mpesa") {
-        // Validate cart
         if (!items || items.length === 0) {
           alert("Your cart is empty.");
           setSubmitting(false);
           return;
         }
 
-        // Calculate subtotal
         const subtotal = items.reduce((sum, item) => {
           const price = Number(item.price || 0);
           const qty = Number(item.quantity || 1);
-
           return sum + price * qty;
         }, 0);
 
-        // Shipping fee from selected carrier rate (fallback to legacy if rates not ready)
         const shipping = getShippingFee();
-
-
-        // Final total
         const total = Math.ceil(subtotal + shipping);
 
-        // Prevent invalid STK requests
         if (total < 1) {
           alert("Invalid cart total.");
           setSubmitting(false);
           return;
         }
 
-        // Normalize phone to 254XXXXXXXXX
         const raw = mpesaPhone.trim().replace(/\s+/g, "").replace("+", "");
         const phone = raw.startsWith("0") ? "254" + raw.slice(1) : raw;
 
@@ -542,8 +497,7 @@ export default function Checkout() {
           return;
         }
 
-        const { startMpesaPayment, getPaymentStatus } =
-          await import("../api/payments.js");
+        const { startMpesaPayment, getPaymentStatus } = await import("../api/payments.js");
 
         const response = await startMpesaPayment({
           phone,
@@ -552,15 +506,10 @@ export default function Checkout() {
         });
 
         const checkoutRequestId = response.checkout_request_id;
-
-
-        if (!checkoutRequestId) {
-          throw new Error("Missing checkout_request_id from backend response.");
-        }
+        if (!checkoutRequestId) throw new Error("Missing checkout_request_id from backend response.");
 
         alert("Check your phone and enter your M-Pesa PIN.");
 
-        // Poll for payment status every 3 seconds, stop after 2 minutes
         let attempts = 0;
         const MAX_ATTEMPTS = 40;
 
@@ -613,7 +562,6 @@ export default function Checkout() {
         const shipping = getShippingFee();
         const totalKES = Math.ceil(subtotal + shipping);
 
-
         const { createOrder: createInternalOrder } = await import("../api/orders.js");
         const { createStripePaymentIntent } = await import("../api/payments.js");
 
@@ -625,21 +573,9 @@ export default function Checkout() {
           success_url: window.location.origin + "/payments/success",
         });
 
-        // Amount/currency contract:
-        // backend should convert/store correctly. We pass KES amount and let backend create the Stripe PI.
         const amount = totalKES;
         const currency = "KES";
 
-        const { loadStripe } = await import("@stripe/stripe-js");
-        const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-
-        if (!stripe) {
-          setSubmitting(false);
-          alert("Stripe failed to initialize. Missing VITE_STRIPE_PUBLISHABLE_KEY.");
-          return;
-        }
-
-        // NOTE: This implementation expects your backend to return a PaymentIntent client_secret.
         const { client_secret } = await createStripePaymentIntent({
           order_id: internalOrder.id,
           amount,
@@ -652,14 +588,22 @@ export default function Checkout() {
           return;
         }
 
-        // Because this app currently uses plain inputs (not Stripe Elements),
-        // we cannot securely confirm with raw card data.
-        // The backend should instead support a PCI-compliant flow using Stripe Elements.
-        // For now, we attempt confirm with a minimal payload. If you use Stripe Elements,
-        // replace this section with Elements-based confirmation.
+        if (!stripe || !elements) {
+          setSubmitting(false);
+          alert("Stripe is not ready yet. Please wait a moment.");
+          return;
+        }
+
+        const cardElement = elements.getElement(CardElement);
+        if (!cardElement) {
+          setSubmitting(false);
+          alert("Card input not found.");
+          return;
+        }
+
         const { error } = await stripe.confirmCardPayment(client_secret, {
           payment_method: {
-            card: undefined,
+            card: cardElement,
             billing_details: {
               name: cardData.name,
               email: delivery.email,
@@ -685,8 +629,6 @@ export default function Checkout() {
       }
 
       if (paymentMethod === "paypal") {
-        // IMPORTANT: PayPal expects a currency it supports (recommended USD).
-        // Backend will create the internal pending order + PayPal order.
         if (!items || items.length === 0) {
           alert("Your cart is empty.");
           setSubmitting(false);
@@ -702,8 +644,6 @@ export default function Checkout() {
         const shipping = getShippingFee();
         const totalKES = Math.ceil(subtotal + shipping);
 
-        // For now, pass amount/currency exactly as backend expects.
-        // Recommended setup is PayPal->USD, so your backend can convert if it stores KES.
         const amount = totalKES;
         const currency = "USD";
 
@@ -712,7 +652,6 @@ export default function Checkout() {
 
         let internalOrder;
         try {
-          // 1) Create internal pending ROOTS order first (required by backend schema)
           internalOrder = await createInternalOrder({
             shipping_fee: shipping,
             payment_method: "paypal",
@@ -729,7 +668,6 @@ export default function Checkout() {
 
         let response;
         try {
-          // 2) Create PayPal order linked to internal order id
           response = await createPaypalOrder({
             order_id: internalOrder.id,
             amount,
@@ -739,13 +677,10 @@ export default function Checkout() {
           const status = err?.response?.status;
           const detail = err?.response?.data?.detail || err?.message;
 
-          if (status === 503) {
-            alert("PayPal is not available right now. Please try M-Pesa or card.");
-          } else if (status === 502) {
-            alert("Could not reach PayPal. Please try again in a moment.");
-          } else {
-            alert(`PayPal error: ${detail || "Unknown error"}`);
-          }
+          if (status === 503) alert("PayPal is not available right now. Please try M-Pesa or card.");
+          else if (status === 502) alert("Could not reach PayPal. Please try again in a moment.");
+          else alert(`PayPal error: ${detail || "Unknown error"}`);
+
           setSubmitting(false);
           return;
         }
@@ -757,13 +692,11 @@ export default function Checkout() {
           return;
         }
 
-        // Redirect user to PayPal to approve payment
         window.location.href = approvalUrl;
         return;
       }
 
       alert("This payment method is not implemented yet.");
-
       setSubmitting(false);
     } catch (err) {
       console.error(err);
@@ -788,11 +721,7 @@ export default function Checkout() {
             Thank you for your order. A confirmation has been sent to your email. Your pieces will be carefully packed and shipped with
             provenance documents.
           </p>
-          <button
-            className="confirmed-btn"
-            onClick={() => (window.location.href = "/")}
-            type="button"
-          >
+          <button className="confirmed-btn" onClick={() => (window.location.href = "/")} type="button">
             CONTINUE EXPLORING →
           </button>
         </div>
@@ -801,9 +730,6 @@ export default function Checkout() {
     );
   }
 
-  // Frontend guard: prevent crashes / broken UI when auth token is missing.
-  // If backend returns 401, our axios interceptors redirect to /login.
-  // Still, keep checkout mount resilient.
   if (cartError) {
     return (
       <div className="roots-checkout">
@@ -841,14 +767,9 @@ export default function Checkout() {
           <h2 className="checkout-heading">Complete Your Order</h2>
           <p className="checkout-subtitle">SHIPPING & PAYMENT DETAILS</p>
 
-          <button
-            type="button"
-            className="back-to-basket-btn"
-            onClick={backToBasket}
-          >
-             Back to Basket
+          <button type="button" className="back-to-basket-btn" onClick={backToBasket}>
+            ↩ Back to Basket
           </button>
-
 
           <DeliveryForm data={delivery} onChange={setDelivery} />
 
@@ -893,14 +814,10 @@ export default function Checkout() {
                         <div>
                           <div className="shipping-rate-carrier">{r.carrier || r.service || "Carrier"}</div>
                           <div className="shipping-rate-meta">
-                            {r.estimated_delivery_days != null
-                              ? `Est. ${r.estimated_delivery_days} days`
-                              : "Delivery estimate unavailable"}
+                            {r.estimated_delivery_days != null ? `Est. ${r.estimated_delivery_days} days` : "Delivery estimate unavailable"}
                           </div>
                         </div>
-                        <div className="shipping-rate-cost">
-                          {r.cost != null ? `KSh ${Number(r.cost).toLocaleString("en-KE")}` : "—"}
-                        </div>
+                        <div className="shipping-rate-cost">{r.cost != null ? `KSh ${Number(r.cost).toLocaleString("en-KE")}` : "—"}</div>
                       </div>
 
                       {r.customs_info && (
@@ -950,24 +867,29 @@ export default function Checkout() {
           </div>
         </div>
 
-        {/* Keep existing OrderSummary UI out of scope for the auth crash fix */}
         <div className="checkout-right" />
 
         <button
           className="checkout-chat-floating"
           type="button"
           onClick={() => {
-            // Keep SPA navigation. roomId is required by Chat.jsx.
             navigate("/chat", { state: { roomId: "general" } });
           }}
           aria-label="Chat about your order"
         >
           💬
         </button>
-
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function Checkout() {
+  return (
+    <Elements stripe={stripePromise}>
+      <CheckoutInner />
+    </Elements>
   );
 }
 
