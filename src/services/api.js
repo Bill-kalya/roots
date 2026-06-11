@@ -84,6 +84,12 @@ export async function verifyEmail(token, signal) {
   return res.data;
 }
 
+// POST /api/auth/resend-verification
+export async function resendVerification(signal) {
+  const res = await api.post('/api/auth/resend-verification', {}, { signal });
+  return res.data;
+}
+
 export async function validatePassword(password, signal) {
   const res = await api.post('/api/auth/validate-password', { password }, { signal });
   return res.data;

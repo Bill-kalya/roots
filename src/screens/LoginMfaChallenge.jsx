@@ -2,7 +2,11 @@ import './LoginMfaChallenge.css';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import { loginWithMfa, verifyMfaLogin } from '../services/api';
+import {
+  loginWithMfa,
+  resendVerification,
+  verifyMfaLogin,
+} from '../services/api';
 
 const getFromLocation = (location) => location?.state || {};
 
@@ -16,12 +20,21 @@ const LoginMfaChallenge = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const [verifyEmailMode, setVerifyEmailMode] = useState(false);
+  const [verifyEmailBusy, setVerifyEmailBusy] = useState(false);
+  const [verifyEmailMessage, setVerifyEmailMessage] = useState(
+    'Please verify your email before continuing.'
+  );
+
   const backendRequiresMfaDetails = useMemo(() => {
     return state;
   }, [state]);
 
   useEffect(() => {
-    if (!backendRequiresMfaDetails || Object.keys(backendRequiresMfaDetails).length === 0) {
+    if (
+      !backendRequiresMfaDetails ||
+      Object.keys(backendRequiresMfaDetails).length === 0
+    ) {
       toast.error('MFA challenge data missing. Please sign in again.');
     }
   }, [backendRequiresMfaDetails]);
@@ -44,10 +57,10 @@ const LoginMfaChallenge = () => {
 
       const access_token = res?.access_token;
       const refresh_token = res?.refresh_token;
+
       // verifyMfaLogin writes tokens via tokenStore.
       if (!access_token || !refresh_token) {
         // Some backends might only return access; still proceed to protected area.
-        // TokenStore should already have what it needs.
       }
 
       toast.success('MFA verified');
@@ -71,6 +84,24 @@ const LoginMfaChallenge = () => {
         }
       }
 
+      // Backend email verification gate (if applicable)
+      const lowered = String(detail || '').toLowerCase();
+      const needsVerification =
+        status === 401 &&
+        (lowered.includes('verify') || lowered.includes('verification')) &&
+        lowered.includes('email');
+
+      if (needsVerification) {
+        setVerifyEmailMode(true);
+        setVerifyEmailMessage(
+          'Please verify your email before continuing. Click “Resend verification” below.'
+        );
+        setError('');
+        setChallengeId('');
+        toast.error('Please verify your email');
+        return;
+      }
+
       setError(detail);
       toast.error('Invalid MFA code');
     } finally {
@@ -83,39 +114,89 @@ const LoginMfaChallenge = () => {
       <div className="login-mfa-card">
         <div className="login-mfa-title">Multi-Factor Authentication</div>
         <div className="login-mfa-body">
-          Enter the 6-digit code from your authenticator app to continue.
+          {verifyEmailMode
+            ? 'Verify your email to continue logging in.'
+            : 'Enter the 6-digit code from your authenticator app to continue.'}
         </div>
 
-        {error && <div className="login-mfa-error">{error}</div>}
-        {!challengeId && (
-          <div className="login-mfa-error">Missing challenge id. Please sign in again.</div>
+        {verifyEmailMode ? (
+          <>
+            <div className="login-mfa-error">{verifyEmailMessage}</div>
+
+            <button
+              className="login-mfa-submit"
+              type="button"
+              disabled={verifyEmailBusy}
+              onClick={async () => {
+                setVerifyEmailBusy(true);
+                setVerifyEmailMessage('Sending a new verification email...');
+                try {
+                  await resendVerification();
+                  setVerifyEmailMessage(
+                    'Verification email resent. Please check your inbox.'
+                  );
+                } catch (e) {
+                  const d = e?.response?.data?.detail || e?.message;
+                  setVerifyEmailMessage(d || 'Could not resend verification.');
+                } finally {
+                  setVerifyEmailBusy(false);
+                }
+              }}
+            >
+              {verifyEmailBusy ? 'Resending…' : 'Resend verification'}
+            </button>
+
+            <div className="login-mfa-footer">
+              <button
+                className="login-mfa-link"
+                type="button"
+                onClick={() => navigate('/login')}
+              >
+                Back to Login
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {error && <div className="login-mfa-error">{error}</div>}
+
+            {!challengeId && (
+              <div className="login-mfa-error">
+                Missing challenge id. Please sign in again.
+              </div>
+            )}
+
+            <form className="login-mfa-form" onSubmit={handleSubmit}>
+              <label className="login-mfa-label">TOTP code</label>
+              <input
+                className="login-mfa-input"
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value)}
+                inputMode="numeric"
+                placeholder="e.g., 123456"
+                required
+              />
+
+              <button
+                className="login-mfa-submit"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? 'Verifying…' : 'Verify & Sign In'}
+              </button>
+            </form>
+
+            <div className="login-mfa-footer">
+              <button
+                className="login-mfa-link"
+                type="button"
+                onClick={() => navigate('/login')}
+              >
+                Back to Login
+              </button>
+            </div>
+          </>
         )}
-
-        <form className="login-mfa-form" onSubmit={handleSubmit}>
-          <label className="login-mfa-label">TOTP code</label>
-          <input
-            className="login-mfa-input"
-            value={mfaCode}
-            onChange={(e) => setMfaCode(e.target.value)}
-            inputMode="numeric"
-            placeholder="e.g., 123456"
-            required
-          />
-
-          <button className="login-mfa-submit" type="submit" disabled={loading}>
-            {loading ? 'Verifying…' : 'Verify & Sign In'}
-          </button>
-        </form>
-
-        <div className="login-mfa-footer">
-          <button
-            className="login-mfa-link"
-            type="button"
-            onClick={() => navigate('/login')}
-          >
-            Back to Login
-          </button>
-        </div>
       </div>
     </div>
   );
