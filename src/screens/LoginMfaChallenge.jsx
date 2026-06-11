@@ -2,8 +2,7 @@ import './LoginMfaChallenge.css';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import { validatePassword, login } from '../services/api';
-import apiClient from '../lib/apiClient.js';
+import { loginWithMfa, verifyMfaLogin } from '../services/api';
 
 const getFromLocation = (location) => location?.state || {};
 
@@ -13,12 +12,11 @@ const LoginMfaChallenge = () => {
   const state = getFromLocation(location);
 
   const [mfaCode, setMfaCode] = useState('');
+  const [challengeId, setChallengeId] = useState(state?.challenge_id || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const backendRequiresMfaDetails = useMemo(() => {
-    // We do not have MFA endpoints in backend routes provided.
-    // This screen exists to provide UX scaffolding; it will display a clear message.
     return state;
   }, [state]);
 
@@ -35,23 +33,44 @@ const LoginMfaChallenge = () => {
 
     try {
       // Step 2: POST /api/auth/login/verify-mfa
-      // Backend contract: { email, password, mfa_code }
       const payload = {
         email: state?.email,
         password: state?.password,
+        challenge_id: challengeId,
         mfa_code: mfaCode,
       };
 
-      const res = await apiClient.post('/api/auth/login/verify-mfa', payload);
-      const { access_token, refresh_token } = res.data || {};
+      const res = await verifyMfaLogin(payload);
 
-      if (access_token) localStorage.setItem('access_token', access_token);
-      if (refresh_token) localStorage.setItem('refresh_token', refresh_token);
+      const access_token = res?.access_token;
+      const refresh_token = res?.refresh_token;
+      // verifyMfaLogin writes tokens via tokenStore.
+      if (!access_token || !refresh_token) {
+        // Some backends might only return access; still proceed to protected area.
+        // TokenStore should already have what it needs.
+      }
 
       toast.success('MFA verified');
-      navigate('/dashboard');
+      navigate('/');
     } catch (err) {
+      const status = err?.response?.status;
       const detail = err?.response?.data?.detail || 'Invalid MFA code.';
+
+      // Spec: if step 2 fails (401/400), discard challenge_id and redo step 1
+      if ((status === 400 || status === 401) && state?.email && state?.password) {
+        try {
+          const step1Res = await loginWithMfa(state.email, state.password, true);
+          if (step1Res?.requires_mfa && step1Res?.challenge_id) {
+            setChallengeId(step1Res.challenge_id);
+            setError('MFA code expired. Enter your new code to continue.');
+            toast.error('MFA expired. Please enter the fresh code.');
+            return;
+          }
+        } catch {
+          // fall through to show original detail
+        }
+      }
+
       setError(detail);
       toast.error('Invalid MFA code');
     } finally {
@@ -68,6 +87,9 @@ const LoginMfaChallenge = () => {
         </div>
 
         {error && <div className="login-mfa-error">{error}</div>}
+        {!challengeId && (
+          <div className="login-mfa-error">Missing challenge id. Please sign in again.</div>
+        )}
 
         <form className="login-mfa-form" onSubmit={handleSubmit}>
           <label className="login-mfa-label">TOTP code</label>

@@ -30,7 +30,10 @@ const Login = () => {
 
       // MFA required — redirect to challenge screen
       if (res?.requires_mfa) {
-        navigate('/login/mfa', { state: { email, password, rememberMe } });
+        const challenge_id = res?.challenge_id;
+        navigate('/login/mfa', {
+          state: { email, password, rememberMe, challenge_id },
+        });
         return;
       }
 

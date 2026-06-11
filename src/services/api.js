@@ -106,11 +106,11 @@ export async function loginWithMfa(email, password, signal) {
   return res.data;
 }
 
-export async function verifyMfaLogin({ email, password, mfa_code }, signal) {
+export async function verifyMfaLogin({ email, password, challenge_id, mfa_code }, signal) {
   // Step 2: POST /api/auth/login/verify-mfa
   const res = await api.post(
     '/api/auth/login/verify-mfa',
-    { email, password, mfa_code },
+    { email, password, challenge_id, mfa_code },
     { signal }
   );
   const { access_token, refresh_token } = res.data;
