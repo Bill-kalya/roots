@@ -1,13 +1,4 @@
-## TODO - Stripe Elements card flow fix
-
-- [x] Update `package.json` to add `@stripe/react-stripe-js`
-
-- [x] Patch `src/screens/Checkout.jsx` to use Stripe Elements (`<CardElement />`) and confirm with `card: cardElement`
-
-- [x] Install dependencies (`npm install`)
-
-- [x] Run `npm run lint`
-
-- [x] Run `npm run build`
-
+- [ ] Move early return in `src/components/PaymentReceipt.jsx` to after all hooks to satisfy `react-hooks/rules-of-hooks`.
+- [ ] Ensure JSX parses cleanly (no unterminated string / missing closing tags) in `src/components/PaymentReceipt.jsx`.
+- [ ] Run lint/build to confirm TypeScript + ESLint errors are resolved.
 
