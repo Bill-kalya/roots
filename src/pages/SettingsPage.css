@@ -51,10 +51,12 @@
 
 /* ── Section ── */
 .settings-section {
-  background: #1a0f07;
-  border: 1px solid rgba(241,193,122,0.1);
+  background: #2d2f31;
   border-radius: 18px;
   overflow: hidden;
+  box-shadow:
+    6px 6px 10px #1e130c,
+    -6px -6px 10px #5a3820;
 }
 
 .section-title {

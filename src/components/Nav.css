@@ -162,6 +162,9 @@
 }
 
 
+/*
+  Mobile: dedicated breakpoint
+*/
 @media (max-width: 768px) {
   .nav {
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -187,6 +190,32 @@
     display: none; /* hide Search on mobile */
   }
 }
+
+/*
+  Tablet / squeezed navbar:
+  Switch to hamburger before true mobile overflow happens.
+*/
+@media (max-width: 1024px) {
+  .nav {
+    overflow: hidden; /* prevent weird overflow during squeezing */
+  }
+
+  /* If we can't fit the center links, hide them and use hamburger */
+  .nav-links {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  /* Keep right-side items from forcing overflow */
+  .nav-right {
+    gap: 10px;
+    min-width: 0;
+  }
+}
+
 
 .currency-selector {
   background: transparent;
@@ -248,7 +277,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--background);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 100px;
   padding: 5px 12px 5px 5px;
@@ -311,7 +340,7 @@
   top: calc(100% + 10px);
   right: 0;
   width: 230px;
-  background: #1c1008;
+  background: var(--background);
   border: 1px solid rgba(241,193,122,0.15);
   border-radius: 14px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);

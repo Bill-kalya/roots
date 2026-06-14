@@ -2,15 +2,24 @@ import React, { useState, useEffect } from 'react';
 import './theme.css';
 
 const ThemeSwitch = () => {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    const saved = window.localStorage.getItem('roots_theme');
+    return saved === 'light' || saved === 'dark' ? saved === 'dark' : false;
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      window.localStorage.setItem('roots_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      window.localStorage.setItem('roots_theme', 'light');
+    }
+  }, [isDark]);
 
   const toggleTheme = () => {
-    // Animate switch but lock on light mode (do not change global colour scheme)
+    // Pure toggle: update state, which updates html.dark in the effect.
     setIsDark(prev => !prev);
-    setTimeout(() => {
-      setIsDark(false); // Snap back to light
-    }, 300); // Match animation duration
-    document.documentElement.classList.remove('dark'); // Ensure no dark
   };
 
   return (

@@ -54,7 +54,20 @@ export default function SettingsPage() {
 
   const [currency, setCurrency] = useState("USD");
   const [language, setLanguage] = useState("en");
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState(() => {
+    const saved = window.localStorage.getItem("roots_theme");
+    return saved === "light" || saved === "dark" ? saved : "dark";
+  });
+
+  // Apply theme to the source of truth: html.dark
+  React.useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    window.localStorage.setItem("roots_theme", theme);
+  }, [theme]);
 
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 

@@ -1,5 +1,6 @@
 /* ── Shared page shell ── */
 .page-shell {
+  align-items: stretch;
   min-height: 100vh;
   background: var(--background);
   padding: 140px 20px 60px;
@@ -35,23 +36,25 @@
 .profile-hero {
   position: relative;
   border-radius: 20px;
-  border: 1px solid rgba(241,193,122,0.12);
-  background: #1a0f07;
+  background: var(--background);
   overflow: hidden;
   padding: 36px 28px 28px;
   display: flex;
   align-items: flex-end;
   gap: 24px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  box-shadow:
+  inset 0 4px 8px rgba(255, 255, 255, 0.12),
+  inset 0 -4px 8px rgba(0, 0, 0, 0.5),
+  0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
-.profile-hero-bg {
+/*.profile-hero-bg {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse at 30% 0%, rgba(161,93,56,0.35) 0%, transparent 65%),
               radial-gradient(ellipse at 80% 80%, rgba(247,165,75,0.12) 0%, transparent 60%);
   pointer-events: none;
-}
+}*/
 
 .avatar-ring {
   width: 88px;
@@ -127,11 +130,14 @@
 
 /* ── Card ── */
 .card {
-  background: #1a0f07;
-  border: 1px solid rgba(241,193,122,0.1);
+  background: var(--background);
+  border: none;
   border-radius: 20px;
   padding: 28px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  box-shadow:
+  inset 0 4px 8px rgba(255, 255, 255, 0.12),
+  inset 0 -4px 8px rgba(0, 0, 0, 0.5),
+  0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
 .card-title {
@@ -144,6 +150,7 @@
 
 /* ── Form ── */
 .profile-form {
+  Align-items: stretch;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -174,11 +181,9 @@
 
 .form-group input,
 .form-group textarea {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--background);
   border-radius: 10px;
   padding: 10px 14px;
-  color: #fff;
   font-size: 14px;
   font-family: Georgia, serif;
   outline: none;
@@ -188,7 +193,6 @@
 
 .form-group input:focus,
 .form-group textarea:focus {
-  border-color: rgba(161,93,56,0.6);
   background: rgba(161,93,56,0.06);
 }
 
@@ -235,8 +239,7 @@
 }
 
 .stat-card {
-  background: #1a0f07;
-  border: 1px solid rgba(241,193,122,0.1);
+  background: #2d2f31;
   border-radius: 16px;
   padding: 24px 16px;
   display: flex;
@@ -244,6 +247,9 @@
   align-items: center;
   gap: 6px;
   transition: border-color 0.2s;
+  box-shadow:
+    inset 4px 4px 10px #1e130c,
+    inset -4px -4px 10px #5a3820;
 }
 
 .stat-card:hover {

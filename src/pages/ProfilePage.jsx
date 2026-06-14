@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
@@ -8,20 +8,79 @@ export default function ProfilePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const initials = user?.name
-    ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const derivedNameRaw = user?.name || user?.full_name || "";
+  const derivedName = derivedNameRaw && derivedNameRaw.toLowerCase() !== "guest" ? derivedNameRaw : "Your Profile";
+
+
+  const initials = useMemo(() => {
+    return derivedName
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  }, [derivedName]);
 
   const [form, setForm] = useState({
-    name: user?.name || "",
+    name: derivedName,
+
     email: user?.email || "",
     phone: user?.phone || "",
     location: user?.location || "",
     bio: user?.bio || "",
   });
+
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [profileError, setProfileError] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProfile = async () => {
+      // Refresh the base fields when auth user changes
+      setForm((prev) => ({
+        ...prev,
+        name: derivedName,
+        email: user?.email || prev.email,
+      }));
+
+      // Load extended profile fields (phone/location/bio, etc.)
+      try {
+        setLoadingProfile(true);
+        setProfileError(null);
+
+        const res = await api.get("/api/user/profile/me");
+        const profile = res?.data || {};
+
+        if (!isMounted) return;
+
+        setForm({
+          name: profile.name ?? derivedName,
+          email: profile.email ?? user?.email ?? "",
+          phone: profile.phone ?? "",
+          location: profile.location ?? "",
+          bio: profile.bio ?? "",
+        });
+      } catch (err) {
+        if (isMounted) {
+          setProfileError(
+            err?.response?.data?.message || err?.message || "Failed to load profile"
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingProfile(false);
+        }
+      }
+
+    };
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [derivedName, user?.email]);
 
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -78,7 +137,7 @@ export default function ProfilePage() {
             )}
           </div>
           <div className="profile-hero-info">
-            <h1 className="hero-name">{user?.name || "Guest"}</h1>
+            <h1 className="hero-name">{derivedName}</h1>
             <p className="hero-email">{user?.email}</p>
             <span className="hero-badge">Member</span>
           </div>
@@ -88,6 +147,11 @@ export default function ProfilePage() {
         <div className="card">
           <h2 className="card-title">Edit Profile</h2>
           <form className="profile-form" onSubmit={handleSave}>
+            {loadingProfile ? (
+              <p className="form-error">Loading profile…</p>
+            ) : profileError ? (
+              <p className="form-error">{profileError}</p>
+            ) : null}
             <div className="form-row">
               <div className="form-group">
                 <label>Full Name</label>

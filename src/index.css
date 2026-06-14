@@ -142,11 +142,116 @@ body.cart-open {
 }
 
 html.dark {
-  --background: #0f0f23;
+  --background: #2d2f31;
   --text: #e0e0e0;
-  --primary: #5a67d8;
+  --primary: #2d2f31;
   --secondary: #805ad5;
   --accent: #ed8936;
   --background-rgb: 15, 15, 35;
+
+  box-shadow:
+  inset 4px 4px 12px #1f2021,
+  inset -4px -4px 12px #3b3e41;
+
+  .heritage-badge {
+    box-shadow:
+  6px 6px 12px #1f2021,
+  -6px -6px 12px #3b3e41;
+  }
+
+  .view-all-btn {
+    box-shadow:
+  6px 6px 12px #1f2021,
+  -6px -6px 12px #3b3e41;
+  }
+
+  .view-all-btn:hover {
+ box-shadow:
+  inset 4px 4px 12px #1f2021,
+  inset -4px -4px 12px #3b3e41;
+}
+  .nav{
+    background: #2d2f31;
+  }
+  .colorscheme-toggle {
+    background: #2d2f31;
+  }
+  .styled-wrapper {
+    background: #2d2f31;
+    box-shadow:
+  inset 4px 4px 12px #1f2021,
+  inset -4px -4px 12px #3b3e41;
+  }
+
+ .basket-btn {
+    box-shadow:
+  inset 4px 4px 12px #1f2021,
+  inset -4px -4px 12px #3b3e41;
+  }
+
+  .basket-btn:active {
+    box-shadow:
+  6px 6px 12px #1f2021,
+  -6px -6px 12px #3b3e41;
+  }
+
+  .hero-logo-right {
+    box-shadow:
+  inset 4px 4px 12px #1f2021,
+  inset -4px -4px 12px #3b3e41;
+  }
+
+  .featured-banner {
+    box-shadow:
+  inset 4px 4px 12px #1f2021,
+  inset -4px -4px 12px #3b3e41;
+  }
+ 
+ .newsletter-input {
+  box-shadow:
+  inset 4px 4px 12px #1f2021,
+  inset -4px -4px 12px #3b3e41;
+ }
+
+ .footer-brand {
+  box-shadow:
+  inset 4px 4px 12px #1f2021,
+  inset -4px -4px 12px #3b3e41;
+ }
+
+ .stat-card {
+  box-shadow:
+  inset 4px 4px 12px #1f2021,
+  inset -4px -4px 12px #3b3e41;
+
+  background: #3c2f2f;
+ }   
+ input{
+   box-shadow:
+  inset 4px 4px 12px #1f2021,
+  inset -4px -4px 12px #3b3e41;
+
+  border: none !important;
+ }
+
+  textarea{
+    box-shadow:
+    inset 4px 4px 12px #1f2021,
+    inset -4px -4px 12px #3b3e41;
+  
+    border: none !important;}
+
+    .testimonials {
+      background: #3c2f2f;
+      box-shadow:
+  6px 6px 12px #1f2021,
+  -6px -6px 12px #3b3e41;}
+
+  .hero-btn-primary {
+    box-shadow:
+  6px 6px 12px #1f2021,
+  -6px -6px 12px #3b3e41;
+  }
+
 }
 
