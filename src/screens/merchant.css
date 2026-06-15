@@ -263,3 +263,16 @@
   color: #F0C060;
 }
 
+.data-table {
+  color: var(--text);
+   box-shadow:
+  inset 0 4px 8px rgba(255, 255, 255, 0.12),
+  inset 0 -4px 8px rgba(0, 0, 0, 0.5),
+  0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+.data-table th,
+.data-table td {
+  color: var(--text);
+}
+

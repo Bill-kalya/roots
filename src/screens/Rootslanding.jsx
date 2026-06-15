@@ -2,9 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, createContext, useCont
 import { useNavigate, useLocation } from "react-router-dom";
 
 import "./Rootslanding.css";
-import Cart from "../components/Cart";
 import Footer from "../components/Footer";
-import Nav from "../components/Nav";
 import api, { addToCart, subscribeNewsletter } from "../services/api";
 import { resolveImageUrl } from "../lib/apiClient";
 import { useCurrency } from "../contexts/CurrencyContext.jsx";
@@ -210,7 +208,6 @@ function SkeletonTestimonial() {
 // ─── Hero Section (Functional) ────────────────────────────────────────────────
 function HeroSection() {
   const [loaded, setLoaded] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => setLoaded(true), 50);
@@ -231,6 +228,9 @@ function HeroSection() {
 
   return (
     <section className="hero">
+      <div className="hero-bg" aria-hidden="true">
+        <img src={`${import.meta.env.BASE_URL}hero_light.png`} alt="" />
+      </div>
       <div className="hero-accent-line" />
       <div className="hero-orb" />
       <div className="hero-content">
