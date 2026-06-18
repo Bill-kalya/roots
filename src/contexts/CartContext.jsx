@@ -1,11 +1,18 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
+
+
 import { getCart } from "../services/api";
 import { tokenStore } from "../lib/tokenStore.js";
 
+import CartContext from "./cart-context.js";
 
-const CartContext = createContext(null);
+export function useCart() {
+  const ctx = React.useContext(CartContext);
+  if (!ctx) throw new Error('useCart must be used within CartProvider');
+  return ctx;
+}
 
-export function CartProvider({ children }) {
+export default function CartProvider({ children }) {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -14,8 +21,6 @@ export function CartProvider({ children }) {
       setCart(null);
       return;
     }
-
-
 
     setLoading(true);
     try {
@@ -34,7 +39,7 @@ export function CartProvider({ children }) {
   }, [fetchCart]);
 
   // Re-fetch on cart updates (debounced to collapse multiple dispatches)
-  const debounceRef = React.useRef(null);
+  const debounceRef = useRef(null);
 
   const debouncedFetch = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -51,13 +56,12 @@ export function CartProvider({ children }) {
     };
   }, [debouncedFetch]);
 
-  const items = cart?.items || [];
+  const items = useMemo(() => cart?.items || [], [cart]);
   const itemCount = useMemo(
     () => items.reduce((n, i) => n + (i.quantity || 0), 0),
     [items]
   );
 
-  // Keep an error-less API; components can derive empty state from loading + cart.
   const value = useMemo(
     () => ({
       cart,
@@ -70,11 +74,5 @@ export function CartProvider({ children }) {
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
-}
-
-export function useCart() {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be used within CartProvider");
-  return ctx;
 }
 

@@ -1,6 +1,10 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+
+import CurrencyContext from "./currency-context.js";
+
 
 // ── Exchange rates relative to KES (1 KES = X foreign currency) ──────────────
+
 // Update these periodically or fetch from exchangerate-api.com
 const CURRENCY_MAP = {
   // ── East Africa ────────────────────────────────────────────────────────────
@@ -140,7 +144,6 @@ const CURRENCY_MAP = {
   TT: { code: "TTD", symbol: "TT$", rate: 0.052 },
 };
 
-// EU countries → EUR
 const EU_COUNTRIES = [
   "AT",
   "BE",
@@ -166,36 +169,36 @@ const EU_COUNTRIES = [
 const EUR = { code: "EUR", symbol: "€", rate: 0.0071 };
 const DEFAULT_CURRENCY = CURRENCY_MAP.KE;
 
-const CurrencyContext = createContext(null);
-
 const STORAGE_KEY = "roots_currency";
 
+function initCurrency() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }
+  return DEFAULT_CURRENCY;
+}
+
 export default function CurrencyProvider({ children }) {
-  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
-  const [detected, setDetected] = useState(false);
+  const [currency, setCurrency] = useState(initCurrency);
+  const [detected, setDetected] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return Boolean(saved);
+  });
 
   useEffect(() => {
-    // Respect manual user choice saved to localStorage
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        setCurrency(JSON.parse(saved));
-        setDetected(true);
-        return;
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    }
+    if (detected) return;
 
-    // Auto-detect country via backend geolocation
-    // (avoids ipapi.co CORS + free-tier 429 issues)
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
     fetch(`${apiBaseUrl}/api/v1/geo`)
       .then((res) => res.json())
       .then((data) => {
         const country = data?.country_code;
-
         if (!country) return;
 
         if (EU_COUNTRIES.includes(country)) {
@@ -205,13 +208,10 @@ export default function CurrencyProvider({ children }) {
 
         const matched = CURRENCY_MAP[country];
         if (matched) setCurrency(matched);
-        // else stay on KES default
       })
-      .catch(() => {
-        // Silent fallback
-      })
+      .catch(() => {})
       .finally(() => setDetected(true));
-  }, []);
+  }, [detected]);
 
   const changeCurrency = (code) => {
     const found = Object.values({ ...CURRENCY_MAP, EU: EUR }).find(
@@ -229,15 +229,6 @@ export default function CurrencyProvider({ children }) {
     [currency, detected]
   );
 
-  return (
-    <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>
-  );
+  return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;
 }
-
-export const useCurrency = () => {
-  const ctx = useContext(CurrencyContext);
-  if (!ctx) throw new Error("useCurrency must be used within CurrencyProvider");
-  return ctx;
-};
-
 

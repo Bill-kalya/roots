@@ -32,7 +32,7 @@ function hexToBytes(hexKey) {
 
 function toBase64url(buf) {
   const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
-  // eslint-disable-next-line no-undef
+   
   return btoa(String.fromCharCode(...bytes))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')

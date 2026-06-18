@@ -233,6 +233,13 @@ const MerchantDashboard = () => {
         <div className="merchant-header-actions">
           <button
             className="btn btn-ghost"
+            onClick={() => navigate('/merchant/payout-settings')}
+            aria-label="Go to payout settings"
+          >
+            Payout Settings
+          </button>
+          <button
+            className="btn btn-ghost"
             onClick={() => navigate('/profile')}
             aria-label="Go to user dashboard"
           >

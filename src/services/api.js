@@ -241,6 +241,24 @@ export const getMerchantAnalytics = (signal) =>
   api.get('/api/merchant/analytics', { signal }).then((res) => res.data);
 
 // =========================
+// MERCHANT PAYOUT SETTINGS
+// =========================
+export const getMerchantPayoutSettings = (signal) =>
+  api
+    .get('/api/merchant/payout-settings', { signal })
+    .then((res) => res.data);
+
+export const updateMerchantPayoutSettings = (payload, signal) =>
+  api
+    .put('/api/merchant/payout-settings', payload, { signal })
+    .then((res) => res.data);
+
+export const getMerchantEarnings = (signal) =>
+  api
+    .get('/api/merchant/earnings', { signal })
+    .then((res) => res.data);
+
+// =========================
 // ADMIN
 // =========================
 export const getAnalytics = (signal) =>

@@ -4,7 +4,6 @@ import { useLocation, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import apiClient from '../lib/apiClient.js';
 
-
 function getTokenFromQuery(search) {
   const params = new URLSearchParams(search);
   return params.get('token');
@@ -16,18 +15,15 @@ const VerifyEmail = () => {
 
   const calledRef = useRef(false);
 
-  const [status, setStatus] = useState('loading'); // loading | success | error
-  const [message, setMessage] = useState('');
-  const [errorKey, setErrorKey] = useState(null);
+  const missingToken = !token;
+
+  // Derive initial state from missingToken so we don't setState in an effect
+  const [status, setStatus] = useState(() => (missingToken ? 'error' : 'loading')); // loading | success | error
+  const [message, setMessage] = useState(() => (missingToken ? 'Missing verification token.' : ''));
+  const [errorKey, setErrorKey] = useState(() => (missingToken ? 'invalid' : null));
 
   useEffect(() => {
-    if (!token) {
-      setStatus('error');
-      setMessage('Missing verification token.');
-      setErrorKey('invalid');
-      return;
-    }
-
+    if (missingToken) return;
     if (calledRef.current) return;
     calledRef.current = true;
 
@@ -36,19 +32,15 @@ const VerifyEmail = () => {
       setMessage('Verifying your email...');
 
       try {
-        // Backend: GET /api/auth/verify-email?token=...
-        // Note: this endpoint returns JSON {message} or raises HTTP 400 with detail.
-        const res = await apiClient.get(`/api/auth/verify-email`, {
+        const res = await apiClient.get('/api/auth/verify-email', {
           params: { token },
         });
 
-        // No cancellation check — calledRef already prevents double calls
         setStatus('success');
         setMessage(res.data?.message || 'Email verified successfully.');
       } catch (err) {
         const detail = err?.response?.data?.detail || 'Verification failed.';
 
-        // Map backend error details to UX.
         let key = 'invalid';
         const lowered = String(detail).toLowerCase();
         if (lowered.includes('expired')) key = 'expired';
@@ -64,9 +56,7 @@ const VerifyEmail = () => {
     }
 
     run();
-  }, [token]);
-
-
+  }, [token, missingToken]);
 
   const friendly = useMemo(() => {
     if (status === 'success') {
@@ -89,6 +79,7 @@ const VerifyEmail = () => {
           body: 'This email is already verified. You can log in now.',
         };
       }
+
       return {
         title: 'Invalid verification link',
         body: message || 'The verification token is invalid.',
@@ -103,7 +94,7 @@ const VerifyEmail = () => {
 
   return (
     <div className="verify-email-page" role="main">
-      <div className={`verify-email-card ${status}`}> 
+      <div className={`verify-email-card ${status}`}>
         <div className="verify-email-title">{friendly.title}</div>
         <div className="verify-email-body">{friendly.body}</div>
 

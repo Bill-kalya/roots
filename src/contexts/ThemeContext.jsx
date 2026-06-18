@@ -1,20 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-const ThemeContext = createContext();
+import ThemeContext from './theme-context.js';
 
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
-
-export const ThemeProvider = ({ children }) => {
-  const [isDark, setIsDark] = useState(false);
+export default function ThemeProvider({ children }) {
+  const [isDark] = useState(false);
 
   const toggleTheme = () => {
-    // Lock on light mode
     alert('Coming Soon...');
     document.documentElement.classList.remove('dark');
   };
@@ -24,5 +15,5 @@ export const ThemeProvider = ({ children }) => {
       {children}
     </ThemeContext.Provider>
   );
-};
+}
 

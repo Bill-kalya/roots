@@ -14,7 +14,7 @@ import { useCart } from "../contexts/CartContext.jsx";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-import { useCurrency } from "../contexts/CurrencyContext.jsx";
+import { useCurrency } from "../contexts/useCurrency.js";
 import { formatMoney } from "../lib/formatMoney";
 
 function formatPrice(amount, currency) {

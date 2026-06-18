@@ -104,10 +104,13 @@ export default function OrdersPage() {
         if (!alive) return;
         setError(e?.response?.data?.message || e?.message || "Failed to load orders");
       } finally {
-        if (!alive) return;
-        setLoading(false);
+        if (alive) {
+          setLoading(false);
+        }
       }
+
     })();
+
     return () => {
       alive = false;
     };

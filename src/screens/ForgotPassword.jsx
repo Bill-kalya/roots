@@ -24,7 +24,8 @@ export default function ForgotPassword() {
     try {
       await api.post("/api/auth/forgot-password", { email });
       setSent(true);
-    } catch (err) {
+    } catch {
+
       // Always show success to prevent email enumeration
       setSent(true);
     } finally {

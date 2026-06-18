@@ -2,7 +2,7 @@ import './Login.css';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { login, resendVerification } from '../services/api.js';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useAuth } from '../context/auth-context.js';
 import { tokenStore } from '../lib/tokenStore.js';
 
 const Login = () => {

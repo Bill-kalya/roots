@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -6,8 +6,7 @@ import { tokenStore } from '../lib/tokenStore.js';
 
 import { fetchAndInitEncryptionKey, clearEncryption } from '../utils/authEncryption.js';
 
-
-const AuthContext = createContext(null);
+import AuthContext from './auth-context.js';
 
 function decodeToken(token) {
   try {
@@ -42,7 +41,7 @@ function deriveUserFromToken() {
   };
 }
 
-export function AuthProvider({ children }) {
+export default function AuthProvider({ children }) {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(() => deriveUserFromToken());
@@ -84,8 +83,6 @@ export function AuthProvider({ children }) {
     const onStorage = () => {
       const accessNow = tokenStore.getAccess();
       if (!accessNow) {
-        // If we have no access token, ensure this tab is logged out.
-        // Avoid loops by just syncing/clearing.
         if (user) {
           clearAuth();
         } else {
@@ -127,7 +124,6 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-
   const logout = useCallback(() => {
     clearEncryption();
     tokenStore.clear();
@@ -135,7 +131,6 @@ export function AuthProvider({ children }) {
     window.dispatchEvent(new Event('roots:auth-changed'));
     navigate('/login');
   }, [navigate]);
-
 
   const isAuthenticated = Boolean(user);
   const isAdmin = user?.role === 'ADMIN';
@@ -162,11 +157,5 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
-  return ctx;
 }
 

@@ -49,7 +49,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchUsers().catch((e) => console.error('Error fetching users:', e));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const onPromoteDemote = async (userId, targetRole) => {

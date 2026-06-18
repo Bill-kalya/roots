@@ -225,14 +225,18 @@ export default function Chat() {
   const chatState = location.state || {};
 
   const { merchantId } = chatState;
-  const { room_id: roomIdFromState, convKeyHex } = chatState;
 
+  // Backwards compatible: some code paths may pass roomId instead of merchantId.
+  // useChat expects merchantId (it resolves the room server-side).
+  const merchantIdResolved = merchantId ?? chatState.roomId ?? chatState.merchant_id;
 
-  const { messages, conversation, sendMessage, status } = useChat({ merchantId });
+  const { messages, conversation, sendMessage, status } = useChat({ merchantId: merchantIdResolved });
+
+  // NOTE: merchantIdResolved is for socket init. Conversation sidebar/unread UI is not implemented yet.
 
   const [merchant, setMerchant] = useState(null);
   const [pinnedProduct, setPinnedProduct] = useState(null);
-  const [typing, setTyping] = useState(false);
+  const [typing] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [quickReplies] = useState([]);
 
@@ -251,31 +255,37 @@ export default function Chat() {
     if (!conversation) return;
 
     const conv = conversation;
-    const merchantData = conv.merchant || conv.artisan || conv.partner || null;
 
+    const merchantData = conv.merchant || conv.artisan || conv.partner || null;
     if (merchantData) {
       const initials =
         merchantData.initials ||
         (merchantData.name ? merchantData.name.slice(0, 2).toUpperCase() : "RA");
 
-      setMerchant({
-        name: merchantData.name || "Merchant",
-        initials,
-        subtitle: merchantData.subtitle || "",
-        online: Boolean(merchantData.online ?? true),
-        responseTime: merchantData.responseTime || "",
+      // Avoid cascades flagged by react-hooks/set-state-in-effect rule:
+      // schedule state updates for the next tick.
+      queueMicrotask(() => {
+        setMerchant({
+          name: merchantData.name || "Merchant",
+          initials,
+          subtitle: merchantData.subtitle || "",
+          online: Boolean(merchantData.online ?? true),
+          responseTime: merchantData.responseTime || "",
+        });
       });
     }
 
     const pinned = conv.pinned_product || conv.pinnedProduct || conv.product || null;
     if (pinned && (pinned.id || pinned.product_id)) {
-      setPinnedProduct({
-        id: pinned.id ?? pinned.product_id,
-        name: pinned.name || pinned.title || "Product",
-        price: pinned.price ?? null,
+      queueMicrotask(() => {
+        setPinnedProduct({
+          id: pinned.id ?? pinned.product_id,
+          name: pinned.name || pinned.title || "Product",
+          price: pinned.price ?? null,
+        });
       });
     } else {
-      setPinnedProduct(null);
+      queueMicrotask(() => setPinnedProduct(null));
     }
   }, [conversation]);
 

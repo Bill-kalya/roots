@@ -6,7 +6,8 @@ import {
   Navigate,
   useLocation,
 } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import AuthProvider from './context/AuthContext.jsx';
+import { useAuth } from './context/auth-context.js';
 import CurrencyProvider from './contexts/CurrencyContext.jsx';
 
 
@@ -19,6 +20,7 @@ import Register from './screens/Register';
 import AdminDashboard from './screens/AdminDashboard';
 import MerchantDashboard from './screens/MerchantDashboard';
 import MerchantProfile from './screens/MerchantProfile';
+import MerchantPayoutSettings from './screens/MerchantPayoutSettings';
 
 import Chat from './screens/Chat';
 import Artisans from './screens/Artisans';
@@ -161,6 +163,16 @@ const AppContent = () => {
             <ProtectedRoute
               allowedRoles={['MERCHANT']}
               element={<MerchantDashboard />}
+            />
+          }
+        />
+
+        <Route
+          path="/merchant/payout-settings"
+          element={
+            <ProtectedRoute
+              allowedRoles={['MERCHANT']}
+              element={<MerchantPayoutSettings />}
             />
           }
         />

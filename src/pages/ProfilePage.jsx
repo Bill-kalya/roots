@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
-import { useAuth } from "../context/AuthContext.jsx";
+import { useAuth } from "../context/auth-context.js";
 import { useNavigate } from "react-router-dom";
 import "./ProfilePage.css";
 

@@ -5,7 +5,7 @@ import "./Rootslanding.css";
 import Footer from "../components/Footer";
 import api, { addToCart, subscribeNewsletter } from "../services/api";
 import { resolveImageUrl } from "../lib/apiClient";
-import { useCurrency } from "../contexts/CurrencyContext.jsx";
+import { useCurrency } from "../contexts/useCurrency.js";
 import { formatMoney } from "../lib/formatMoney.js";
 import { tokenStore } from "../lib/tokenStore.js";
 

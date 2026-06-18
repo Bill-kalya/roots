@@ -26,10 +26,16 @@ import { tokenStore } from "../lib/tokenStore.js";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const WS_BASE = import.meta.env.VITE_WS_URL || "ws://localhost:8000";
+const WS_BASE = import.meta.env.VITE_WS_URL || getDefaultWebSocketBase();
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const MAX_BACKOFF_MS = 30_000;
+
+function getDefaultWebSocketBase() {
+  if (typeof window === "undefined") return "ws://localhost:8000";
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+  return `${protocol}://${window.location.host}`;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -216,7 +222,6 @@ export function useChat({ merchantId }) {
       // onclose fires after onerror and handles reconnect — just log here
       console.warn("[useChat] WebSocket error; reconnecting via onclose.");
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [safe]);
 
   // ─── Frame dispatcher ────────────────────────────────────────────────────

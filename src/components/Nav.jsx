@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
+import { useAuth } from "../context/auth-context.js";
 import { useCart } from "../contexts/CartContext.jsx";
 
 import COLORS from "./Colors";
@@ -8,7 +8,7 @@ import Button from "./Button";
 import Search from "./Search";
 import "./Nav.css";
 import CartDrawer from "./CartDrawer";
-import { useCurrency } from "../contexts/CurrencyContext.jsx";
+import { useCurrency } from "../contexts/useCurrency.js";
 
 
 function ProfileWrapper({ user, logout, navigate }) {
