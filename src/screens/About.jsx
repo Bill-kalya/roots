@@ -13,7 +13,7 @@ const VALUES = [
 ];
  
 const TEAM = [
-  { initials: "CD", name: "Carter Dave", role: "Founder & CEO", bio: "Former Art Enthusiasit and Collector, Carter founded Roots after witnessing how little of the art's value reached its makers." },
+  { photo: "/daviso.jpeg", initials: "CD", name: "Carter Dave", role: "Founder & CEO", bio: "Former Art Enthusiasit and Collector, Carter founded Roots after witnessing how little of the art's value reached its makers." },
   { initials: "DM", name: "Domnic Murray", role: "Head of Curation", bio: "An art historian specialising in West African material culture, Domnic has authenticated over 3,000 pieces across 15 countries." },
   { initials: "EK", name: "Edward Kiprotich", role: "Artisan Relations", bio: "Born in the interior of Kenya, Edward manages relationships with 200+ artisan cooperatives across East Africa." },
   { initials: "SL", name: "Sara Lindqvist", role: "Conservation", bio: "A trained conservator from the Rijksmuseum, Sara ensures every piece is preserved for centuries to come." },
@@ -139,7 +139,9 @@ export default function AboutPage() {
         <div className="team-grid">
           {TEAM.map((m, i) => (
             <div key={i} className={`team-member reveal ${teamVis ? "visible" : ""}`} style={{ transitionDelay: `${i * 120}ms` }}>
-              <div className="team-avatar">{m.initials}</div>
+              <div className={`team-avatar${m.photo ? ' has-photo' : ''}`}>
+            {m.photo ? <img src={m.photo} alt={m.name} /> : m.initials}
+          </div>
               <div className="team-name">{m.name}</div>
               <div className="team-role">{m.role}</div>
               <div className="team-bio">{m.bio}</div>
