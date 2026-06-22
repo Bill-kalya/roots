@@ -193,7 +193,7 @@ export default function CurrencyProvider({ children }) {
   useEffect(() => {
     if (detected) return;
 
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+    const apiBaseUrl = import.meta.env.VITE_API_URL || "https://api.shoproots.africa";
 
     fetch(`${apiBaseUrl}/api/v1/geo`)
       .then((res) => res.json())
