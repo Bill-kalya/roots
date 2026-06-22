@@ -1,8 +1,11 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/.*",
+      "dest": "/index.html"
     }
   ],
   "headers": [
@@ -11,7 +14,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; img-src 'self' https:; script-src 'self'; style-src 'self'; font-src 'self';"
+          "value": "default-src 'self'; img-src 'self' https: data:; script-src 'self' https://js.stripe.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://api.shoproots.africa https://api.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com;"
         },
         {
           "key": "X-Frame-Options",
