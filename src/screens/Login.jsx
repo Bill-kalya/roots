@@ -125,7 +125,7 @@ const Login = () => {
                 setError('');
 
                 try {
-                  await resendVerification();
+                  await resendVerification(email);
                   setVerifyEmailMessage(
                     'Verification email resent. Please check your inbox.'
                   );

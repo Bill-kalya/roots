@@ -131,7 +131,7 @@ const LoginMfaChallenge = () => {
                 setVerifyEmailBusy(true);
                 setVerifyEmailMessage('Sending a new verification email...');
                 try {
-                  await resendVerification();
+                  await resendVerification(state?.email);
                   setVerifyEmailMessage(
                     'Verification email resent. Please check your inbox.'
                   );

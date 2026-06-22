@@ -2,6 +2,7 @@ import './LoginMfaChallenge.css';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import apiClient from '../lib/apiClient.js';
+import { tokenStore } from '../lib/tokenStore.js';
 
 const MfaSetup = () => {
   const [loading, setLoading] = useState(false);
@@ -13,7 +14,7 @@ const MfaSetup = () => {
 
   const [code, setCode] = useState('');
 
-  const accessToken = localStorage.getItem('access_token');
+  const accessToken = tokenStore.getAccess();
 
   useEffect(() => {
     if (!accessToken) {
@@ -26,15 +27,7 @@ const MfaSetup = () => {
       setLoading(true);
       setError('');
       try {
-        const res = await apiClient.post(
-          '/api/auth/mfa/setup',
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
+        const res = await apiClient.post('/api/auth/mfa/setup', {}, { signal: undefined });
 
         const data = res.data || {};
         setSecret(data.secret || '');
@@ -58,15 +51,7 @@ const MfaSetup = () => {
     setError('');
 
     try {
-      const res = await apiClient.post(
-        '/api/auth/mfa/verify-enroll',
-        { code },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      const res = await apiClient.post('/api/auth/mfa/verify-enroll', { code });
 
       const data = res.data || {};
       if (data?.success) {
@@ -132,7 +117,7 @@ const MfaSetup = () => {
           />
 
           <button className="login-mfa-submit" type="submit" disabled={loading}>
-            {loading ? 'Verifying8…' : 'Enable MFA'}
+            {loading ? 'Verifying…' : 'Enable MFA'}
           </button>
         </form>
 

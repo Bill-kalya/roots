@@ -85,8 +85,8 @@ export async function verifyEmail(token, signal) {
 }
 
 // POST /api/auth/resend-verification
-export async function resendVerification(signal) {
-  const res = await api.post('/api/auth/resend-verification', {}, { signal });
+export async function resendVerification(email, signal) {
+  const res = await api.post('/api/auth/resend-verification', { email }, { signal });
   return res.data;
 }
 
