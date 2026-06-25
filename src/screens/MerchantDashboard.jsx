@@ -418,14 +418,27 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Final numeric sanitation before sending to backend.
+    const safePrice = Number.isFinite(parseFloat(formData.price)) ? parseFloat(formData.price) : null;
+    const safeStock = Number.isFinite(parseInt(formData.stock, 10)) ? parseInt(formData.stock, 10) : 0;
+    const safeYearRaw = formData.year === '' || formData.year === null ? null : formData.year;
+    const safeYear = safeYearRaw === null || !Number.isFinite(parseInt(safeYearRaw, 10)) ? null : parseInt(safeYearRaw, 10);
+    void safeYear;
+
+
+    if (safePrice === null) {
+      toast.error('Please enter a valid price');
+      return;
+    }
+
     const data = new FormData();
     data.append('name', formData.name);
     data.append('description', formData.description);
     data.append('long_description', formData.long_description || '');
-    data.append('price', formData.price);
+    data.append('price', String(safePrice));
     data.append('origin', formData.origin);
     data.append('tag', formData.tag || '');
-    data.append('stock', formData.stock);
+    data.append('stock', String(safeStock));
     data.append('is_featured', formData.is_featured ? 'true' : 'false');
 
     // NEW optional product fields
@@ -506,8 +519,13 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
               <label>Stock Quantity</label>
               <input
                 type="number"
+                min="0"
                 value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) })}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const parsed = raw === '' ? '' : parseInt(raw, 10);
+                  setFormData({ ...formData, stock: Number.isNaN(parsed) ? '' : parsed });
+                }}
                 required
               />
             </div>
@@ -602,7 +620,11 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
               <input
                 type="number"
                 value={formData.year}
-                onChange={(e) => setFormData({ ...formData, year: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const parsed = raw === '' ? '' : parseInt(raw, 10);
+                  setFormData({ ...formData, year: Number.isNaN(parsed) ? '' : parsed });
+                }}
                 placeholder="e.g., 2024"
               />
             </div>

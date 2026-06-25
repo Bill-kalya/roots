@@ -27,19 +27,37 @@ export default function MerchantPayoutSettings() {
   const [error, setError] = useState('');
 
   const [payoutMethod, setPayoutMethod] = useState('MPESA');
+
+  // M-PESA options
+  const [mpesaMode, setMpesaMode] = useState('PHONE'); // 'PHONE' | 'TILL' | 'POCHI'
   const [mpesaPhone, setMpesaPhone] = useState('');
+  const [mpesaTillNumber, setMpesaTillNumber] = useState('');
+  const [pochiPhone, setPochiPhone] = useState('');
+
+
+  // Other payout options
   const [paypalEmail, setPaypalEmail] = useState('');
   const [stripeAccountId, setStripeAccountId] = useState('');
+
   const [isVerified, setIsVerified] = useState(false);
   const [supportedMethods, setSupportedMethods] = useState(['MPESA']);
 
   const canSave = useMemo(() => {
     if (!supportedMethods.includes(payoutMethod)) return false;
-    if (payoutMethod === 'MPESA') return String(mpesaPhone || '').trim().length > 0;
+
+    if (payoutMethod === 'MPESA') {
+      if (mpesaMode === 'TILL') return String(mpesaTillNumber || '').trim().length > 0;
+      if (mpesaMode === 'POCHI') return String(pochiPhone || '').trim().length > 0;
+      // default PHONE
+      return String(mpesaPhone || '').trim().length > 0;
+    }
+
     if (payoutMethod === 'PAYPAL') return String(paypalEmail || '').trim().length > 0;
     if (payoutMethod === 'STRIPE') return String(stripeAccountId || '').trim().length > 0;
     return true;
-  }, [mpesaPhone, paypalEmail, stripeAccountId, payoutMethod, supportedMethods]);
+  }, [mpesaPhone, mpesaTillNumber, pochiPhone, paypalEmail, stripeAccountId, mpesaMode, payoutMethod, supportedMethods]);
+
+
 
   const load = async () => {
     setLoading(true);
@@ -54,7 +72,18 @@ export default function MerchantPayoutSettings() {
           ? data.payout_method
           : getDefaultMethod(supported)
       );
+
+      // M-PESA: PHONE | TILL | POCHI
+      if (data?.mpesa_mode === 'TILL') setMpesaMode('TILL');
+      else if (data?.mpesa_mode === 'POCHI') setMpesaMode('POCHI');
+      else setMpesaMode('PHONE');
+
       setMpesaPhone(data?.mpesa_phone || '');
+      setMpesaTillNumber(data?.mpesa_till_number || '');
+      setPochiPhone(data?.pochi_phone || '');
+
+
+      // Other methods
       setPaypalEmail(data?.paypal_email || '');
       setStripeAccountId(data?.stripe_account_id || '');
       setIsVerified(Boolean(data?.is_verified));
@@ -66,6 +95,7 @@ export default function MerchantPayoutSettings() {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     load();
@@ -82,8 +112,15 @@ export default function MerchantPayoutSettings() {
       const payload = { payout_method: payoutMethod };
 
       if (payoutMethod === 'MPESA') {
-        payload.mpesa_phone = mpesaPhone;
+        payload.mpesa_mode = mpesaMode;
+        payload.mpesa_phone = mpesaMode === 'PHONE' ? mpesaPhone : null;
+        payload.mpesa_till_number = mpesaMode === 'TILL' ? mpesaTillNumber : null;
+        payload.pochi_phone = mpesaMode === 'POCHI' ? pochiPhone : null;
       }
+
+
+
+
       if (payoutMethod === 'PAYPAL') {
         payload.paypal_email = paypalEmail;
       }
@@ -166,18 +203,85 @@ export default function MerchantPayoutSettings() {
 
           {payoutMethod === 'MPESA' && (
             <div className="form-group">
-              <label>M-PESA phone number</label>
-              <input
-                type="text"
-                placeholder="e.g., 2547XXXXXXXX"
-                value={mpesaPhone}
-                onChange={(e) => setMpesaPhone(e.target.value)}
-              />
+              <label>M-PESA receiving option</label>
+
+              <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <input
+                    type="radio"
+                    name="mpesaMode"
+                    value="PHONE"
+                    checked={mpesaMode === 'PHONE'}
+                    onChange={() => setMpesaMode('PHONE')}
+                  />
+                  Phone number
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <input
+                    type="radio"
+                    name="mpesaMode"
+                    value="TILL"
+                    checked={mpesaMode === 'TILL'}
+                    onChange={() => setMpesaMode('TILL')}
+                  />
+                  Till Number (Buy Goods)
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <input
+                    type="radio"
+                    name="mpesaMode"
+                    value="POCHI"
+                    checked={mpesaMode === 'POCHI'}
+                    onChange={() => setMpesaMode('POCHI')}
+                  />
+                  Pochi la Biashara
+                </label>
+              </div>
+
+              {mpesaMode === 'PHONE' && (
+                <input
+                  type="text"
+                  placeholder="e.g., 2547XXXXXXXX"
+                  value={mpesaPhone}
+                  onChange={(e) => setMpesaPhone(e.target.value)}
+                />
+              )}
+
+              {mpesaMode === 'TILL' && (
+                <input
+                  type="text"
+                  placeholder="e.g., 174379"
+                  value={mpesaTillNumber}
+                  onChange={(e) =>
+                    setMpesaTillNumber(e.target.value.replace(/\D/g, '').slice(0, 10))
+                  }
+                  maxLength={10}
+                />
+              )}
+
+              {mpesaMode === 'POCHI' && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="e.g., 2547XXXXXXXX"
+                    value={pochiPhone}
+                    onChange={(e) => setPochiPhone(e.target.value)}
+                  />
+                  <small style={{ color: '#888' }}>
+                    The phone number registered to your Pochi la Biashara account
+                  </small>
+                </>
+              )}
+
+
               <div style={{ marginTop: 8, color: '#D4B896', fontSize: 13 }}>
                 {isVerified ? 'Verified' : 'Not verified yet'}
               </div>
             </div>
           )}
+
 
           {payoutMethod === 'PAYPAL' && (
             <div className="form-group">
