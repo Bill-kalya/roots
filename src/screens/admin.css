@@ -202,7 +202,42 @@ background: var(--background);
   inset 0 -4px 8px rgba(0, 0, 0, 0.5),
   0 6px 16px rgba(0, 0, 0, 0.45);
   }
+
+  .admin-header-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .top-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom-grid {
+    grid-template-columns: 1fr;
+  }
 }
+
+@media (max-width: 640px) {
+  .admin-main {
+    padding: 12px;
+  }
+
+  .admin-header {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .admin-header-actions .btn {
+    width: 100%;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 12px;
+    font-size: 13px;
+  }
+}
+
 
 
 .admin-header h1 {

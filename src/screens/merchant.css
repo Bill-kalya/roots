@@ -276,3 +276,70 @@
   color: var(--text);
 }
 
+/* =========================
+   Responsive tweaks (Merchant/Admin)
+   ========================= */
+
+@media (max-width: 900px) {
+  .merchant-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .merchant-header-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .merchant-header-actions .btn {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .merchant-main {
+    padding: 14px;
+  }
+
+  .merchant-section {
+    padding: 14px;
+  }
+
+  .form-group {
+    padding: 0;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .modal-header {
+    padding: 18px 14px;
+  }
+
+  .modal-footer {
+    padding: 14px;
+    justify-content: stretch;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  .product-image {
+    height: 160px;
+  }
+
+  .product-actions {
+    flex-direction: column;
+  }
+
+  .product-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+
