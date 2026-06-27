@@ -1,5 +1,11 @@
 export function formatMoney(amountInKes, currency) {
-  const num = typeof amountInKes === "number" ? amountInKes : Number(amountInKes);
+  // amountInKes is expected to be a numeric KES amount from the backend.
+  // Frontend sometimes receives strings like "12,000"; normalize them.
+  const numRaw = typeof amountInKes === "number" ? amountInKes : amountInKes;
+  const num =
+    typeof numRaw === "string"
+      ? Number(numRaw.replace(/[^0-9.-]/g, ""))
+      : Number(numRaw);
   const safe = Number.isFinite(num) ? num : 0;
 
   if (!currency || !currency.rate) {

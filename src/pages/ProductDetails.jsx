@@ -9,10 +9,14 @@ import { addToCart, getProduct } from "../services/api";
 import { toast } from "sonner";
 
 import { resolveImageUrl } from "../lib/apiClient";
+import { useCurrency } from "../contexts/useCurrency.js";
+import { formatMoney } from "../lib/formatMoney";
 
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { currency } = useCurrency();
+
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -133,7 +137,17 @@ export default function ProductDetails() {
             <h1 className="details-title">{product.name}</h1>
 
             <div className="details-price">
-              KSh {product.price?.toLocaleString() ?? "—"}
+              {(() => {
+                // Prefer shared currency conversion used across the app.
+                // ProductDetails previously hardcoded KSh and never converted.
+                try {
+                  // Lazy require to avoid refactoring imports too aggressively.
+                  return formatMoney(product.price, currency);
+                } catch {
+                  const v = product.price ?? "—";
+                  return `KSh ${Number(v).toLocaleString()}`;
+                }
+              })()}
             </div>
 
 
