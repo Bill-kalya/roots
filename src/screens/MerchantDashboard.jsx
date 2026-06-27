@@ -12,9 +12,13 @@ import {
 import './merchant.css';
 import { resolveImageUrl } from '../lib/apiClient';
 import { toast } from 'sonner';
+import { useCurrency } from '../contexts/useCurrency';
+import { formatMoney } from '../lib/formatMoney';
 
 const MerchantDashboard = () => {
   const navigate = useNavigate();
+  const { currency } = useCurrency();
+
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [analytics, setAnalytics] = useState({
@@ -30,8 +34,10 @@ const MerchantDashboard = () => {
   const [error, setError] = useState(null);
 
   const applyMerchantData = (productsData, ordersData, analyticsData) => {
-    setProducts(Array.isArray(productsData) ? productsData : (productsData?.items ?? []));
-    setOrders(Array.isArray(ordersData) ? ordersData : (ordersData?.items ?? []));
+    setProducts(
+      Array.isArray(productsData) ? productsData : productsData?.items ?? []
+    );
+    setOrders(Array.isArray(ordersData) ? ordersData : ordersData?.items ?? []);
     setAnalytics(analyticsData || {});
     setLoading(false);
   };
@@ -140,7 +146,7 @@ const MerchantDashboard = () => {
     loadMerchantData();
   };
 
-  const normalizeMerchantOrderRow = (order) => {
+  const normalizeMerchantOrderRow = (order, currency) => {
     const id = order?.id ?? order?._id ?? order?.order_id ?? '';
 
     const customer_name =
@@ -166,10 +172,10 @@ const MerchantDashboard = () => {
           ? Number(rawTotal)
           : 0;
 
-    const total_display =
-      typeof rawTotal === 'string' && rawTotal.includes('$')
-        ? rawTotal
-        : `$${(Number.isFinite(totalNumber) ? totalNumber : 0).toFixed(2)}`;
+    const total_display = formatMoney(
+      Number.isFinite(totalNumber) ? totalNumber : 0,
+      currency
+    );
 
     const rawStatus = (order?.status ?? order?.order_status ?? '').toString();
 
@@ -215,8 +221,6 @@ const MerchantDashboard = () => {
     );
   }
 
-  console.log('MerchantDashboard Products state:', products);
-
   return (
     <div className="merchant-main">
       {error && (
@@ -260,7 +264,9 @@ const MerchantDashboard = () => {
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-title">Total Sales</div>
-          <div className="stat-value">${analytics.totalSales?.toLocaleString?.() || 0}</div>
+          <div className="stat-value">
+            {formatMoney(Number(analytics.totalSales || 0), currency)}
+          </div>
         </div>
 
         <div className="stat-card">
@@ -275,7 +281,9 @@ const MerchantDashboard = () => {
 
         <div className="stat-card">
           <div className="stat-title">Total Revenue</div>
-          <div className="stat-value">${analytics.totalRevenue?.toLocaleString?.() || 0}</div>
+          <div className="stat-value">
+            {formatMoney(Number(analytics.totalRevenue || 0), currency)}
+          </div>
         </div>
       </div>
 
@@ -291,18 +299,15 @@ const MerchantDashboard = () => {
                 productId: product.id,
               });
             }
-            // Ensure visibility even if the global landing page animation CSS
-            // expects `product-card-visible`.
+
             return (
               <div key={product.id ?? idx} className="product-card product-card-visible">
-                <img
-                  src={resolved}
-                  alt={product.name}
-                  className="product-image"
-                />
+                <img src={resolved} alt={product.name} className="product-image" />
                 <div className="product-info">
                   <h3>{product.name}</h3>
-                  <p className="product-price">${product.price}</p>
+                  <p className="product-price">
+                    {formatMoney(Number(product.price || 0), currency)}
+                  </p>
                   <p className="product-stock">Stock: {product.stock} units</p>
                   <div className="product-actions">
                     <button
@@ -344,7 +349,7 @@ const MerchantDashboard = () => {
             </thead>
             <tbody>
               {orders.map((order) => {
-                const normalized = normalizeMerchantOrderRow(order);
+                const normalized = normalizeMerchantOrderRow(order, currency);
                 return (
                   <tr key={normalized.id}>
                     <td>#{String(normalized.id).slice(0, 8)}</td>
@@ -352,12 +357,18 @@ const MerchantDashboard = () => {
                     <td>{normalized.items_count} items</td>
                     <td>{normalized.total_display}</td>
                     <td>
-                      <span className={`status-badge status-${normalized.status_badge_key}`}>{normalized.status_label}</span>
+                      <span
+                        className={`status-badge status-${normalized.status_badge_key}`}
+                      >
+                        {normalized.status_label}
+                      </span>
                     </td>
                     <td>
                       <select
                         value={normalized.status}
-                        onChange={(e) => handleUpdateOrderStatus(normalized.id, e.target.value)}
+                        onChange={(e) =>
+                          handleUpdateOrderStatus(normalized.id, e.target.value)
+                        }
                         className="status-select"
                       >
                         <option value="pending">Pending</option>
@@ -383,13 +394,14 @@ const MerchantDashboard = () => {
             setShowProductForm(false);
             setEditingProduct(null);
           }}
+          currency={currency}
         />
       )}
     </div>
   );
 };
 
-const ProductFormModal = ({ product, onSave, onClose }) => {
+const ProductFormModal = ({ product, onSave, onClose, currency }) => {
   const [formData, setFormData] = useState({
     name: product?.name || '',
     description: product?.description || '',
@@ -412,19 +424,21 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
 
   const isEditing = Boolean(product);
 
-
   const [imagePreview, setImagePreview] = useState(product?.image_url || null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Final numeric sanitation before sending to backend.
-    const safePrice = Number.isFinite(parseFloat(formData.price)) ? parseFloat(formData.price) : null;
-    const safeStock = Number.isFinite(parseInt(formData.stock, 10)) ? parseInt(formData.stock, 10) : 0;
+    const safePrice =
+      Number.isFinite(parseFloat(formData.price)) ? parseFloat(formData.price) : null;
+    const safeStock =
+      Number.isFinite(parseInt(formData.stock, 10)) ? parseInt(formData.stock, 10) : 0;
     const safeYearRaw = formData.year === '' || formData.year === null ? null : formData.year;
-    const safeYear = safeYearRaw === null || !Number.isFinite(parseInt(safeYearRaw, 10)) ? null : parseInt(safeYearRaw, 10);
+    const safeYear =
+      safeYearRaw === null || !Number.isFinite(parseInt(safeYearRaw, 10))
+        ? null
+        : parseInt(safeYearRaw, 10);
     void safeYear;
-
 
     if (safePrice === null) {
       toast.error('Please enter a valid price');
@@ -441,7 +455,6 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
     data.append('stock', String(safeStock));
     data.append('is_featured', formData.is_featured ? 'true' : 'false');
 
-    // NEW optional product fields
     data.append('artisan', formData.artisan || '');
     data.append('weight', formData.weight || '');
     data.append('dimensions', formData.dimensions || '');
@@ -449,20 +462,15 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
       data.append('year', String(formData.year));
     }
 
-    // Materials — backend expects JSON array string (e.g. ["Wood","Brass"])
     data.append('materials', JSON.stringify(formData.materials));
-
-    // Gallery — was missing entirely
     data.append('gallery', JSON.stringify(formData.gallery));
 
     if (formData.image_file) {
       data.append('image', formData.image_file);
     } else if (!isEditing) {
-      // New product — image is required
       toast.error('Please select a product image');
       return;
     }
-    // Editing with no new file: do not append `image` so backend keeps existing image.
 
     onSave(data);
   };
@@ -504,9 +512,12 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
               rows="4"
             />
           </div>
+
           <div className="form-row">
             <div className="form-group">
-              <label>Price ($)</label>
+              <label>
+                Price ({currency?.code || 'KES'})
+              </label>
               <input
                 type="number"
                 step="0.01"
@@ -530,10 +541,10 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
               />
             </div>
           </div>
+
           <div className="form-group">
             <label>Product Image</label>
 
-            {/* Preview */}
             {imagePreview && (
               <div style={{ marginBottom: '8px' }}>
                 <img
@@ -562,6 +573,7 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
             />
             <small style={{ color: '#888' }}>JPG, PNG, WEBP — max 5MB</small>
           </div>
+
           <div className="form-row">
             <div className="form-group">
               <label>Origin</label>
@@ -649,6 +661,7 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
               placeholder="e.g., Wood, Brass, Cotton"
             />
           </div>
+
           <div className="form-group">
             <label>
               <input
@@ -659,6 +672,7 @@ const ProductFormModal = ({ product, onSave, onClose }) => {
               Feature this product
             </label>
           </div>
+
           <div className="modal-footer">
             <button type="button" className="btn" onClick={onClose}>
               Cancel

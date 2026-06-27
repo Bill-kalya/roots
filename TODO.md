@@ -1,8 +1,7 @@
-# TODO
-
-## Current issue: CartContext export mismatch
-
-- [ ] Update `src/contexts/CartContext.jsx` to export `useCart` (named export) matching `CartDrawer.jsx` import.
-- [ ] Ensure the file also exports `CartProvider` (if it’s used anywhere else) and keeps existing default export behavior.
-- [ ] Run `npm test` / `npm run lint` (or `npm run dev` build check) to confirm the runtime error is gone.
+- [ ] Update MerchantDashboard.jsx to use currency from useCurrency.
+- [ ] Replace hardcoded USD formatting in stats (Total Sales/Total Revenue) with formatMoney(..., currency).
+- [ ] Replace product price display with formatMoney(..., currency).
+- [ ] Update orders table total_display to use formatMoney and refactor normalizeMerchantOrderRow(order, currency) call.
+- [ ] Update ProductFormModal label from "Price ($)" to include currency code.
+- [ ] Run lint/build (or equivalent) to ensure no syntax errors.
 
