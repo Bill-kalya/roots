@@ -90,6 +90,10 @@ export function useChat({ merchantId }) {
   const pendingQueue = useRef([]); // frames buffered while reconnecting
   const isMounted = useRef(true);
 
+  const handleFrameRef = useRef(null);
+  const scheduleReconnectRef = useRef(null);
+
+
   // ─── Safe state setter ────────────────────────────────────────────────────
 
   const safe = useCallback((setter, value) => {
@@ -142,6 +146,7 @@ export function useChat({ merchantId }) {
   // ─── Step 2 & 3: Fetch room key and init encryption ─────────────────────
 
   const fetchAndInitKey = useCallback(async (roomId) => {
+
     try {
       const res = await fetch(
         `${API_BASE}/conversations/room-key?room_id=${encodeURIComponent(roomId)}`,
@@ -205,7 +210,7 @@ export function useChat({ merchantId }) {
         return;
       }
       if (!frame?.type) return;
-      handleFrame(frame);
+      handleFrameRef.current?.(frame);
     };
 
     ws.onclose = (evt) => {
@@ -215,8 +220,9 @@ export function useChat({ merchantId }) {
         return;
       }
       safe(setStatus, "reconnecting");
-      scheduleReconnect();
+      scheduleReconnectRef.current?.();
     };
+
 
     ws.onerror = () => {
       // onclose fires after onerror and handles reconnect — just log here
@@ -226,9 +232,14 @@ export function useChat({ merchantId }) {
 
   // ─── Frame dispatcher ────────────────────────────────────────────────────
 
-  const handleFrame = useCallback(
-    (frame) => {
+  // kept as a stable callback and dispatched via handleFrameRef
+  // keep as stable callback; dispatched via handleFrameRef
+  // (reference wiring below ensures the callback is actually used)
+  useEffect(() => {
+    // keep handleFrameRef in sync with the latest callback implementation
+    handleFrameRef.current = (frame) => {
       switch (frame.type) {
+
         case "conversation": {
           safe(setConversation, frame.conversation ?? frame);
           safe(setStatus, "open");
@@ -294,15 +305,15 @@ export function useChat({ merchantId }) {
         }
 
         case "typing":
-          // No backend relay yet — ignore silently
           break;
 
         default:
           break;
       }
-    },
-    [safe, tryDecrypt, upsertMessage]
-  );
+    };
+  }, [safe, tryDecrypt, upsertMessage, setMessages, setConversation, setStatus]);
+
+
 
   // ─── Reconnect with exponential back-off ────────────────────────────────
 
@@ -314,6 +325,11 @@ export function useChat({ merchantId }) {
       if (isMounted.current) openSocket(roomInfoRef.current);
     }, delay);
   }, [openSocket]);
+
+  useEffect(() => {
+    scheduleReconnectRef.current = scheduleReconnect;
+  }, [scheduleReconnect]);
+
 
   // ─── sendMessage — encrypts when key is loaded ─────────────────────────
 

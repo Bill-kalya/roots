@@ -6,11 +6,7 @@ import { tokenStore } from "../lib/tokenStore.js";
 
 import CartContext from "./cart-context.js";
 
-export function useCart() {
-  const ctx = React.useContext(CartContext);
-  if (!ctx) throw new Error('useCart must be used within CartProvider');
-  return ctx;
-}
+
 
 export default function CartProvider({ children }) {
   const [cart, setCart] = useState(null);
