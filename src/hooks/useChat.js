@@ -23,11 +23,11 @@ import {
 } from "../utils/encryption.js";
 
 import { tokenStore } from "../lib/tokenStore.js";
+import apiClient from "../lib/apiClient.js";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const WS_BASE = import.meta.env.VITE_WS_URL || getDefaultWebSocketBase();
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const MAX_BACKOFF_MS = 30_000;
 
@@ -43,12 +43,6 @@ function getToken() {
   return tokenStore.getAccess();
 }
 
-function authHeaders() {
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${getToken()}`,
-  };
-}
 
 function localTime() {
   return new Date().toLocaleTimeString("en-KE", {
@@ -127,39 +121,30 @@ export function useChat({ merchantId }) {
 
     safe(setStatus, "resolving");
 
-    const res = await fetch(`${API_BASE}/conversations/resolve-room`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({ merchant_id: merchantId }),
+    const res = await apiClient.post("/conversations/resolve-room", {
+      merchant_id: merchantId,
     });
 
-    if (!res.ok) {
-      const body = await res.text().catch(() => String(res.status));
-      throw new Error(`resolve-room ${res.status}: ${body}`);
-    }
-
-    const data = await res.json();
-    roomInfoRef.current = data;
-    return data; // { room_id, customer_id, merchant_id }
+    roomInfoRef.current = res.data;
+    return res.data; // { room_id, customer_id, merchant_id }
   }, [merchantId, safe]);
+
 
   // ─── Step 2 & 3: Fetch room key and init encryption ─────────────────────
 
   const fetchAndInitKey = useCallback(async (roomId) => {
 
     try {
-      const res = await fetch(
-        `${API_BASE}/conversations/room-key?room_id=${encodeURIComponent(roomId)}`,
-        { headers: authHeaders() }
+      const res = await apiClient.get(
+        "/conversations/room-key",
+        {
+          params: { room_id: roomId },
+        }
       );
 
-      if (!res.ok) {
-        const body = await res.text().catch(() => String(res.status));
-        throw new Error(`room-key ${res.status}: ${body}`);
-      }
-
-      const { key } = await res.json();
+      const { key } = res.data;
       await initEncryption(key);
+
 
       safe(setEncryptionStatus, "active");
       console.info("[useChat] E2EE active for room", roomId);
