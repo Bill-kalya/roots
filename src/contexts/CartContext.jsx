@@ -4,9 +4,9 @@ import React, { useCallback, useEffect, useMemo, useState, useRef } from "react"
 import { getCart } from "../services/api";
 import { tokenStore } from "../lib/tokenStore.js";
 
-import CartContext from "./cart-context.js";
+import CartContext, { useCart } from "./cart-context.js";
 
-
+export { useCart };
 
 export default function CartProvider({ children }) {
   const [cart, setCart] = useState(null);
