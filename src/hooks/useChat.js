@@ -30,6 +30,7 @@ import apiClient from "../lib/apiClient.js";
 const WS_BASE = import.meta.env.VITE_WS_URL || getDefaultWebSocketBase();
 
 const MAX_BACKOFF_MS = 30_000;
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 function getDefaultWebSocketBase() {
   if (typeof window === "undefined") return "ws://localhost:8000";
@@ -81,7 +82,10 @@ export function useChat({ merchantId }) {
   const roomInfoRef = useRef(null); // { room_id, customer_id, merchant_id }
   const backoffRef = useRef(1_000);
   const reconnectTimer = useRef(null);
+  const reconnectAttemptsRef = useRef(0);
+
   const pendingQueue = useRef([]); // frames buffered while reconnecting
+
   const isMounted = useRef(true);
 
   const handleFrameRef = useRef(null);
@@ -304,12 +308,35 @@ export function useChat({ merchantId }) {
 
   const scheduleReconnect = useCallback(() => {
     if (!isMounted.current) return;
+
+    // Hard stop after a few structural failures to avoid hammering.
+    // (e.g., backend init crash causing immediate close)
+    const attempts = reconnectTimer.current?.__attempts ?? 0;
+    if (attempts >= MAX_RECONNECT_ATTEMPTS) {
+      safe(setStatus, "error");
+      return;
+    }
+
+    // Reset attempts after a successful connect.
+    // openSocket sets backoffRef but we also stop retries here only.
+    // (If you want retries to reset on open, do it there too.)
+    if (attempts >= MAX_RECONNECT_ATTEMPTS) {
+      safe(setStatus, "error");
+      return;
+    }
+
+    const nextAttempts = attempts + 1;
     const delay = Math.min(backoffRef.current, MAX_BACKOFF_MS);
-    backoffRef.current = Math.min(backoffRef.current * 2, MAX_BACKOFF_MS);
-    reconnectTimer.current = setTimeout(() => {
+    const t = setTimeout(() => {
       if (isMounted.current) openSocket(roomInfoRef.current);
     }, delay);
-  }, [openSocket]);
+
+    // attach attempts metadata
+    t.__attempts = nextAttempts;
+    reconnectTimer.current = t;
+
+    backoffRef.current = Math.min(backoffRef.current * 2, MAX_BACKOFF_MS);
+  }, [openSocket, safe]);
 
   useEffect(() => {
     scheduleReconnectRef.current = scheduleReconnect;

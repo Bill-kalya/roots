@@ -473,21 +473,7 @@ function CheckoutInner() {
           return;
         }
 
-        const subtotal = items.reduce((sum, item) => {
-          const price = Number(item.price || 0);
-          const qty = Number(item.quantity || 1);
-          return sum + price * qty;
-        }, 0);
-
-        const shipping = getShippingFee();
-        const total = Math.ceil(subtotal + shipping);
-
-        if (total < 1) {
-          alert("Invalid cart total.");
-          setSubmitting(false);
-          return;
-        }
-
+        // We still validate/normalize the phone, but the backend derives the canonical amount from the Order row.
         const raw = mpesaPhone.trim().replace(/\s+/g, "").replace("+", "");
         const phone = raw.startsWith("0") ? "254" + raw.slice(1) : raw;
 
@@ -497,13 +483,34 @@ function CheckoutInner() {
           return;
         }
 
+        const shipping = getShippingFee();
+
+        const { createOrder: createInternalOrder } = await import("../api/orders.js");
         const { startMpesaPayment, getPaymentStatus } = await import("../api/payments.js");
+
+        let internalOrder;
+        try {
+          internalOrder = await createInternalOrder({
+            shipping_fee: shipping,
+            payment_method: "mpesa",
+            // Prefer passing mpesa_phone if backend uses it to populate STK push fields.
+            mpesa_phone: phone,
+            delivery,
+            cancel_url: window.location.origin + "/payments/cancel",
+            success_url: window.location.origin + "/payments/success",
+          });
+        } catch (err) {
+          const detail = err?.response?.data?.detail || err?.message || "Could not create order.";
+          alert(`Order error: ${detail}`);
+          setSubmitting(false);
+          return;
+        }
 
         const response = await startMpesaPayment({
           phone,
-          amount: total,
-          order_reference: `ROOTS-${Date.now()}`,
+          order_id: internalOrder.id,
         });
+
 
         const checkoutRequestId = response.checkout_request_id;
         if (!checkoutRequestId) throw new Error("Missing checkout_request_id from backend response.");
