@@ -1,17 +1,16 @@
-import React, { useEffect, useState } from "react";
-import api from "../services/api";
+import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useOrders } from "../hooks/useOrders.js";
 import "./OrdersPage.css";
 
-
-const STATUS_COLORS = {
-  Delivered: { bg: "rgba(74,180,100,0.12)", text: "#5ecb78", border: "rgba(74,180,100,0.25)" },
-  "In Transit": { bg: "rgba(247,165,75,0.12)", text: "#f7a54b", border: "rgba(247,165,75,0.3)" },
-  Processing: { bg: "rgba(100,140,240,0.12)", text: "#8aabff", border: "rgba(100,140,240,0.25)" },
-  Cancelled: { bg: "rgba(220,80,80,0.1)", text: "#e07070", border: "rgba(220,80,80,0.2)" },
-};
-
 function StatusBadge({ status }) {
+  const STATUS_COLORS = {
+    Delivered: { bg: "rgba(74,180,100,0.12)", text: "#5ecb78", border: "rgba(74,180,100,0.25)" },
+    "In Transit": { bg: "rgba(247,165,75,0.12)", text: "#f7a54b", border: "rgba(247,165,75,0.3)" },
+    Processing: { bg: "rgba(100,140,240,0.12)", text: "#8aabff", border: "rgba(100,140,240,0.25)" },
+    Cancelled: { bg: "rgba(220,80,80,0.1)", text: "#e07070", border: "rgba(220,80,80,0.2)" },
+  };
+
   const c = STATUS_COLORS[status] || STATUS_COLORS["Processing"];
   return (
     <span
@@ -23,22 +22,25 @@ function StatusBadge({ status }) {
   );
 }
 
-function OrderCard({ order }) {
-  const [expanded, setExpanded] = useState(false);
+function OrderCard({ order, onTrack, onBuyAgain, onCancel, onReturn, isCancelling, isReturning }) {
+  const [expanded, setExpanded] = React.useState(false);
 
   return (
     <div className={`order-card ${expanded ? "expanded" : ""}`}>
       <button className="order-card-header" onClick={() => setExpanded(p => !p)}>
         <div className="order-meta">
-          <span className="order-id">{order.id}</span>
-          <span className="order-date">{order.date}</span>
+          <span className="order-id">{order.id || order.order_id}</span>
+          <span className="order-date">{order.date || order.created_at}</span>
         </div>
         <div className="order-right">
           <StatusBadge status={order.status} />
-          <span className="order-total">{order.total}</span>
+          <span className="order-total">{order.total || order.total_amount}</span>
           <svg
             className={`order-chevron ${expanded ? "open" : ""}`}
-            width="14" height="14" viewBox="0 0 12 12" fill="none"
+            width="14"
+            height="14"
+            viewBox="0 0 12 12"
+            fill="none"
           >
             <path d="M2 4L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
@@ -48,7 +50,7 @@ function OrderCard({ order }) {
       {expanded && (
         <div className="order-items">
           <div className="order-items-divider" />
-          {order.items.map((item, i) => (
+          {order.items && order.items.map((item, i) => (
             <div className="order-item-row" key={i}>
               <div className="order-item-thumb">
                 {item.img
@@ -58,14 +60,44 @@ function OrderCard({ order }) {
               </div>
               <div className="order-item-info">
                 <span className="item-name">{item.name}</span>
-                <span className="item-qty">Qty: {item.qty}</span>
+                <span className="item-qty">Qty: {item.qty || item.quantity}</span>
               </div>
-              <span className="item-price">{item.price}</span>
+              <span className="item-price">{item.price || item.unit_price}</span>
             </div>
           ))}
           <div className="order-actions">
-            <button className="btn-ghost">Track Order</button>
-            <button className="btn-ghost">Buy Again</button>
+            <button
+              className="btn-ghost"
+              onClick={() => onTrack(order.id || order.order_id)}
+              disabled={isCancelling || isReturning}
+            >
+              Track Order
+            </button>
+            <button
+              className="btn-ghost"
+              onClick={() => onBuyAgain(order.id || order.order_id)}
+              disabled={isCancelling || isReturning}
+            >
+              Buy Again
+            </button>
+            {order.status !== 'Cancelled' && order.status !== 'Delivered' && (
+              <button
+                className="btn-ghost btn-danger-ghost"
+                onClick={() => onCancel(order.id || order.order_id)}
+                disabled={isCancelling || isReturning}
+              >
+                {isCancelling ? 'Cancelling...' : 'Cancel Order'}
+              </button>
+            )}
+            {order.status === 'Delivered' && (
+              <button
+                className="btn-ghost"
+                onClick={() => onReturn(order.id || order.order_id)}
+                disabled={isCancelling || isReturning}
+              >
+                {isReturning ? 'Processing...' : 'Request Return'}
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -75,48 +107,55 @@ function OrderCard({ order }) {
 
 export default function OrdersPage() {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState("All");
-  const filters = ["All", "Delivered", "In Transit", "Processing"];
+  const {
+    visibleOrders,
+    filter,
+    loading,
+    error,
+    actionError,
+    updateFilter,
+    handleTrackOrder,
+    handleReorder,
+    handleCancelOrder,
+    handleRequestReturn,
+    refresh,
+    cancelling,
+    returning,
+  } = useOrders();
 
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const handleTrack = useCallback(async (orderId) => {
+    try {
+      const trackingInfo = await handleTrackOrder(orderId);
+      // Display tracking info (could be a modal or alert for now)
+      alert(`Tracking: ${JSON.stringify(trackingInfo, null, 2)}`);
+    } catch (err) {
+      // Error is already handled in the hook
+    }
+  }, [handleTrackOrder]);
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const handleBuyAgain = useCallback(async (orderId) => {
+    try {
+      const result = await handleReorder(orderId);
+      alert('Items added to cart!');
+      // Optionally navigate to cart
+      // navigate('/basket');
+    } catch (err) {
+      // Error is already handled in the hook
+    }
+  }, [handleReorder]);
 
-        const res = await api.get("/api/user/orders/");
-        const data = res?.data;
+  const handleCancel = useCallback(async (orderId) => {
+    if (window.confirm('Are you sure you want to cancel this order?')) {
+      await handleCancelOrder(orderId, 'User requested cancellation');
+    }
+  }, [handleCancelOrder]);
 
-        const list = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.orders)
-            ? data.orders
-            : [];
-
-        if (!alive) return;
-        setOrders(list);
-      } catch (e) {
-        if (!alive) return;
-        setError(e?.response?.data?.message || e?.message || "Failed to load orders");
-      } finally {
-        if (alive) {
-          setLoading(false);
-        }
-      }
-
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const visible = filter === "All" ? orders : orders.filter((o) => o.status === filter);
+  const handleReturn = useCallback(async (orderId) => {
+    const reason = prompt('Please provide a reason for the return:');
+    if (reason) {
+      await handleRequestReturn(orderId, reason);
+    }
+  }, [handleRequestReturn]);
 
   return (
     <div className="page-shell">
@@ -134,13 +173,22 @@ export default function OrdersPage() {
           <p className="page-subtitle">Track and manage your purchases</p>
         </div>
 
+        {/* Action error */}
+        {actionError && (
+          <div className="action-error" role="alert">
+            {actionError}
+            <button className="error-dismiss" onClick={() => {}}>×</button>
+          </div>
+        )}
+
         {/* Filter pills */}
         <div className="filter-pills">
-          {filters.map(f => (
+          {["All", "Delivered", "In Transit", "Processing"].map(f => (
             <button
               key={f}
               className={`filter-pill ${filter === f ? "active" : ""}`}
-              onClick={() => setFilter(f)}
+              onClick={() => updateFilter(f)}
+              disabled={loading}
             >
               {f}
             </button>
@@ -158,14 +206,28 @@ export default function OrdersPage() {
             <div className="empty-state">
               <span className="empty-icon">⚠️</span>
               <p>{error}</p>
+              <button className="btn-ghost" onClick={refresh}>
+                Retry
+              </button>
             </div>
-          ) : visible.length === 0 ? (
+          ) : visibleOrders.length === 0 ? (
             <div className="empty-state">
               <span className="empty-icon">📦</span>
               <p>No orders found</p>
             </div>
           ) : (
-            visible.map((order) => <OrderCard key={order.id || order.order_id} order={order} />)
+            visibleOrders.map((order) => (
+              <OrderCard
+                key={order.id || order.order_id}
+                order={order}
+                onTrack={handleTrack}
+                onBuyAgain={handleBuyAgain}
+                onCancel={handleCancel}
+                onReturn={handleReturn}
+                isCancelling={cancelling === (order.id || order.order_id)}
+                isReturning={returning === (order.id || order.order_id)}
+              />
+            ))
           )}
         </div>
 

@@ -259,6 +259,24 @@ export const getMerchantEarnings = (signal) =>
     .then((res) => res.data);
 
 // =========================
+// MERCHANT PAYOUT REQUESTS
+// =========================
+export const requestPayout = (payload, signal) =>
+  api
+    .post('/api/merchant/payouts/request', payload, { signal })
+    .then((res) => res.data);
+
+export const getMerchantPayouts = (signal) =>
+  api
+    .get('/api/merchant/payouts', { signal })
+    .then((res) => res.data);
+
+export const getMerchantLedger = (params, signal) =>
+  api
+    .get('/api/merchant/ledger', { params, signal })
+    .then((res) => res.data);
+
+// =========================
 // ADMIN
 // =========================
 export const getAnalytics = (signal) =>
@@ -269,6 +287,19 @@ export const getOrders = (params, signal) =>
 
 export const updateSystemSettings = (data, signal) =>
   api.put('/api/admin/settings/', data, { signal }).then((res) => res.data);
+
+// =========================
+// ADMIN WALLET OVERVIEW
+// =========================
+export const getAdminWalletOverview = (signal) =>
+  api
+    .get('/api/admin/wallet/overview', { signal })
+    .then((res) => res.data);
+
+export const getAdminMerchantWallets = (params, signal) =>
+  api
+    .get('/api/admin/wallet/merchants', { params, signal })
+    .then((res) => res.data);
 
 // =========================
 // ADMIN USERS (role management)
@@ -283,6 +314,66 @@ export const updateUserRole = (userId, role, signal) =>
 // Backend must return role + merchant_approved (or frontend will have no button gating)
 export const getUsers = (signal) =>
   api.get('/api/admin/users/', { signal }).then((res) => res.data);
+
+// =========================
+// PROFILE
+// =========================
+export const getMyProfile = (signal) =>
+  api.get('/api/user/profile/me', { signal }).then((res) => res.data);
+
+export const updateMyProfile = (payload, signal) =>
+  api.put('/api/user/profile/me', payload, { signal }).then((res) => res.data);
+
+export const patchMyProfile = (payload, signal) =>
+  api.patch('/api/user/profile/me', payload, { signal }).then((res) => res.data);
+
+// =========================
+// SETTINGS
+// =========================
+export const getUserSettings = (signal) =>
+  api.get('/api/user/settings', { signal }).then((res) => res.data);
+
+export const updateUserSettings = (payload, signal) =>
+  api.put('/api/user/settings', payload, { signal }).then((res) => res.data);
+
+export const updateNotificationSettings = (notificationSettings, signal) =>
+  api.patch('/api/user/settings/notifications', notificationSettings, { signal }).then((res) => res.data);
+
+export const updatePrivacySettings = (privacySettings, signal) =>
+  api.patch('/api/user/settings/privacy', privacySettings, { signal }).then((res) => res.data);
+
+export const updatePreferences = (preferences, signal) =>
+  api.patch('/api/user/settings/preferences', preferences, { signal }).then((res) => res.data);
+
+export const deleteAccount = (password, signal) =>
+  api.post('/api/user/account/delete', { password }, { signal }).then((res) => res.data);
+
+export const enableTwoFactorAuth = (signal) =>
+  api.post('/api/user/settings/2fa/enable', {}, { signal }).then((res) => res.data);
+
+export const disableTwoFactorAuth = (password, mfaCode, signal) =>
+  api.post('/api/user/settings/2fa/disable', { password, mfa_code: mfaCode }, { signal }).then((res) => res.data);
+
+// =========================
+// ORDERS
+// =========================
+export const getMyOrders = (params, signal) =>
+  api.get('/api/user/orders/', { params, signal }).then((res) => res.data);
+
+export const getOrderById = (id, signal) =>
+  api.get(`/api/user/orders/${id}`, { signal }).then((res) => res.data);
+
+export const cancelOrder = (orderId, reason, signal) =>
+  api.post(`/api/user/orders/${orderId}/cancel`, { reason }, { signal }).then((res) => res.data);
+
+export const requestReturn = (orderId, reason, signal) =>
+  api.post(`/api/user/orders/${orderId}/return`, { reason }, { signal }).then((res) => res.data);
+
+export const trackOrder = (orderId, signal) =>
+  api.get(`/api/user/orders/${orderId}/tracking`, { signal }).then((res) => res.data);
+
+export const reorder = (orderId, signal) =>
+  api.post(`/api/user/orders/${orderId}/reorder`, {}, { signal }).then((res) => res.data);
 
 // =========================
 // EXPORT

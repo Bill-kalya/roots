@@ -1,118 +1,39 @@
-import React, { useEffect, useMemo, useState } from "react";
-import api from "../services/api";
+import React, { useMemo } from "react";
 import { useAuth } from "../context/auth-context.js";
 import { useNavigate } from "react-router-dom";
+import { useProfile } from "../hooks/useProfile.js";
 import "./ProfilePage.css";
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const {
+    profile,
+    form,
+    loadingProfile,
+    saving,
+    profileError,
+    saveError,
+    validationErrors,
+    saved,
+    handleChange,
+    handleSubmit,
+    refetchProfile,
+  } = useProfile();
+
   const derivedNameRaw = user?.name || user?.full_name || "";
   const derivedName = derivedNameRaw && derivedNameRaw.toLowerCase() !== "guest" ? derivedNameRaw : "Your Profile";
 
-
   const initials = useMemo(() => {
     return derivedName
-      ?.split(" ")
+      ?.trim()
+      .split(/\s+/)
       .map((n) => n[0])
       .join("")
       .slice(0, 2)
       .toUpperCase();
   }, [derivedName]);
-
-  const [form, setForm] = useState({
-    name: derivedName,
-
-    email: user?.email || "",
-    phone: user?.phone || "",
-    location: user?.location || "",
-    bio: user?.bio || "",
-  });
-
-  const [loadingProfile, setLoadingProfile] = useState(false);
-  const [profileError, setProfileError] = useState(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadProfile = async () => {
-      // Refresh the base fields when auth user changes
-      setForm((prev) => ({
-        ...prev,
-        name: derivedName,
-        email: user?.email || prev.email,
-      }));
-
-      // Load extended profile fields (phone/location/bio, etc.)
-      try {
-        setLoadingProfile(true);
-        setProfileError(null);
-
-        const res = await api.get("/api/user/profile/me");
-        const profile = res?.data || {};
-
-        if (!isMounted) return;
-
-        setForm({
-          name: profile.name ?? derivedName,
-          email: profile.email ?? user?.email ?? "",
-          phone: profile.phone ?? "",
-          location: profile.location ?? "",
-          bio: profile.bio ?? "",
-        });
-      } catch (err) {
-        if (isMounted) {
-          setProfileError(
-            err?.response?.data?.message || err?.message || "Failed to load profile"
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setLoadingProfile(false);
-        }
-      }
-
-    };
-
-    loadProfile();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [derivedName, user?.email]);
-
-  const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState(null);
-
-  const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSave = async (e) => {
-    e.preventDefault();
-    try {
-      setSaving(true);
-      setSaveError(null);
-
-      const payload = {
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        location: form.location,
-        bio: form.bio,
-      };
-
-      await api.put("/api/user/profile/me", payload);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-    } catch (err) {
-      setSaveError(err?.response?.data?.message || err?.message || "Failed to save profile");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <div className="page-shell">
@@ -146,43 +67,99 @@ export default function ProfilePage() {
         {/* Edit form */}
         <div className="card">
           <h2 className="card-title">Edit Profile</h2>
-          <form className="profile-form" onSubmit={handleSave}>
+          <form className="profile-form" onSubmit={handleSubmit}>
             {loadingProfile ? (
               <p className="form-error">Loading profile…</p>
             ) : profileError ? (
               <p className="form-error">{profileError}</p>
             ) : null}
+
+            {Object.keys(validationErrors).length > 0 && (
+              <p className="form-error">Please fix the errors below</p>
+            )}
+
             <div className="form-row">
               <div className="form-group">
                 <label>Full Name</label>
-                <input name="name" value={form.name} onChange={handleChange} placeholder="Your name" />
+                <input
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="Your name"
+                  disabled={loadingProfile}
+                />
+                {validationErrors.name && (
+                  <span className="field-error">{validationErrors.name}</span>
+                )}
               </div>
               <div className="form-group">
                 <label>Email</label>
-                <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="you@example.com" />
+                <input
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="you@example.com"
+                  disabled={loadingProfile}
+                />
+                {validationErrors.email && (
+                  <span className="field-error">{validationErrors.email}</span>
+                )}
               </div>
             </div>
             <div className="form-row">
               <div className="form-group">
                 <label>Phone</label>
-                <input name="phone" value={form.phone} onChange={handleChange} placeholder="+1 555 000 0000" />
+                <input
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  placeholder="+1 555 000 0000"
+                  disabled={loadingProfile}
+                />
+                {validationErrors.phone && (
+                  <span className="field-error">{validationErrors.phone}</span>
+                )}
               </div>
               <div className="form-group">
                 <label>Location</label>
-                <input name="location" value={form.location} onChange={handleChange} placeholder="City, Country" />
+                <input
+                  name="location"
+                  value={form.location}
+                  onChange={handleChange}
+                  placeholder="City, Country"
+                  disabled={loadingProfile}
+                />
+                {validationErrors.location && (
+                  <span className="field-error">{validationErrors.location}</span>
+                )}
               </div>
             </div>
             <div className="form-group full">
               <label>Bio</label>
-              <textarea name="bio" value={form.bio} onChange={handleChange} rows={3} placeholder="Tell us a little about yourself…" />
+              <textarea
+                name="bio"
+                value={form.bio}
+                onChange={handleChange}
+                rows={3}
+                placeholder="Tell us a little about yourself…"
+                disabled={loadingProfile}
+              />
+              {validationErrors.bio && (
+                <span className="field-error">{validationErrors.bio}</span>
+              )}
             </div>
             <div className="form-actions">
-              <button type="submit" className="btn-primary" disabled={saving}>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={saving || loadingProfile}
+              >
                 {saving ? "Saving…" : saved ? "✓ Saved!" : "Save Changes"}
               </button>
             </div>
 
-            {saveError ? <p className="form-error">{saveError}</p> : null}
+            {saveError && <p className="form-error">{saveError}</p>}
           </form>
         </div>
 
@@ -200,14 +177,13 @@ export default function ProfilePage() {
           ))}
         </div>
 
-
         {/* Sign out */}
         <button
           className="signout-btn"
           onClick={() => { logout(); navigate("/"); }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M15 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 21 19 21H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M10 17L15 12M15 12L10 7M15 12H3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           Sign Out

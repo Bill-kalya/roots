@@ -4,6 +4,7 @@ import {
   getMerchantProducts,
   getMerchantOrders,
   getMerchantAnalytics,
+  getMerchantEarnings,
   createMerchantProduct,
   updateMerchantProduct,
   deleteMerchantProduct,
@@ -28,10 +29,19 @@ const MerchantDashboard = () => {
     totalRevenue: 0,
   });
 
+  const [earnings, setEarnings] = useState({
+    available_balance: 0,
+    pending_balance: 0,
+    total_withdrawn: 0,
+  });
+
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [ledger, setLedger] = useState([]);
+  const [showLedger, setShowLedger] = useState(false);
 
   const applyMerchantData = (productsData, ordersData, analyticsData) => {
     setProducts(
@@ -47,17 +57,24 @@ const MerchantDashboard = () => {
     setLoading(true);
 
     try {
-      const [productsData, ordersData, analyticsData] = await Promise.all([
+      const [productsData, ordersData, analyticsData, earningsData] = await Promise.all([
         getMerchantProducts(),
         getMerchantOrders(),
         getMerchantAnalytics(),
+        getMerchantEarnings(),
       ]);
 
       console.log('MerchantDashboard raw productsData:', productsData);
       console.log('MerchantDashboard raw ordersData:', ordersData);
       console.log('MerchantDashboard raw analyticsData:', analyticsData);
+      console.log('MerchantDashboard raw earningsData:', earningsData);
 
       applyMerchantData(productsData, ordersData, analyticsData);
+      setEarnings({
+        available_balance: Number(earningsData?.available_balance || 0),
+        pending_balance: Number(earningsData?.pending_balance || 0),
+        total_withdrawn: Number(earningsData?.total_withdrawn || 0),
+      });
     } catch (err) {
       console.error('Error fetching merchant data:', err);
       setLoading(false);
@@ -144,6 +161,36 @@ const MerchantDashboard = () => {
 
   const retryLoad = () => {
     loadMerchantData();
+  };
+
+  const handleRequestPayout = async (amount) => {
+    try {
+      await requestPayout({ amount });
+      toast.success(`Payout request for ${formatMoney(amount, currency)} submitted!`);
+      setShowPayoutModal(false);
+      await loadMerchantData();
+    } catch (err) {
+      console.error('Error requesting payout:', err);
+      const msg = err?.response?.data?.detail || err?.message || 'Failed to request payout';
+      toast.error(msg);
+    }
+  };
+
+  const loadLedger = async () => {
+    try {
+      const data = await getMerchantLedger({ limit: 50 });
+      setLedger(Array.isArray(data) ? data : data?.items || []);
+    } catch (err) {
+      console.error('Error loading ledger:', err);
+      toast.error('Failed to load transaction history');
+    }
+  };
+
+  const toggleLedger = async () => {
+    if (!showLedger && ledger.length === 0) {
+      await loadLedger();
+    }
+    setShowLedger(!showLedger);
   };
 
   const normalizeMerchantOrderRow = (order, currency) => {
@@ -262,6 +309,38 @@ const MerchantDashboard = () => {
       </div>
 
       <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-title">Available Balance</div>
+          <div className="stat-value">
+            {formatMoney(Number(earnings.available_balance || 0), currency)}
+          </div>
+          <button
+            className="btn btn-primary btn-sm"
+            style={{ marginTop: 8 }}
+            onClick={() => setShowPayoutModal(true)}
+            disabled={Number(earnings.available_balance || 0) <= 0}
+          >
+            Request Payout
+          </button>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-title">Pending Balance</div>
+          <div className="stat-value">
+            {formatMoney(Number(earnings.pending_balance || 0), currency)}
+          </div>
+          <small style={{ color: '#888', marginTop: 4, display: 'block' }}>
+            In escrow (awaiting delivery)
+          </small>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-title">Total Withdrawn</div>
+          <div className="stat-value">
+            {formatMoney(Number(earnings.total_withdrawn || 0), currency)}
+          </div>
+        </div>
+
         <div className="stat-card">
           <div className="stat-title">Total Sales</div>
           <div className="stat-value">
@@ -386,6 +465,55 @@ const MerchantDashboard = () => {
         </div>
       </div>
 
+      <div className="merchant-section">
+        <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2>Transaction History</h2>
+          <button 
+            className="btn btn-ghost btn-sm" 
+            onClick={toggleLedger}
+          >
+            {showLedger ? 'Hide' : 'Show'} Ledger
+          </button>
+        </div>
+        
+        {showLedger && (
+          <div className="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ledger.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                      No transactions yet
+                    </td>
+                  </tr>
+                ) : (
+                  ledger.map((entry, idx) => (
+                    <tr key={idx}>
+                      <td>{new Date(entry.created_at || entry.date).toLocaleDateString()}</td>
+                      <td>
+                        <span className={`status-badge status-${entry.type?.toLowerCase() || 'pending'}`}>
+                          {entry.type || 'UNKNOWN'}
+                        </span>
+                      </td>
+                      <td>{formatMoney(Number(entry.amount || 0), currency)}</td>
+                      <td>{entry.description || entry.memo || '-'}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {showProductForm && (
         <ProductFormModal
           product={editingProduct}
@@ -397,6 +525,14 @@ const MerchantDashboard = () => {
           currency={currency}
         />
       )}
+
+      <PayoutModal
+        isOpen={showPayoutModal}
+        onClose={() => setShowPayoutModal(false)}
+        onConfirm={handleRequestPayout}
+        availableBalance={earnings.available_balance}
+        currency={currency}
+      />
     </div>
   );
 };
@@ -679,6 +815,63 @@ const ProductFormModal = ({ product, onSave, onClose, currency }) => {
             </button>
             <button type="submit" className="btn btn-primary">
               Save Product
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const PayoutModal = ({ isOpen, onClose, onConfirm, availableBalance, currency }) => {
+  const [amount, setAmount] = useState('');
+
+  if (!isOpen) return null;
+
+  const safeAmount = Number(amount || 0);
+  const canSubmit =
+    Number.isFinite(safeAmount) &&
+    safeAmount > 0 &&
+    safeAmount <= Number(availableBalance || 0);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    onConfirm(safeAmount);
+    setAmount('');
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>Request Payout</h2>
+          <button className="modal-close" onClick={onClose}>
+            ×
+          </button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Amount ({currency?.code || 'KES'})</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder={`Max ${formatMoney(Number(availableBalance || 0), currency)}`}
+            />
+            <small style={{ color: '#888' }}>
+              Available: {formatMoney(Number(availableBalance || 0), currency)}
+            </small>
+          </div>
+
+          <div className="modal-footer">
+            <button type="button" className="btn" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={!canSubmit}>
+              Submit Payout Request
             </button>
           </div>
         </form>

@@ -93,10 +93,30 @@ export default function AuthProvider({ children }) {
 
     window.addEventListener('storage', onStorage);
 
+    // Listen for profile updates to keep auth context in sync
+    const onProfileUpdated = (event) => {
+      const updatedProfile = event.detail?.profile;
+      if (updatedProfile && user) {
+        // Update user object with new profile data
+        setUser((prev) => ({
+          ...prev,
+          name: updatedProfile.name || prev.name,
+          full_name: updatedProfile.name || prev.full_name,
+          email: updatedProfile.email || prev.email,
+          phone: updatedProfile.phone,
+          location: updatedProfile.location,
+          bio: updatedProfile.bio,
+        }));
+      }
+    };
+
+    window.addEventListener('roots:profile-updated', onProfileUpdated);
+
     return () => {
       window.removeEventListener('roots:auth-changed', onAuthChanged);
       window.removeEventListener('roots:auth-expired', onAuthExpired);
       window.removeEventListener('storage', onStorage);
+      window.removeEventListener('roots:profile-updated', onProfileUpdated);
     };
   }, [clearAuth, syncUser, user]);
 

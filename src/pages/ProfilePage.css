@@ -231,6 +231,13 @@
   font-family: Georgia, serif;
 }
 
+.field-error {
+  font-size: 11px;
+  color: rgba(255,140,140,0.9);
+  font-family: Georgia, serif;
+  margin-top: 2px;
+}
+
 /* ── Stats row ── */
 .stats-row {
   display: grid;

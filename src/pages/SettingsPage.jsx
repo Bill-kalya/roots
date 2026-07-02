@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSettings } from "../hooks/useSettings.js";
 import "./SettingsPage.css";
 
-function Toggle({ checked, onChange }) {
+function Toggle({ checked, onChange, disabled }) {
   return (
     <button
       className={`toggle ${checked ? "on" : ""}`}
@@ -10,22 +11,24 @@ function Toggle({ checked, onChange }) {
       type="button"
       aria-checked={checked}
       role="switch"
+      disabled={disabled}
     >
       <span className="toggle-thumb" />
     </button>
   );
 }
 
-function SettingsSection({ title, children }) {
+function SettingsSection({ title, children, error }) {
   return (
     <div className="settings-section">
       <h3 className="section-title">{title}</h3>
       <div className="section-rows">{children}</div>
+      {error && <div className="section-error" role="alert">{error}</div>}
     </div>
   );
 }
 
-function SettingsRow({ label, description, children }) {
+function SettingsRow({ label, description, children, disabled }) {
   return (
     <div className="settings-row">
       <div className="row-text">
@@ -39,40 +42,70 @@ function SettingsRow({ label, description, children }) {
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const {
+    settings,
+    loading,
+    fetchError,
+    saving,
+    saved,
+    saveError,
+    validationErrors,
+    hasUnsavedChanges,
+    deleteConfirm,
+    setDeleteConfirm,
+    deletePassword,
+    setDeletePassword,
+    deleteError,
+    isDeleting,
+    updateNotification,
+    updatePrivacy,
+    updatePreference,
+    saveSettings,
+    resetSettings,
+    confirmDeleteAccount,
+    cancelDeleteAccount,
+    handleEnable2FA,
+    enabling2FA,
+  } = useSettings();
 
-  const [notifs, setNotifs] = useState({
-    orderUpdates: true,
-    promotions: false,
-    newArrivals: true,
-    artisanStories: false,
-  });
+  const handleSave = useCallback(async () => {
+    await saveSettings();
+  }, [saveSettings]);
 
-  const [privacy, setPrivacy] = useState({
-    profileVisible: true,
-    dataAnalytics: true,
-  });
-
-  const [currency, setCurrency] = useState("USD");
-  const [language, setLanguage] = useState("en");
-  const [theme, setTheme] = useState(() => {
-    const saved = window.localStorage.getItem("roots_theme");
-    return saved === "light" || saved === "dark" ? saved : "dark";
-  });
-
-  // Apply theme to the source of truth: html.dark
-  React.useEffect(() => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+  const handleReset = useCallback(() => {
+    if (window.confirm("Are you sure you want to reset all settings to defaults?")) {
+      resetSettings();
     }
-    window.localStorage.setItem("roots_theme", theme);
-  }, [theme]);
+  }, [resetSettings]);
 
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const handleDeleteAccount = useCallback(async () => {
+    await confirmDeleteAccount();
+  }, [confirmDeleteAccount]);
 
-  const toggle = (group, setter) => (key) => (val) =>
-    setter(prev => ({ ...prev, [key]: val }));
+  if (loading) {
+    return (
+      <div className="page-shell">
+        <div className="page-container">
+          <div className="loading-state">Loading settings...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="page-shell">
+        <div className="page-container">
+          <div className="error-state" role="alert">
+            <p>Failed to load settings</p>
+            <button className="btn-ghost-sm" onClick={() => window.location.reload()}>
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-shell">
@@ -90,19 +123,70 @@ export default function SettingsPage() {
           <p className="page-subtitle">Manage your preferences and account</p>
         </div>
 
+        {/* Saved indicator */}
+        {saved && (
+          <div className="saved-indicator" role="status" aria-live="polite">
+            ✓ Settings saved
+          </div>
+        )}
+
+        {/* Global save error */}
+        {saveError && (
+          <div className="global-error" role="alert">
+            {saveError}
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="settings-actions">
+          <button
+            className="btn-primary"
+            onClick={handleSave}
+            disabled={saving || !hasUnsavedChanges}
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+          <button
+            className="btn-ghost-sm"
+            onClick={handleReset}
+            disabled={saving || !hasUnsavedChanges}
+          >
+            Reset to Defaults
+          </button>
+        </div>
+
         {/* Notifications */}
-        <SettingsSection title="Notifications">
+        <SettingsSection
+          title="Notifications"
+          error={validationErrors.notifications?.error}
+        >
           <SettingsRow label="Order updates" description="Shipping and delivery status">
-            <Toggle checked={notifs.orderUpdates} onChange={toggle(notifs, setNotifs)("orderUpdates")} />
+            <Toggle
+              checked={settings.notifications.orderUpdates}
+              onChange={() => updateNotification("orderUpdates", !settings.notifications.orderUpdates)}
+              disabled={saving}
+            />
           </SettingsRow>
           <SettingsRow label="Promotions" description="Deals, discounts, and seasonal sales">
-            <Toggle checked={notifs.promotions} onChange={toggle(notifs, setNotifs)("promotions")} />
+            <Toggle
+              checked={settings.notifications.promotions}
+              onChange={() => updateNotification("promotions", !settings.notifications.promotions)}
+              disabled={saving}
+            />
           </SettingsRow>
           <SettingsRow label="New arrivals" description="Fresh items from our artisans">
-            <Toggle checked={notifs.newArrivals} onChange={toggle(notifs, setNotifs)("newArrivals")} />
+            <Toggle
+              checked={settings.notifications.newArrivals}
+              onChange={() => updateNotification("newArrivals", !settings.notifications.newArrivals)}
+              disabled={saving}
+            />
           </SettingsRow>
           <SettingsRow label="Artisan stories" description="Behind the scenes from makers">
-            <Toggle checked={notifs.artisanStories} onChange={toggle(notifs, setNotifs)("artisanStories")} />
+            <Toggle
+              checked={settings.notifications.artisanStories}
+              onChange={() => updateNotification("artisanStories", !settings.notifications.artisanStories)}
+              disabled={saving}
+            />
           </SettingsRow>
         </SettingsSection>
 
@@ -111,10 +195,11 @@ export default function SettingsPage() {
           <SettingsRow label="Currency">
             <select
               className="settings-select"
-              value={currency}
-              onChange={e => setCurrency(e.target.value)}
+              value={settings.currency}
+              onChange={(e) => updatePreference("currency", e.target.value)}
+              disabled={saving}
             >
-              {["USD", "EUR", "GBP", "KES", "NGN", "ZAR"].map(c => (
+              {["USD", "EUR", "GBP", "KES", "NGN", "ZAR"].map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
@@ -122,8 +207,9 @@ export default function SettingsPage() {
           <SettingsRow label="Language">
             <select
               className="settings-select"
-              value={language}
-              onChange={e => setLanguage(e.target.value)}
+              value={settings.language}
+              onChange={(e) => updatePreference("language", e.target.value)}
+              disabled={saving}
             >
               <option value="en">English</option>
               <option value="fr">Français</option>
@@ -133,11 +219,12 @@ export default function SettingsPage() {
           </SettingsRow>
           <SettingsRow label="Theme">
             <div className="theme-pills">
-              {["dark", "light"].map(t => (
+              {["dark", "light"].map((t) => (
                 <button
                   key={t}
-                  className={`theme-pill ${theme === t ? "active" : ""}`}
-                  onClick={() => setTheme(t)}
+                  className={`theme-pill ${settings.theme === t ? "active" : ""}`}
+                  onClick={() => updatePreference("theme", t)}
+                  disabled={saving}
                 >
                   {t === "dark" ? "🌙 Dark" : "☀️ Light"}
                 </button>
@@ -147,12 +234,23 @@ export default function SettingsPage() {
         </SettingsSection>
 
         {/* Privacy */}
-        <SettingsSection title="Privacy">
+        <SettingsSection
+          title="Privacy"
+          error={validationErrors.privacy?.error}
+        >
           <SettingsRow label="Public profile" description="Let others see your collection activity">
-            <Toggle checked={privacy.profileVisible} onChange={toggle(privacy, setPrivacy)("profileVisible")} />
+            <Toggle
+              checked={settings.privacy.profileVisible}
+              onChange={() => updatePrivacy("profileVisible", !settings.privacy.profileVisible)}
+              disabled={saving}
+            />
           </SettingsRow>
           <SettingsRow label="Analytics" description="Help us improve with anonymous data">
-            <Toggle checked={privacy.dataAnalytics} onChange={toggle(privacy, setPrivacy)("dataAnalytics")} />
+            <Toggle
+              checked={settings.privacy.dataAnalytics}
+              onChange={() => updatePrivacy("dataAnalytics", !settings.privacy.dataAnalytics)}
+              disabled={saving}
+            />
           </SettingsRow>
         </SettingsSection>
 
@@ -164,7 +262,13 @@ export default function SettingsPage() {
             </button>
           </SettingsRow>
           <SettingsRow label="Two-factor authentication" description="Add an extra layer of protection">
-            <button className="btn-ghost-sm">Enable →</button>
+            <button
+              className="btn-ghost-sm"
+              onClick={handleEnable2FA}
+              disabled={enabling2FA}
+            >
+              {enabling2FA ? 'Setting up...' : 'Enable →'}
+            </button>
           </SettingsRow>
         </SettingsSection>
 
@@ -172,28 +276,45 @@ export default function SettingsPage() {
         <div className="danger-zone">
           <h3 className="danger-title">Danger Zone</h3>
           {!deleteConfirm ? (
-            <button className="btn-danger" onClick={() => setDeleteConfirm(true)}>
+            <button
+              className="btn-danger"
+              onClick={() => setDeleteConfirm(true)}
+              disabled={saving}
+            >
               Delete Account
             </button>
           ) : (
             <div className="delete-confirm">
               <p>Are you sure? This cannot be undone.</p>
+              {deleteError && (
+                <div className="delete-error" role="alert">{deleteError}</div>
+              )}
               <div className="delete-actions">
                 <button
                   className="btn-danger"
-                  onClick={() => {
-                    // No confirmed backend endpoint for deleting the current user account.
-                    // Keep UI honest instead of claiming a success.
-                    setDeleteConfirm(false);
-                    window.alert("Account deletion is not available yet.");
-                  }}
+                  onClick={handleDeleteAccount}
+                  disabled={isDeleting}
                 >
-                  Yes, delete
+                  {isDeleting ? 'Deleting...' : 'Yes, delete'}
                 </button>
 
-                <button className="btn-ghost-sm" onClick={() => setDeleteConfirm(false)}>
+                <button
+                  className="btn-ghost-sm"
+                  onClick={cancelDeleteAccount}
+                  disabled={isDeleting}
+                >
                   Cancel
                 </button>
+              </div>
+              <div className="delete-password-field">
+                <input
+                  type="password"
+                  placeholder="Enter your password to confirm"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  disabled={isDeleting}
+                  onKeyDown={(e) => e.key === 'Enter' && handleDeleteAccount()}
+                />
               </div>
             </div>
           )}
