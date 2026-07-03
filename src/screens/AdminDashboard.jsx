@@ -261,13 +261,7 @@ const AdminDashboard = () => {
     labels: ['Pending', 'Paid', 'Shipped', 'Delivered', 'Cancelled'],
     datasets: [
       {
-        data: [
-          stats.pendingOrders,
-          stats.totalOrders * 0.3,
-          stats.totalOrders * 0.2,
-          stats.totalOrders * 0.4,
-          stats.totalOrders * 0.1,
-        ],
+        data: analytics.order_status_distribution || [0, 0, 0, 0, 0],
         backgroundColor: ['#ffc107', '#17a2b8', '#007bff', '#28a745', '#dc3545'],
       },
     ],

@@ -9,6 +9,8 @@ import {
   updateMerchantProduct,
   deleteMerchantProduct,
   updateOrderStatus,
+  requestPayout,
+  getMerchantLedger,
 } from '../services/api';
 import './merchant.css';
 import { resolveImageUrl } from '../lib/apiClient';
@@ -63,11 +65,6 @@ const MerchantDashboard = () => {
         getMerchantAnalytics(),
         getMerchantEarnings(),
       ]);
-
-      console.log('MerchantDashboard raw productsData:', productsData);
-      console.log('MerchantDashboard raw ordersData:', ordersData);
-      console.log('MerchantDashboard raw analyticsData:', analyticsData);
-      console.log('MerchantDashboard raw earningsData:', earningsData);
 
       applyMerchantData(productsData, ordersData, analyticsData);
       setEarnings({
@@ -371,13 +368,6 @@ const MerchantDashboard = () => {
         <div className="products-grid">
           {products.map((product, idx) => {
             const resolved = resolveImageUrl(product.image_url);
-            if (idx < 5) {
-              console.log('MerchantDashboard product image:', {
-                raw: product.image_url,
-                resolved,
-                productId: product.id,
-              });
-            }
 
             return (
               <div key={product.id ?? idx} className="product-card product-card-visible">

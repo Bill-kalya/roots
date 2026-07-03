@@ -39,6 +39,7 @@ import ProductDetails from './pages/ProductDetails';
 import ProfilePage from './pages/ProfilePage';
 import OrdersPage from './pages/OrdersPage';
 import SettingsPage from './pages/SettingsPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 import PaypalSuccess from './screens/PaypalSuccess';
 import PaypalCancel from './screens/PaypalCancel';
 
@@ -152,6 +153,17 @@ const AppContent = () => {
             <ProtectedRoute
               allowedRoles={['USER', 'MERCHANT', 'ADMIN']}
               element={<MfaSetup />}
+            />
+          }
+        />
+
+        {/* Protected: Change password — any logged-in user */}
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute
+              allowedRoles={['USER', 'MERCHANT', 'ADMIN']}
+              element={<ChangePasswordPage />}
             />
           }
         />

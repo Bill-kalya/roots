@@ -153,3 +153,21 @@ export async function disableTwoFactorAuth(password, mfaCode, signal) {
     throw new Error(getErrorMessage(error));
   }
 }
+
+/**
+ * Changes the current user's password.
+ *
+ * @param {string} currentPassword - The user's current password
+ * @param {string} newPassword - The new password
+ * @param {AbortSignal} signal - Optional abort signal for cancellation
+ * @returns {Promise<Object>} Success confirmation
+ * @throws {Error} If the request fails
+ */
+export async function changePassword(currentPassword, newPassword, signal) {
+  try {
+    const res = await api.post('/api/user/account/change-password', { current_password: currentPassword, new_password: newPassword }, { signal });
+    return res.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}

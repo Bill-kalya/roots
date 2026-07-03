@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Register.css";
-import { register } from "../services/api.js";
+import { register, validatePassword } from "../services/api.js";
 import { Link } from "react-router-dom";
 
 
@@ -33,6 +33,58 @@ const Register = () => {
 
   const [focusedInput, setFocusedInput] = useState(null);
 
+  const [clientChecks, setClientChecks] = useState(null);
+  const [serverChecks, setServerChecks] = useState(null);
+  const [checkingPassword, setCheckingPassword] = useState(false);
+
+  // Mirrors the regex rules in backend PasswordValidator exactly.
+  // Keep in sync if backend rules change.
+  const checkPasswordClientSide = (password) => ({
+    min_length: password.length >= 8,
+    max_length: password.length <= 128,
+    has_uppercase: /[A-Z]/.test(password),
+    has_lowercase: /[a-z]/.test(password),
+    has_digit: /[0-9]/.test(password),
+    has_special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+  });
+
+  // Instant client-side feedback — runs synchronously on every keystroke
+  useEffect(() => {
+    if (!form.password) {
+      setClientChecks(null);
+      setServerChecks(null);
+      return;
+    }
+    setClientChecks(checkPasswordClientSide(form.password));
+  }, [form.password]);
+
+  // Debounced server call — only once basic client checks pass, to confirm
+  // no_common_patterns (server-only logic) and get the authoritative is_valid.
+  useEffect(() => {
+    if (!clientChecks) return;
+    const basicsPass = clientChecks.min_length && clientChecks.max_length &&
+      clientChecks.has_uppercase && clientChecks.has_lowercase &&
+      clientChecks.has_digit && clientChecks.has_special;
+
+    if (!basicsPass) {
+      setServerChecks(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setCheckingPassword(true);
+    const timer = setTimeout(() => {
+      validatePassword(form.password, controller.signal)
+        .then((data) => setServerChecks(data))
+        .catch(() => {})
+        .finally(() => setCheckingPassword(false));
+    }, 400);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [clientChecks, form.password]);
 
   const stepTitles = {
     1: "Begin your story with us",
@@ -182,6 +234,10 @@ const Register = () => {
       setError("Password must be at least 8 characters");
       return false;
     }
+    if (serverChecks && !serverChecks.is_valid) {
+      setError("Please meet all password requirements below");
+      return false;
+    }
     setError("");
     return true;
   };
@@ -225,12 +281,12 @@ const Register = () => {
       setRegistered(true);
     } catch (err) {
       // Handle common duplicate-email case (backend returns 400)
-      if (err?.response?.status === 400) {
+      if (err?.response?.status === 400 && err?.response?.data?.message?.toLowerCase().includes("already registered")) {
         setError("DUPLICATE_EMAIL");
         return;
       }
 
-      setError(err.response?.data?.detail || err.message || "Registration failed");
+      setError(err.response?.data?.message || err.response?.data?.detail || err.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -266,7 +322,7 @@ const Register = () => {
           <h2>{stepTitles[step]}</h2>
 
           {error && (
-            <div className="error">
+            <div className="error" style={{ whiteSpace: "pre-line" }}>
               {error === "DUPLICATE_EMAIL" ? (
                 <>
                   This email is already in use.
@@ -356,14 +412,35 @@ const Register = () => {
                     {showPassword ? "Hide" : "Show"}
                   </button>
                 </div>
-                {/* Strength bar */}
-
-                <div style={S.strengthBar}>
-                  {[1, 2, 3, 4].map(n => (
-                    <div key={n} style={S.strengthSegment(pw.score >= n, pw.score)} />
-                  ))}
-                </div>
-                {pw.label && <div style={S.strengthLabel}>{pw.label}</div>}
+                {/* Live requirements checklist */}
+                {form.password && (
+                  <div style={{ marginTop: "10px", fontSize: "13px" }}>
+                    <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "4px" }}>
+                      {Object.entries({
+                        min_length: "At least 8 characters",
+                        has_uppercase: "One uppercase letter (A-Z)",
+                        has_lowercase: "One lowercase letter (a-z)",
+                        has_digit: "One number (0-9)",
+                        has_special: "One special character (!@#$%^&* etc.)",
+                      }).map(([key, label]) => {
+                        const met = clientChecks?.[key];
+                        return (
+                          <li key={key} style={{ color: met ? "#7fbf7f" : "#c9a96a", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span>{met ? "✓" : "○"}</span>
+                            <span>{label}</span>
+                          </li>
+                        );
+                      })}
+                      {/* Server-only check */}
+                      <li style={{ color: serverChecks?.checks?.no_common_patterns ? "#7fbf7f" : "#c9a96a", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span>
+                          {checkingPassword ? "…" : serverChecks?.checks?.no_common_patterns ? "✓" : "○"}
+                        </span>
+                        <span>No common patterns (password123, qwerty, etc.)</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
               </div>
               <div style={S.btnRow}>
                 <button
