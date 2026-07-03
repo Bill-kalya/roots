@@ -101,7 +101,10 @@ const AdminDashboard = () => {
     total_withdrawn: 0,
   });
 
+  const [analyticsData, setAnalyticsData] = useState({});
+
   const applyDashboardData = (analytics, orders) => {
+    setAnalyticsData(analytics || {});
     setStats({
       totalSales: analytics.total_sales || 0,
       totalOrders: analytics.total_orders || 0,
@@ -261,7 +264,7 @@ const AdminDashboard = () => {
     labels: ['Pending', 'Paid', 'Shipped', 'Delivered', 'Cancelled'],
     datasets: [
       {
-        data: analytics.order_status_distribution || [0, 0, 0, 0, 0],
+        data: analyticsData.order_status_distribution || [0, 0, 0, 0, 0],
         backgroundColor: ['#ffc107', '#17a2b8', '#007bff', '#28a745', '#dc3545'],
       },
     ],
@@ -367,7 +370,7 @@ const AdminDashboard = () => {
         <div className="stat-card">
           <div className="stat-title">Avg Order Value</div>
           <div className="stat-value">
-            ${(stats.totalSales / stats.totalOrders || 0).toFixed(2)}
+            ${stats.totalOrders > 0 ? (stats.totalSales / stats.totalOrders).toFixed(2) : '0.00'}
           </div>
         </div>
       </div>
