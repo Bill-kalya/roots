@@ -25,7 +25,7 @@
   aspect-ratio: 1/1;
   overflow: hidden;
   border-radius: 24px;
-  background: #2d2f31;
+  background: #fff;
   box-shadow:
     inset 4px 4px 12px #2a1a1a,
     inset -4px -4px 12px #6F4E37;
@@ -51,7 +51,7 @@
   cursor: pointer;
   opacity: 0.5;
   transition: 0.3s;
-  background: #2d2f31;
+  background: #fff;
 }
 
 .thumbnail-active,
