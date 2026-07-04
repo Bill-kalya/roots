@@ -129,13 +129,15 @@ export default function MerchantProfile() {
             ) : (
               products.map((p, idx) => (
                 <div key={p.id ?? idx} className="product-card product-card-visible">
-                  <img
-                    src={resolveImageUrl(p.image_url)}
-                    alt={p.name}
-                    className="product-image"
-                    onClick={() => p.id && navigate(`/product/${p.id}`)}
-                    style={{ cursor: p.id ? "pointer" : "default" }}
-                  />
+                  <div className="image-container">
+                    <img
+                      src={resolveImageUrl(p.image_url)}
+                      alt={p.name}
+                      className="product-image"
+                      onClick={() => p.id && navigate(`/product/${p.id}`)}
+                      style={{ cursor: p.id ? "pointer" : "default" }}
+                    />
+                  </div>
                   <div className="product-info">
                     <h3 style={{ cursor: p.id ? "pointer" : "default" }} onClick={() => p.id && navigate(`/product/${p.id}`)}>
                       {p.name}

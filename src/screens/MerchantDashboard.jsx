@@ -371,7 +371,9 @@ const MerchantDashboard = () => {
 
             return (
               <div key={product.id ?? idx} className="product-card product-card-visible">
-                <img src={resolved} alt={product.name} className="product-image" />
+                <div className="image-container">
+                  <img src={resolved} alt={product.name} className="product-image" />
+                </div>
                 <div className="product-info">
                   <h3>{product.name}</h3>
                   <p className="product-price">
