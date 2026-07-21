@@ -205,9 +205,63 @@ function SkeletonTestimonial() {
   );
 }
 
+// ─── Hero Product Carousel ────────────────────────────────────────────────────
+function HeroProductCarousel({ products = [] }) {
+  const navigate = useNavigate();
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (products.length <= 1) return;
+
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % products.length);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [products]);
+
+  if (!products.length) return null;
+
+  const product = products[current];
+
+  return (
+    <div
+      className="hero-product-carousel"
+      onClick={() => navigate(`/product/${product.id}`)}
+      role="button"
+      tabIndex={0}
+    >
+      <img
+        src={resolveImageUrl(product.image_url)}
+        alt={product.name}
+        className="hero-product-image"
+      />
+
+      <div className="hero-product-overlay">
+        <h4>{product.name}</h4>
+        <span>View Product →</span>
+      </div>
+
+      <div className="hero-carousel-dots">
+        {products.map((_, index) => (
+          <button
+            key={index}
+            className={`hero-dot ${index === current ? "active" : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setCurrent(index);
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Hero Section (Functional) ────────────────────────────────────────────────
 function HeroSection() {
   const [loaded, setLoaded] = useState(false);
+  const data = useContext(DataContext);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoaded(true), 50);
@@ -219,6 +273,8 @@ function HeroSection() {
       behavior: 'smooth', block: 'start' 
     });
   }, []);
+
+  const featuredProducts = data.products.slice(0, 5);
 
   const STATS = [
     ["500+", "Artisan Pieces"],
@@ -261,7 +317,7 @@ function HeroSection() {
         </div>
       </div>
       <div className={`hero-logo-right ${loaded ? "hero-logo-right-visible" : ""}`}>
-        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Roots Logo" />
+        <HeroProductCarousel products={featuredProducts} />
       </div>
       <div className="scroll-indicator">
         <span>SCROLL</span>

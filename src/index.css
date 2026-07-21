@@ -196,9 +196,7 @@ html.dark {
   }
 
   .hero-logo-right {
-    box-shadow:
-  inset 4px 4px 12px #1f2021,
-  inset -4px -4px 12px #3b3e41;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
   }
 
   .featured-banner {

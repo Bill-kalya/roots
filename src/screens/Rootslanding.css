@@ -78,16 +78,75 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
-  pointer-events: none;
   opacity: 0;
   transition: opacity 1.2s ease 0.4s;
-  box-shadow:
-    inset 4px 4px 12px #2a1a1a,
-    inset -4px -4px 12px #6F4E37;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
 }
 
 .hero-logo-right-visible {
   opacity: 0.9;
+}
+
+.hero-product-carousel {
+  position: relative;
+  width: 420px;
+  height: 520px;
+  border-radius: 24px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.hero-product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .4s ease;
+}
+
+.hero-product-carousel:hover .hero-product-image {
+  transform: scale(1.05);
+}
+
+.hero-product-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 24px;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.75),
+    transparent
+  );
+  color: white;
+}
+
+.hero-product-overlay h4 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.hero-carousel-dots {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.hero-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,.4);
+  cursor: pointer;
+}
+
+.hero-dot.active {
+  background: white;
 }
 
 .hero-content {
@@ -893,8 +952,9 @@ background: linear-gradient(to bottom, #493b3b, #2d2f31);
    Breakpoint: 1280px
 ───────────────────────────────────────────────────────────── */
 @media (max-width: 1280px) {
-  .hero-logo-right img {
+  .hero-product-carousel {
     width: 340px;
+    height: 420px;
   }
 
   .hero-content {
@@ -919,8 +979,9 @@ background: linear-gradient(to bottom, #493b3b, #2d2f31);
     right: 32px;
   }
 
-  .hero-logo-right img {
-    width: 260px;
+  .hero-product-carousel {
+    width: 280px;
+    height: 360px;
   }
 
   .collection {
