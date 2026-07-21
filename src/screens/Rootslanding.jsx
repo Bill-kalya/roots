@@ -206,7 +206,7 @@ function SkeletonTestimonial() {
 }
 
 // ─── Hero Product Carousel ────────────────────────────────────────────────────
-function HeroProductCarousel({ products = [] }) {
+function HeroProductCarousel({ products = [], currency }) {
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
 
@@ -238,8 +238,14 @@ function HeroProductCarousel({ products = [] }) {
       />
 
       <div className="hero-product-overlay">
-        <h4>{product.name}</h4>
-        <span>View Product →</span>
+        <div className="hero-product-origin">
+          {product.origin || "Various Origins"}
+        </div>
+        <h2>{product.name}</h2>
+        <div className="hero-product-price">
+          {formatMoney(product.price, currency)}
+        </div>
+        <span>Shop Now →</span>
       </div>
 
       <div className="hero-carousel-dots">
@@ -262,6 +268,7 @@ function HeroProductCarousel({ products = [] }) {
 function HeroSection() {
   const [loaded, setLoaded] = useState(false);
   const data = useContext(DataContext);
+  const { currency } = useCurrency();
 
   useEffect(() => {
     const timer = setTimeout(() => setLoaded(true), 50);
@@ -317,7 +324,7 @@ function HeroSection() {
         </div>
       </div>
       <div className={`hero-logo-right ${loaded ? "hero-logo-right-visible" : ""}`}>
-        <HeroProductCarousel products={featuredProducts} />
+        <HeroProductCarousel products={featuredProducts} currency={currency} />
       </div>
       <div className="scroll-indicator">
         <span>SCROLL</span>
