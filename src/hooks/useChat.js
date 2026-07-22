@@ -66,9 +66,11 @@ function normalizeMessage(m, fallback = {}) {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 /**
- * @param {{ merchantId: string }} params
+ * @param {{ merchantId?: string, roomId?: string }} params
+ *   merchantId – will call POST /conversations/resolve-room to get the room_id.
+ *   roomId     – a pre-resolved room_id (skips resolve-room).
  */
-export function useChat({ merchantId }) {
+export function useChat({ merchantId, roomId: initialRoomId }) {
   const [messages, setMessages] = useState([]);
   const [conversation, setConversation] = useState(null);
   const [status, setStatus] = useState("idle");
@@ -121,7 +123,12 @@ export function useChat({ merchantId }) {
   // ─── Step 1: Resolve room ─────────────────────────────────────────────────
 
   const resolveRoom = useCallback(async () => {
-    if (!merchantId) throw new Error("merchantId is required");
+    if (initialRoomId) {
+      // Room already resolved upstream — construct a compatible object.
+      return { room_id: initialRoomId, customer_id: null, merchant_id: null };
+    }
+
+    if (!merchantId) throw new Error("merchantId or roomId is required");
 
     safe(setStatus, "resolving");
 
@@ -131,7 +138,7 @@ export function useChat({ merchantId }) {
 
     roomInfoRef.current = res.data;
     return res.data; // { room_id, customer_id, merchant_id }
-  }, [merchantId, safe]);
+  }, [merchantId, initialRoomId, safe]);
 
 
   // ─── Step 2 & 3: Fetch room key and init encryption ─────────────────────
@@ -381,9 +388,9 @@ export function useChat({ merchantId }) {
 
   useEffect(() => {
     isMounted.current = true;
-    if (!merchantId) return;
+    if (!merchantId && !initialRoomId) return;
 
-    // Reset state for new merchant
+    // Reset state for new merchant/room
     setConversation(null);
     setMessages([]);
     setStatus("idle");
@@ -420,7 +427,7 @@ export function useChat({ merchantId }) {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [merchantId]);
+  }, [merchantId, initialRoomId]);
 
   // ─── Exposed API ────────────────────────────────────────────────────────
 

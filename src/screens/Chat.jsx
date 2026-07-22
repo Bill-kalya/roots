@@ -224,13 +224,29 @@ export default function Chat() {
   const location = useLocation();
   const chatState = location.state || {};
 
-  const { merchantId } = chatState;
+  const merchantId = chatState.merchantId;
+  const roomId = chatState.roomId;
 
-  // Backwards compatible: some code paths may pass roomId instead of merchantId.
-  // useChat expects merchantId (it resolves the room server-side).
-  const merchantIdResolved = merchantId ?? chatState.roomId ?? chatState.merchant_id;
+  // Determine if roomId is a merchant UUID (needs resolve-room) or a pre-resolved room ID.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-  const { messages, conversation, sendMessage, status } = useChat({ merchantId: merchantIdResolved });
+  let merchantIdResolved;
+  let roomIdResolved;
+
+  if (merchantId) {
+    merchantIdResolved = merchantId;
+  } else if (roomId && UUID_RE.test(roomId)) {
+    // roomId is actually a merchant UUID (from MerchantProfile)
+    merchantIdResolved = roomId;
+  } else if (roomId) {
+    // roomId is a pre-resolved room ID (from Checkout)
+    roomIdResolved = roomId;
+  }
+
+  const { messages, conversation, sendMessage, status } = useChat({
+    merchantId: merchantIdResolved,
+    roomId: roomIdResolved,
+  });
 
   // NOTE: merchantIdResolved is for socket init. Conversation sidebar/unread UI is not implemented yet.
 

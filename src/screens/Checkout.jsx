@@ -880,7 +880,12 @@ function CheckoutInner() {
           className="checkout-chat-floating"
           type="button"
           onClick={() => {
-            navigate("/chat", { state: { roomId: "general" } });
+            const firstMerchantId = items?.find((i) => i.merchant_id)?.merchant_id;
+            if (firstMerchantId) {
+              navigate("/chat", { state: { merchantId: firstMerchantId } });
+            } else {
+              navigate("/chat", { state: { roomId: "general" } });
+            }
           }}
           aria-label="Chat about your order"
         >
