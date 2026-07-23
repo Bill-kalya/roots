@@ -26,6 +26,7 @@ import Chat from './screens/Chat';
 import Artisans from './screens/Artisans';
 import Origins from './screens/Origins';
 import About from './screens/About';
+import SearchResults from './screens/SearchResults';
 import Theme from './components/Theme';
 import AppToaster from './components/Toaster';
 import VerifyEmail from './screens/VerifyEmail';
@@ -111,6 +112,7 @@ const AppContent = () => {
         <Route path="/artisans" element={<Artisans />} />
         <Route path="/origins" element={<Origins />} />
         <Route path="/about" element={<About />} />
+        <Route path="/search" element={<SearchResults />} />
         <Route path="/paypal/success" element={<PaypalSuccess />} />
         <Route path="/paypal/cancel" element={<PaypalCancel />} />
 

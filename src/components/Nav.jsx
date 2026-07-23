@@ -189,6 +189,7 @@ function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -225,6 +226,19 @@ const handleCollectionClick = (e) => {
     navigate('/about');
   };
 
+  const handleSearchSubmit = (query) => {
+    const trimmed = (query || '').trim();
+    if (trimmed) {
+      navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+      setSearchQuery('');
+      setMobileSearchOpen(false);
+    }
+  };
+
+  const handleMobileSearchSubmit = (query) => {
+    handleSearchSubmit(query);
+  };
+
   const toggleCart = () => setCartOpen(prev => !prev);
 
   return (
@@ -258,7 +272,20 @@ const handleCollectionClick = (e) => {
           <button className="menu-toggle" onClick={toggleMenu}>
             ☰
           </button>
-          <Search value={searchQuery} onChange={setSearchQuery} placeholder="Search collection..." />
+
+          {/* Mobile search icon — visible only on mobile */}
+          <button
+            className="mobile-search-toggle"
+            onClick={() => setMobileSearchOpen(prev => !prev)}
+            aria-label="Search"
+            type="button"
+          >
+            <svg fill="currentColor" width="20" height="20" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg">
+              <path d="M790.588 1468.235c-373.722 0-677.647-303.924-677.647-677.647 0-373.722 303.925-677.647 677.647-677.647 373.723 0 677.647 303.925 677.647 677.647 0 373.723-303.924 677.647-677.647 677.647Zm596.781-160.715c120.396-138.692 193.807-319.285 193.807-516.932C1581.176 354.748 1226.428 0 790.588 0S0 354.748 0 790.588s354.748 790.588 790.588 790.588c197.647 0 378.24-73.411 516.932-193.807l516.028 516.142 79.963-79.963-516.142-516.028Z" fillRule="evenodd" />
+            </svg>
+          </button>
+
+          <Search value={searchQuery} onChange={setSearchQuery} onSubmit={handleSearchSubmit} placeholder="Search collection..." />
 
           <select
             className="currency-selector"
@@ -358,6 +385,43 @@ const handleCollectionClick = (e) => {
               {label}
             </Button>
           ))}
+        </div>
+      )}
+
+      {/* Mobile search overlay */}
+      {mobileSearchOpen && (
+        <div className="mobile-search-overlay">
+          <div className="mobile-search-bar">
+            <input
+              type="text"
+              placeholder="Search collection..."
+              className="mobile-search-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleMobileSearchSubmit(searchQuery);
+              }}
+              autoFocus
+            />
+            <button
+              className="mobile-search-close"
+              onClick={() => {
+                setMobileSearchOpen(false);
+                setSearchQuery('');
+              }}
+              aria-label="Close search"
+              type="button"
+            >
+              ✕
+            </button>
+          </div>
+          <button
+            className="mobile-search-go"
+            onClick={() => handleMobileSearchSubmit(searchQuery)}
+            disabled={!searchQuery.trim()}
+          >
+            Search
+          </button>
         </div>
       )}
 
