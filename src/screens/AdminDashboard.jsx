@@ -20,7 +20,6 @@ import {
   updateSystemSettings,
   updateUserRole,
   getUsers,
-  getAdminWalletOverview,
 } from '../services/api';
 import './admin.css';
 
@@ -94,13 +93,6 @@ const AdminDashboard = () => {
   const [salesData, setSalesData] = useState({});
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [walletStats, setWalletStats] = useState({
-    total_merchant_balances: 0,
-    total_pending_escrow: 0,
-    total_available: 0,
-    total_withdrawn: 0,
-  });
-
   const [analyticsData, setAnalyticsData] = useState({});
 
   const applyDashboardData = (analytics, orders) => {
@@ -187,7 +179,6 @@ const AdminDashboard = () => {
 
         if (!cancelled) {
           applyDashboardData(analytics, orders);
-          await loadWalletOverview();
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -219,20 +210,6 @@ const AdminDashboard = () => {
       console.error('Error toggling maintenance mode:', error);
     }
 
-  };
-
-  const loadWalletOverview = async () => {
-    try {
-      const data = await getAdminWalletOverview();
-      setWalletStats({
-        total_merchant_balances: Number(data?.total_merchant_balances || 0),
-        total_pending_escrow: Number(data?.total_pending_escrow || 0),
-        total_available: Number(data?.total_available || 0),
-        total_withdrawn: Number(data?.total_withdrawn || 0),
-      });
-    } catch (error) {
-      console.error('Error fetching wallet overview:', error);
-    }
   };
 
   const salesChartData = {
@@ -371,31 +348,6 @@ const AdminDashboard = () => {
           <div className="stat-title">Avg Order Value</div>
           <div className="stat-value">
             ${stats.totalOrders > 0 ? (stats.totalSales / stats.totalOrders).toFixed(2) : '0.00'}
-          </div>
-        </div>
-      </div>
-
-      {/* WALLET OVERVIEW */}
-      <div className="bottom-grid">
-        <div className="stat-card wallet-card">
-          <div className="section-header">Wallet Overview</div>
-          <div className="wallet-stats">
-            <div className="wallet-stat-item">
-              <span className="wallet-stat-label">Total Merchant Balances</span>
-              <span className="wallet-stat-value">${walletStats.total_merchant_balances.toLocaleString()}</span>
-            </div>
-            <div className="wallet-stat-item">
-              <span className="wallet-stat-label">Pending Escrow</span>
-              <span className="wallet-stat-value escrow">${walletStats.total_pending_escrow.toLocaleString()}</span>
-            </div>
-            <div className="wallet-stat-item">
-              <span className="wallet-stat-label">Total Available</span>
-              <span className="wallet-stat-value available">${walletStats.total_available.toLocaleString()}</span>
-            </div>
-            <div className="wallet-stat-item">
-              <span className="wallet-stat-label">Total Withdrawn</span>
-              <span className="wallet-stat-value withdrawn">${walletStats.total_withdrawn.toLocaleString()}</span>
-            </div>
           </div>
         </div>
       </div>

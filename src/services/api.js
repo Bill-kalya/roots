@@ -241,42 +241,6 @@ export const getMerchantAnalytics = (signal) =>
   api.get('/api/merchant/analytics', { signal }).then((res) => res.data);
 
 // =========================
-// MERCHANT PAYOUT SETTINGS
-// =========================
-export const getMerchantPayoutSettings = (signal) =>
-  api
-    .get('/api/merchant/payout-settings', { signal })
-    .then((res) => res.data);
-
-export const updateMerchantPayoutSettings = (payload, signal) =>
-  api
-    .put('/api/merchant/payout-settings', payload, { signal })
-    .then((res) => res.data);
-
-export const getMerchantEarnings = (signal) =>
-  api
-    .get('/api/merchant/earnings', { signal })
-    .then((res) => res.data);
-
-// =========================
-// MERCHANT PAYOUT REQUESTS
-// =========================
-export const requestPayout = (payload, signal) =>
-  api
-    .post('/api/merchant/payouts/request', payload, { signal })
-    .then((res) => res.data);
-
-export const getMerchantPayouts = (signal) =>
-  api
-    .get('/api/merchant/payouts', { signal })
-    .then((res) => res.data);
-
-export const getMerchantLedger = (params, signal) =>
-  api
-    .get('/api/merchant/ledger', { params, signal })
-    .then((res) => res.data);
-
-// =========================
 // ADMIN
 // =========================
 export const getAnalytics = (signal) =>
@@ -287,19 +251,6 @@ export const getOrders = (params, signal) =>
 
 export const updateSystemSettings = (data, signal) =>
   api.put('/api/admin/settings/', data, { signal }).then((res) => res.data);
-
-// =========================
-// ADMIN WALLET OVERVIEW
-// =========================
-export const getAdminWalletOverview = (signal) =>
-  api
-    .get('/api/admin/wallet/overview', { signal })
-    .then((res) => res.data);
-
-export const getAdminMerchantWallets = (params, signal) =>
-  api
-    .get('/api/admin/wallet/merchants', { params, signal })
-    .then((res) => res.data);
 
 // =========================
 // ADMIN USERS (role management)
