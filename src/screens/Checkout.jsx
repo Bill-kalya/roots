@@ -335,6 +335,8 @@ function CheckoutInner() {
 
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentPending, setPaymentPending] = useState(false);
 
   const [delivery, setDelivery] = useState({
     firstName: "",
@@ -567,7 +569,6 @@ function CheckoutInner() {
         }, 0);
 
         const shipping = getShippingFee();
-        const totalKES = Math.ceil(subtotal + shipping);
 
         const { createOrder: createInternalOrder } = await import("../api/orders.js");
         const { createStripePaymentIntent } = await import("../api/payments.js");
@@ -580,13 +581,8 @@ function CheckoutInner() {
           success_url: window.location.origin + "/payments/success",
         });
 
-        const amount = totalKES;
-        const currency = "KES";
-
         const { client_secret } = await createStripePaymentIntent({
           order_id: internalOrder.id,
-          amount,
-          currency,
         });
 
         if (!client_secret) {
@@ -630,7 +626,31 @@ function CheckoutInner() {
           return;
         }
 
-        setSubmitted(true);
+        // Card confirmed — now poll the backend to wait for webhook confirmation
+        // before showing success. This bridges the gap between card confirmation
+        // and webhook arrival.
+        setPaymentProcessing(true);
+        const { getOrderById } = await import("../services/api.js");
+        let confirmed = false;
+        for (let attempt = 0; attempt < 10; attempt++) {
+          await new Promise((r) => setTimeout(r, 2000));
+          try {
+            const orderData = await getOrderById(internalOrder.id);
+            if (orderData?.status === "paid" || orderData?.status === "shipped" || orderData?.status === "delivered") {
+              confirmed = true;
+              break;
+            }
+          } catch {
+            // Order may not be retrievable yet — keep polling
+          }
+        }
+        setPaymentProcessing(false);
+
+        if (confirmed) {
+          setSubmitted(true);
+        } else {
+          setPaymentPending(true);
+        }
         setSubmitting(false);
         return;
       }
@@ -712,6 +732,53 @@ function CheckoutInner() {
       setSubmitting(false);
     }
   };
+
+  if (paymentProcessing) {
+    return (
+      <div className="roots-checkout">
+        <CheckoutNav />
+        <main className="checkout-body">
+          <div className="checkout-left">
+            <h2 className="checkout-heading">Processing Payment...</h2>
+            <p className="checkout-subtitle">
+              Your card has been charged. We're confirming your payment with our system. This usually takes a few seconds.
+            </p>
+            <div className="processing-spinner" style={{ marginTop: 24, textAlign: 'center' }}>
+              <div className="spinner" style={{
+                width: 40, height: 40, border: '4px solid #e0d5c7',
+                borderTop: '4px solid #2a5298', borderRadius: '50%',
+                animation: 'spin 1s linear infinite', margin: '0 auto'
+              }} />
+              <p style={{ marginTop: 16, color: '#888', fontSize: 14 }}>Please don't close this page...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (paymentPending) {
+    return (
+      <div className="roots-checkout roots-checkout-confirmed">
+        <CheckoutNav />
+        <div className="confirmed-content">
+          <div className="confirmed-circle">
+            <span className="confirmed-check" aria-hidden="true" style={{ fontSize: 32 }}>⏳</span>
+          </div>
+          <h2 className="confirmed-title">Payment Processing</h2>
+          <p className="confirmed-desc">
+            Your payment is being processed. We'll confirm your order shortly and send you an email with the details.
+            If you don't receive confirmation within a few minutes, please check your orders page or contact support.
+          </p>
+          <button className="confirmed-btn" onClick={() => (window.location.href = "/")} type="button">
+            CONTINUE EXPLORING →
+          </button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (submitted) {
     return (

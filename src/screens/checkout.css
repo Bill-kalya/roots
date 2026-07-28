@@ -990,3 +990,8 @@
 /* Note: legacy inline chat button styles removed from checkout.scss to avoid
    placing chat inline between form fields. */
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+

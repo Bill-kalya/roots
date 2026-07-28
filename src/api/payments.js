@@ -14,17 +14,9 @@ export const getPaymentStatus = (checkoutRequestId) =>
 // =========================
 // STRIPE (CARD)
 // =========================
-export const createStripePaymentIntent = ({
-  order_id,
-  amount,
-  currency = "USD",
-}) =>
+export const createStripePaymentIntent = ({ order_id }) =>
   api
-    .post("/api/payments/stripe/create-payment-intent", {
-      order_id,
-      amount,
-      currency,
-    })
+    .post("/api/payments/stripe/create-payment-intent", { order_id })
     .then((res) => res.data);
 
 // =========================
