@@ -656,6 +656,13 @@ background: linear-gradient(to bottom, #493b3b, #2d2f31);
   padding: 40px 0;
 }
 
+.load-more-error {
+  text-align: center;
+  color: #C4861A;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
 .view-all-btn:hover {
 
   box-shadow:

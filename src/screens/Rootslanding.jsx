@@ -30,6 +30,26 @@ const STATIC_TESTIMONIALS = [
   }
 ];
 
+const PRODUCTS_PER_PAGE = 100;
+
+// Try common response shapes:
+// - { items: [...] }
+// - { results: [...] }
+// - { products: [...] }
+// - [...] (array)
+const normalizeList = (data) => {
+  if (Array.isArray(data)) return data;
+  if (!data || typeof data !== 'object') return [];
+  return (
+    data.items ||
+    data.results ||
+    data.products ||
+    data.data?.items ||
+    data.data?.results ||
+    []
+  );
+};
+
 // ─── Data Context ────────────────────────────────────────────────────────────
 const DataContext = createContext();
 
@@ -39,8 +59,12 @@ function DataProvider({ children }) {
     testimonials: [],
     productsLoading: false,
     testimonialsLoading: false,
+    productsLoadingMore: false,
     productsError: null,
-    testimonialsError: null
+    testimonialsError: null,
+    productsLoadMoreError: null,
+    productsTotal: 0,
+    productsPages: 0
   });
 
   useEffect(() => {
@@ -50,34 +74,17 @@ function DataProvider({ children }) {
       setData(prev => ({ ...prev, productsLoading: true, testimonialsLoading: true }));
       try {
         const [productsRes, testimonialsRes] = await Promise.allSettled([
-          api.get('/api/products/', { signal: controller.signal }),
+          api.get(`/api/products/?limit=${PRODUCTS_PER_PAGE}`, { signal: controller.signal }),
           api.get('/api/testimonials', { signal: controller.signal }),
         ]);
 
-        const normalizeList = (data) => {
-          // Try common shapes:
-          // - { items: [...] }
-          // - { results: [...] }
-          // - { products: [...] }
-          // - [...] (array)
-          if (Array.isArray(data)) return data;
-          if (!data || typeof data !== 'object') return [];
-          return (
-            data.items ||
-            data.results ||
-            data.products ||
-            data.data?.items ||
-            data.data?.results ||
-            []
-          );
-        };
+        const productsData = productsRes.status === 'fulfilled' ? productsRes.value.data : null;
 
         setData(prev => ({
           ...prev,
-          products:
-            productsRes.status === 'fulfilled'
-              ? normalizeList(productsRes.value.data)
-              : [],
+          products: normalizeList(productsData),
+          productsTotal: productsData?.total ?? 0,
+          productsPages: productsData?.pages ?? 0,
           productsLoading: false,
           productsError: productsRes.status === 'rejected' ? productsRes.reason : null,
 
@@ -106,13 +113,34 @@ function DataProvider({ children }) {
   const refetchProducts = useCallback(async () => {
     setData(prev => ({ ...prev, productsLoading: true, productsError: null }));
     try {
-const res = await api.get('/api/products/');
+      const res = await api.get(`/api/products/?limit=${PRODUCTS_PER_PAGE}`);
       const products = res.data?.items ?? res.data ?? [];
-      setData(prev => ({ ...prev, products, productsLoading: false }));
+      setData(prev => ({
+        ...prev,
+        products,
+        productsTotal: res.data?.total ?? products.length,
+        productsLoading: false,
+      }));
     } catch (err) {
       setData(prev => ({ ...prev, productsLoading: false, productsError: err }));
     }
   }, []);
+
+  const loadMoreProducts = useCallback(async () => {
+    const nextPage = Math.floor(data.products.length / PRODUCTS_PER_PAGE) + 1;
+    setData(prev => ({ ...prev, productsLoadingMore: true, productsLoadMoreError: null }));
+    try {
+      const res = await api.get(`/api/products/?page=${nextPage}&limit=${PRODUCTS_PER_PAGE}`);
+      const items = normalizeList(res.data);
+      setData(prev => ({
+        ...prev,
+        products: [...prev.products, ...items],
+        productsLoadingMore: false,
+      }));
+    } catch (err) {
+      setData(prev => ({ ...prev, productsLoadingMore: false, productsLoadMoreError: err }));
+    }
+  }, [data.products.length]);
 
   const refetchTestimonials = useCallback(async () => {
     setData(prev => ({ ...prev, testimonialsLoading: true, testimonialsError: null }));
@@ -127,7 +155,7 @@ const res = await api.get('/api/products/');
 
 
   return (
-    <DataContext.Provider value={{ ...data, refetchProducts, refetchTestimonials }}>
+    <DataContext.Provider value={{ ...data, refetchProducts, refetchTestimonials, loadMoreProducts }}>
       {children}
     </DataContext.Provider>
   );
@@ -498,7 +526,22 @@ function CollectionSection() {
           ))}
         </div>
         <div className="collection-footer">
-          <button className="view-all-btn" onClick={handleViewAll}>View All 500+ Pieces</button>
+          {!data.productsLoading && !data.productsError && data.products.length < data.productsTotal ? (
+            <>
+              {data.productsLoadMoreError && (
+                <p className="load-more-error">Couldn't load more pieces.</p>
+              )}
+              <button
+                className="view-all-btn"
+                onClick={data.loadMoreProducts}
+                disabled={data.productsLoadingMore}
+              >
+                {data.productsLoadingMore ? "LOADING…" : "LOAD MORE"}
+              </button>
+            </>
+          ) : (
+            <button className="view-all-btn" onClick={handleViewAll}>View All 500+ Pieces</button>
+          )}
         </div>
       </div>
     </section>
