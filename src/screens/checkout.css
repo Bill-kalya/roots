@@ -317,6 +317,16 @@
   margin-top: 1px;
 }
 
+.paypal-conversion-note {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #C4861A;
+}
+
+.paypal-conversion-note strong {
+  color: #fff;
+}
+
 /* ─────────────────────────────────────────────────────────────
    Submit Button
 ───────────────────────────────────────────────────────────── */

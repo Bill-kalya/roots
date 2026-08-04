@@ -212,6 +212,8 @@ function PaymentForm({
   onCardChange,
   mpesaPhone,
   onMpesaPhoneChange,
+  paypalRate,
+  paypalTotalKES,
 }) {
   function formatCardNumber(value) {
     return value
@@ -302,7 +304,16 @@ function PaymentForm({
           <span className="paypal-notice-icon" aria-hidden="true">
             ℹ
           </span>
-          You will be redirected to PayPal to complete your payment securely.
+          <div>
+            You will be redirected to PayPal to complete your payment securely.
+            {paypalRate && paypalTotalKES > 0 && (
+              <div className="paypal-conversion-note">
+                {`KSh ${Math.round(paypalTotalKES).toLocaleString("en-KE")}`} ≈{" "}
+                <strong>{`$${(paypalTotalKES / paypalRate).toFixed(2)}`}</strong> — PayPal
+                charges in USD.
+              </div>
+            )}
+          </div>
         </div>
       )}
     </fieldset>
@@ -337,6 +348,24 @@ function CheckoutInner() {
   const [submitted, setSubmitted] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paymentPending, setPaymentPending] = useState(false);
+
+  const [paypalRate, setPaypalRate] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { getPaypalConfig } = await import("../api/payments.js");
+        const cfg = await getPaypalConfig();
+        if (!cancelled) setPaypalRate(Number(cfg.exchange_rate));
+      } catch {
+        // rate unavailable -> conversion note hidden, submit still works
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const [delivery, setDelivery] = useState({
     firstName: "",
@@ -463,6 +492,12 @@ function CheckoutInner() {
       items?.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1), 0) || 0;
     return subtotalFallback >= 10000 ? 0 : 850;
   };
+
+  const paypalTotalKES = React.useMemo(() => {
+    const subtotal =
+      items?.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1), 0) || 0;
+    return Math.ceil(subtotal + getShippingFee());
+  }, [items, getShippingFee]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -917,6 +952,8 @@ function CheckoutInner() {
             onCardChange={setCardData}
             mpesaPhone={mpesaPhone}
             onMpesaPhoneChange={setMpesaPhone}
+            paypalRate={paypalRate}
+            paypalTotalKES={paypalTotalKES}
           />
 
           <button

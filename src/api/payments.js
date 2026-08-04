@@ -39,3 +39,13 @@ export const capturePaypalOrder = ({ paypal_order_id }) =>
     .post("/api/payments/paypal/capture", { paypal_order_id })
     .then((res) => res.data);
 
+// KES -> USD rate used by the backend when creating PayPal orders.
+export const getPaypalConfig = () =>
+  api.get("/api/payments/paypal/config").then((res) => res.data);
+
+// Mark the pending PayPal payment as cancelled after the user abandons checkout.
+export const cancelPaypalOrder = ({ order_id }) =>
+  api
+    .post("/api/payments/paypal/cancel", { order_id })
+    .then((res) => res.data);
+
