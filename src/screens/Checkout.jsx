@@ -493,6 +493,17 @@ function CheckoutInner() {
     return subtotalFallback >= 10000 ? 0 : 850;
   };
 
+  // Package characteristics + chosen carrier let the backend derive the
+  // authoritative shipping fee (Kenya = free, international = zone-based).
+  const deliveryPayload = React.useMemo(
+    () => ({
+      ...delivery,
+      package: packageEstimate,
+      carrier: selectedRate?.carrier ?? null,
+    }),
+    [delivery, packageEstimate, selectedRate],
+  );
+
   const paypalTotalKES = React.useMemo(() => {
     const subtotal =
       items?.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 1), 0) || 0;
@@ -532,7 +543,7 @@ function CheckoutInner() {
             payment_method: "mpesa",
             // Prefer passing mpesa_phone if backend uses it to populate STK push fields.
             mpesa_phone: phone,
-            delivery,
+            delivery: deliveryPayload,
             cancel_url: window.location.origin + "/payments/cancel",
             success_url: window.location.origin + "/payments/success",
           });
@@ -611,7 +622,7 @@ function CheckoutInner() {
         const internalOrder = await createInternalOrder({
           shipping_fee: shipping,
           payment_method: "card",
-          delivery,
+          delivery: deliveryPayload,
           cancel_url: window.location.origin + "/payments/cancel",
           success_url: window.location.origin + "/payments/success",
         });
@@ -717,7 +728,7 @@ function CheckoutInner() {
           internalOrder = await createInternalOrder({
             shipping_fee: shipping,
             payment_method: "paypal",
-            delivery,
+            delivery: deliveryPayload,
             cancel_url: window.location.origin + "/paypal/cancel",
             success_url: window.location.origin + "/paypal/success",
           });
